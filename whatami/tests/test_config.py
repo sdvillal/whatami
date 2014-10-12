@@ -256,7 +256,7 @@ def test_non_quoted_string_values(c3):
     # non-quoted string values must cascade recursively
     # - this makes things complex, should get rid of this feat
     assert c3.what().id(quote_string_vals=False) == 'C3#c1="C1#length=1#p1=blah#p2=bleh"#' \
-                                                   'c2="C2#c1="C1#length=1#p1=blah#p2=bleh"#name=roxanne"'
+                                                    'c2="C2#c1="C1#length=1#p1=blah#p2=bleh"#name=roxanne"'
 
 
 def test_configurable_magics(c1):
