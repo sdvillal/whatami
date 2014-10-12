@@ -1,0 +1,1 @@
+[![Coverage Status](https://img.shields.io/coveralls/sdvillal/wakeup.svg)](https://coveralls.io/r/sdvillal/wakeup)
