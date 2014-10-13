@@ -1,4 +1,4 @@
-# Whatami: unintrusive object self-identification for python
+# whatami: unintrusive object self-identification for python
 
 [![Build Status](https://travis-ci.org/sdvillal/whatami.svg?branch=master)](https://travis-ci.org/sdvillal/whatami)
 [![Coverage Status](https://img.shields.io/coveralls/sdvillal/whatami.svg)](https://coveralls.io/r/sdvillal/whatami)
