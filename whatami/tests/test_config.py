@@ -12,8 +12,9 @@ from time import strptime, mktime
 
 import pytest
 
-from whatami.config import parse_id_string, Configurable, Configuration, config_dict_for_object, \
-    mlexp_info_helper, _dict_or_slotsdict, configuration_as_string
+from whatami import parse_id_string, Configurable, Configuration, config_dict_for_object, \
+    mlexp_info_helper, configuration_as_string
+from whatami.config import _dict_or_slotsdict
 
 
 def test_parse_id_simple():
