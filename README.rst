@@ -1,7 +1,7 @@
 whatami: unintrusive object self-identification for python
 ==========================================================
 
-|Build Status| |Coverage Status|
+|Pypi Version| |Build Status| |Coverage Status|
 
 About
 -----
@@ -65,3 +65,5 @@ Example
    :target: https://travis-ci.org/sdvillal/whatami
 .. |Coverage Status| image:: https://img.shields.io/coveralls/sdvillal/whatami.svg
    :target: https://coveralls.io/r/sdvillal/whatami
+.. |Pypi Version| image:: https://badge.fury.io/py/whatami.svg
+   :target: http://badge.fury.io/py/whatami
