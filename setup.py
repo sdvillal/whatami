@@ -15,13 +15,12 @@ setup(
     name='whatami',
     license='BSD 3 clause',
     description='Easily provide python objects with self-identification',
-    # long_description=open('README.md').read(),  # Use pyandoc or move to RST
+    long_description=open('README.rst').read(),
     version=whatami.__version__,
     url='https://github.com/sdvillal/whatami',
     author='Santi Villalba',
     author_email='sdvillal@gmail.com',
     packages=['whatami', 'whatami.tests'],
-    package_data={'': ['*.txt', '*.cfg', '*.md']},  # use MANIFEST.in
     classifiers=[
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
