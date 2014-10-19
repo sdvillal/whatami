@@ -13,7 +13,7 @@ from time import strptime, mktime
 import pytest
 
 from whatami import parse_id_string, Configurable, Configuration, config_dict_for_object, \
-    mlexp_info_helper, configuration_as_string
+    mlexp_info_helper, configuration_as_string, whatable
 from whatami.config import _dict_or_slotsdict
 
 
@@ -390,6 +390,23 @@ def test_configurable_duck():
             self.ducked = cduck
     nested_duck = NestedDuckedConfiguration()
     assert nested_duck.what().id() == 'NestedDuckedConfiguration#ducked="DuckedConfiguration#param1=33"'
+
+
+def test_configurable_decorator():
+    @whatable
+    def normalize(x, loc=5, scale=3):
+        """returns (x+loc) / scale"""
+        return (x + loc) / scale
+    assert normalize.what().id() == 'normalize#loc=5#scale=3'
+    assert normalize.__name__ == 'normalize'
+    assert normalize.__doc__ == 'returns (x+loc) / scale'
+
+    # very specific case: partial application over a whatable closure
+    normalize6 = partial(normalize, loc=6)
+    assert not hasattr(normalize6, 'what')
+    assert not hasattr(normalize6, '__name__')  # partials have no name
+    normalize6 = whatable(normalize6)
+    assert normalize6.what().id() == 'normalize#loc=6#scale=3'
 
 
 def test_mlexp_info_helper():

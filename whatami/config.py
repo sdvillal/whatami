@@ -57,7 +57,7 @@ import inspect
 import shlex
 from copy import copy
 from collections import OrderedDict
-from functools import partial
+from functools import partial, wraps, update_wrapper, WRAPPER_ASSIGNMENTS
 from socket import gethostname
 
 from whatami.misc import callable2call, is_iterable, internet_time
@@ -386,6 +386,71 @@ class Configurable(object):
             self.__class__.__name__,
             configuration_dict=config_dict_for_object(self,
                                                       add_descriptors=self._add_descriptors))
+
+# A less standard synonym for Configurable going well with the new method name
+Whatable = Configurable
+
+
+def configurable(func):
+    """Decorates a callable (function, partial...) adding a what() method.
+
+    This provides safe ids for thunks/partials/functions with default parameters
+    that are idenfified uniquely before their intended call (for example, if we
+    have a function that operates on some data with possible extra, but fixed, parameters).
+
+    Examples
+    --------
+    >>> def normalize(x, mean=3, std=2):
+    ...     return (x - mean) / std
+    >>> cnormalize = configurable(normalize)
+    >>> print cnormalize.what().id()
+    normalize#mean=3#std=2
+    >>> print cnormalize.__name__
+    normalize
+    >>> cnormalize(5)
+    1
+    >>> hasattr(normalize, 'what')
+    False
+    """
+
+    # Do not modify func inplace
+    def whatablefunc(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    #
+    # Wrapper to get proper '__name__', '__doc__' and '__module__' when present
+    # "wraps" won't work for partials or lambdas on python 2.x.
+    # See: http://bugs.python.org/issue3445
+    #
+    update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(func, method)]
+    if len(update_in_wrapper):
+        whatablefunc = update_wrapper(wrapper=whatablefunc,
+                                      wrapped=func,
+                                      assigned=update_in_wrapper)
+
+    # Adds what method
+    name, config_dict = callable2call(func, closure_extractor=extract_decorated_function_from_closure)
+    whatablefunc.what = lambda: Configuration(name, configuration_dict=config_dict)
+
+    return whatablefunc
+
+# decorator synonim
+whatable = configurable
+
+
+def extract_decorated_function_from_closure(c):
+    """
+    Extracts a function from closure c iff the closure only have one cell mapping to a function
+    and also has a method 'what'.
+    (this ad-hoc behavior could help to play well with the configurable decorator)
+    """
+    closure = c.__closure__
+    if closure is not None and len(closure) == 1 and hasattr(c, 'what'):
+        func = closure[0].cell_contents
+        if inspect.isfunction(func):
+            return extract_decorated_function_from_closure(func)
+    return c
+
 
 #
 # def configure(self, configuration):

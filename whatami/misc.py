@@ -9,7 +9,7 @@ import inspect
 from functools import partial
 
 
-def callable2call(c):
+def callable2call(c, closure_extractor=lambda c: c):
     """
     Extracts the (actual) function name and set parameters from a callable.
 
@@ -20,6 +20,11 @@ def callable2call(c):
     ----------
     c : callable
         The function, partial, builtin or, in general, any callable.
+
+    closure_extractor : function c -> function, default c -> c
+        A function that will be executed whenever c is a closure.
+        It should return a function to be analyzed by inspect.
+        This can be useful to specify custom behavior with, e.g., decorated functions
 
     Returns
     -------
@@ -53,6 +58,8 @@ def callable2call(c):
         if positional is None:
             positional = []
         if inspect.isfunction(c):
+            if is_closure(c):  # allow custom behavior with closures
+                c = closure_extractor(c)
             args, _, _, defaults = inspect.getargspec(c)
             defaults = [] if not defaults else defaults
             args = [] if not args else args
@@ -87,6 +94,11 @@ def is_iterable(v):
     except:
         return False
     return True
+
+
+def is_closure(c):
+    """Checks whether an object is a python closure."""
+    return inspect.isfunction(c) and c.__closure__ is not None
 
 
 def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
