@@ -1,4 +1,4 @@
-whatami: unintrusive object self-identification for python
+whatami: unobtrusive object self-identification for python
 ==========================================================
 
 |Pypi Version| |Build Status| |Coverage Status|
