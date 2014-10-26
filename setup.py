@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#!/usr/bin/env python2
 # coding=utf-8
 
 # Authors: Santi Villalba <sdvillal@gmail.com>
@@ -24,14 +24,13 @@ setup(
     classifiers=[
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
-        'License :: OSI Approved',
-        'Programming Language :: Python',
         'Topic :: Software Development',
         'Topic :: Scientific/Engineering',
-        'Operating System :: Unix',
+        'License :: OSI Approved',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Operating System :: Unix',
     ],
-    test_require=['pytest'],
+    tests_require=['pytest'],
     platforms=['Any'],
 )
