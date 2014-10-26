@@ -2,4 +2,5 @@
 
 __version__ = '1.0.1'
 
-from config import *
+from what import *
+from helpers import *

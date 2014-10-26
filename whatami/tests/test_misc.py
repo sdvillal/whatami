@@ -26,7 +26,6 @@ def test_is_iterable():
 def test_callable2call_partials():
     assert callable2call(partial(map)) == ('map', {})
     assert callable2call(partial(map, function=str)) == ('map', {'function': str})
-
     assert callable2call(partial(partial(map, function=str), iterable1=())) == ('map', {'function': str,
                                                                                         'iterable1': ()})
 

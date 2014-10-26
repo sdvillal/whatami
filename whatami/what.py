@@ -1,20 +1,21 @@
 # coding=utf-8
-"""An attempt to abstract configurability and experiment identifiability in a convenient way.
+"""Unobtrusive object (self-)identification for python.
+(aka an attempt to abstract configurability and experiment identifiability in a convenient way).
 
 It works this way:
 
   - Objects provide their own ids based on parameters=value dictionaries.
-    They do so by returning an instance of the *Configuration* class from a method called "what()"
+    They do so by returning an instance of the *What* class from a method called *"what()"*
     (and that's all)
 
-  - Optionally, this package provides a Configurable class that can be inherited to provide automatic
-    creation of Configuration objects from the class dictionary (and optionally slots). All attributes
-    will be considered part of the configuration, except for those whose names start or end by '_'.
+  - Optionally, this package provides a *Whatable* class that can be inherited to provide automatic
+    creation of *What* objects from the class dictionary (or *WhatableD* to do so from slots or propertes).
+    All attributes will be considered part of the configuration, except for those whose names start or end by '_'.
 
 Examples
 --------
 
->>> # Objects of this class provide a configuration
+>>> # Objects of this class provide a configuration (What object)
 >>> class DuckedConfigurable(object):
 ...      def __init__(self, quantity, name, company=None, verbose=True):
 ...          self.quantity = quantity
@@ -23,16 +24,16 @@ Examples
 ...          self.verbose = verbose
 ...
 ...      def what(self):
-...          return Configuration('ducked', {'quantity': self.quantity, 'name': self.name, 'company': self.company})
+...          return What('ducked', {'quantity': self.quantity, 'name': self.name, 'company': self.company})
 >>>
 >>>
 >>> duckedc = DuckedConfigurable(33, 'salty-lollypops', verbose=False)
->>> # The configuration id string helps consistency by sorting by key alphanumeric order
->>> duckedc.what().id()
-u"ducked#company=None#name='salty-lollypops'#quantity=33"
->>> # Inheriting from Configurable makes objects gain a what() method
+>>> # The configuration id string sorts by key alphanumeric order, helping id consistency
+>>> print duckedc.what().id()
+ducked#company=None#name='salty-lollypops'#quantity=33
+>>> # Inheriting from Whatable makes objects gain a what() method
 >>> # In this case, what() is infered automatically
->>> class Company(Configurable):
+>>> class Company(Whatable):
 ...     def __init__(self, name, city, verbose=True):
 ...          super(Company, self).__init__()
 ...          self.name = name
@@ -40,12 +41,18 @@ u"ducked#company=None#name='salty-lollypops'#quantity=33"
 ...          self._verbose = verbose  # not part of config
 ...          self.social_reason_ = '%s S.A., %s' % (name, city)  # not part of config
 >>> cc = Company(name='Chupa Chups', city='Barcelona')
->>> cc.what().id()
-u"Company#city='Barcelona'#name='Chupa Chups'"
->>> # Ultimately, we can nest configurables...
+>>> print cc.what().id()
+Company#city='Barcelona'#name='Chupa Chups'
+>>> # Ultimately, we can nest whatables...
 >>> duckedc = DuckedConfigurable(33, 'salty-lollypops', company=cc, verbose=False)
 >>> print duckedc.what().id()
 ducked#company="Company#city='Barcelona'#name='Chupa Chups'"#name='salty-lollypops'#quantity=33
+>>> # Also a function decorator is provided - use with caution
+>>> @whatable
+... def buy(company, price=2**32, currency='euro'):
+...     return '%s is now mine for %g %s' % (company.name, price, currency)
+>>> print buy.what().id()
+buy#currency='euro'#price=4294967296
 """
 
 # Authors: Santi Villalba <sdvillal@gmail.com>
@@ -67,8 +74,10 @@ from whatami.misc import callable2call, is_iterable, internet_time
 MAX_EXT4_FN_LENGTH = 255
 
 
-class Configuration(object):
-    """Configurations are just dictionaries {key: value} that can nest and have a name.
+class What(object):
+    """Stores and manipulates object configuration.
+
+    Configurations are just dictionaries {key: value} that can nest and have a name.
 
     This helper class allows to represent configurations as (reasonable) strings.
 
@@ -119,7 +128,7 @@ class Configuration(object):
                  prefix_keys=None,
                  postfix_keys=None,
                  quote_string_values=True):
-        super(Configuration, self).__init__()
+        super(What, self).__init__()
         self.name = name
         self.configdict = configuration_dict
         self.nickname = nickname
@@ -251,21 +260,21 @@ class Configuration(object):
             if self.nickname is None else self.nickname
 
     def _nested_string(self, v, quote_string_vals):
-        """Returns the nested configuration string for a variaety of value types."""
+        """Returns the nested configuration string for a variety of value types."""
         def nest(string):
             return u'"%s"' % string
 
-        if isinstance(v, Configuration):
+        if isinstance(v, What):
             return nest(v.id(quote_string_vals=quote_string_vals))
         if hasattr(v, 'what'):
             configuration = getattr(v, 'what')
             configuration = configuration() if callable(configuration) else configuration
-            if isinstance(configuration, Configuration):
+            if isinstance(configuration, What):
                 return nest(configuration.id(quote_string_vals=quote_string_vals))
             raise Exception('object has a "configuration" attribute, but it is not of Configuration class')
         if inspect.isbuiltin(v):  # Special message if we try to pass something like sorted or np.array
             raise Exception('Cannot determine the argspec of a non-python function (%s). '
-                            'Please wrap it in a configurable' % v.__name__)
+                            'Please wrap it in a whatable' % v.__name__)
         if isinstance(v, property):
             raise Exception('Dynamic properties are not suppported.')
         if isinstance(v, partial):
@@ -357,11 +366,11 @@ def config_dict_for_object(obj, add_descriptors=False):
             if not k.startswith('_') and not k.endswith('_')}
 
 
-class Configurable(object):
-    """A configurable object has a configuration.
+class Whatable(object):
+    """A Whatable object has a what method returning a What configuration.
 
-    This class strives to be as little intrusive as possible and performs all its
-    magic only on request (call to "configuration").
+    This mixin strives to be as unobtrusive as possible and performs all its
+    magic only on calling to "what".
 
     By default, the object is introspected to get the configuration, so that:
        - the name is the class name of the object
@@ -371,30 +380,33 @@ class Configurable(object):
 
     See also
     --------
-    config_dict_for_object, Configuration
+    config_dict_for_object, What
     """
-
-    __slots__ = ('_add_descriptors',)
-
-    def __init__(self, add_descriptors=False):
-        super(Configurable, self).__init__()
-        self._add_descriptors = add_descriptors
 
     def what(self):
         """Returns a Configuration object."""
-        return Configuration(
+        return What(
             self.__class__.__name__,
-            configuration_dict=config_dict_for_object(self,
-                                                      add_descriptors=self._add_descriptors))
-
-# A less standard synonym for Configurable going well with the new method name
-Whatable = Configurable
+            configuration_dict=config_dict_for_object(self, add_descriptors=False))
 
 
-def configurable(func):
+class WhatableD(object):
+    """Same as the Whatable mixin, but considering data-descriptors instead of the object configuration dict.
+
+    Recall: data-descriptors = __slots__ + @properties
+    """
+
+    def what(self):
+        """Returns a Configuration object."""
+        return What(
+            self.__class__.__name__,
+            configuration_dict=config_dict_for_object(self, add_descriptors=True))
+
+
+def whatable(func):
     """Decorates a callable (function, partial...) adding a what() method.
 
-    This provides safe ids for thunks/partials/functions with default parameters
+    This provides safe ids for partials/functions with default parameters
     that are idenfified uniquely before their intended call (for example, if we
     have a function that operates on some data with possible extra, but fixed, parameters).
 
@@ -402,7 +414,7 @@ def configurable(func):
     --------
     >>> def normalize(x, mean=3, std=2):
     ...     return (x - mean) / std
-    >>> cnormalize = configurable(normalize)
+    >>> cnormalize = whatable(normalize)
     >>> print cnormalize.what().id()
     normalize#mean=3#std=2
     >>> print cnormalize.__name__
@@ -411,6 +423,11 @@ def configurable(func):
     1
     >>> hasattr(normalize, 'what')
     False
+    >>> @whatable
+    ... def thunk(x, name='hi'):
+    ...     print x, name
+    >>> print thunk.what().id()
+    thunk#name='hi'
     """
 
     # Do not modify func inplace
@@ -430,19 +447,16 @@ def configurable(func):
 
     # Adds what method
     name, config_dict = callable2call(func, closure_extractor=extract_decorated_function_from_closure)
-    whatablefunc.what = lambda: Configuration(name, configuration_dict=config_dict)
+    whatablefunc.what = lambda: What(name, configuration_dict=config_dict)
 
     return whatablefunc
-
-# decorator synonim
-whatable = configurable
 
 
 def extract_decorated_function_from_closure(c):
     """
     Extracts a function from closure c iff the closure only have one cell mapping to a function
     and also has a method 'what'.
-    (this ad-hoc behavior could help to play well with the configurable decorator)
+    (this ad-hoc behavior could help to play well with the whatable decorator)
     """
     closure = c.__closure__
     if closure is not None and len(closure) == 1 and hasattr(c, 'what'):
@@ -554,53 +568,23 @@ def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, r
 
 
 def configuration_as_string(obj):
-    """Returns the setup of obj as a string.
-    (Here configurable means None, a string or an object providing an "id" method.)
+    """Returns the configuration of obj as a string.
+
+    Returns
+    -------
+      None if obj is None
+      obj is obj is a string
+      obj.what().id() if obj has a what() method returning a whatable
+      obj.id() if obj has an id() method
     """
     if obj is None:
         return None
     if isinstance(obj, basestring):
         return obj
     try:
-        return obj.id()
-    except AttributeError:
-        raise Exception('the object must be None, a string or have an id() method')  # TypeError
-
-
-def mlexp_info_helper(title,
-                      data_setup=None,
-                      model_setup=None,
-                      eval_setup=None,
-                      exp_function=None,
-                      comments=None,
-                      itime=False):
-    """Creates a dictionary describing machine learning experiments.
-
-    Parameters:
-      - title: the title for the experiment
-      - data_setup: a configurable for the data used in the experiment
-      - model_setup: a configurable for the model used in the experiment
-      - eval_setup: a configurable for the evaluation method used in the experiment
-      - exp_function: the function in which the experiment is defined;
-                      its source text lines will be stored
-      - comments: a string with whatever else we need to say
-      - itime: if True we try to store UTC time from  an internet source
-
-    (Here configurable means None, a string or an object providing an "id" method.)
-
-    Return:
-      An ordered dict mapping strings to strings with all or part of:
-      title, data_setup, model_setup, eval_setup, fsource, date, idate (internet datetime), host, comments
-    """
-    info = OrderedDict((
-        ('title', title),
-        ('data_setup', configuration_as_string(data_setup)),
-        ('model_setup', configuration_as_string(model_setup)),
-        ('eval_setup', configuration_as_string(eval_setup)),
-        ('fsource', inspect.getsourcelines(exp_function) if exp_function else None),
-        ('date', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
-        ('idate', None if not itime else internet_time()),
-        ('host', gethostname()),
-        ('comments', comments),
-    ))
-    return info
+        return obj.what().id()
+    except:
+        try:
+            return obj.id()
+        except:
+            raise TypeError('the object must be None, a string, have a what() method or have an id() method')
