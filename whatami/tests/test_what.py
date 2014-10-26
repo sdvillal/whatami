@@ -402,5 +402,29 @@ def test_whatable_decorator():
     assert normalize6.what().id() == 'normalize#loc=6#scale=3'
 
 
+def test_list_parameters(c1):
+    class WhatableWithCollections(Whatable):
+        def __init__(self):
+            self.list = [c1, 'second']
+    sid = WhatableWithCollections().what().id()
+    assert sid == "WhatableWithCollections#list=[%s, \'second\']" % c1.what().id()
+
+
+def test_tuple_parameters(c1):
+    class WhatableWithCollections(Whatable):
+        def __init__(self):
+            self.tuple = ['first', c1]
+    sid = WhatableWithCollections().what().id()
+    assert sid == "WhatableWithCollections#tuple=[\'first\', %s]" % c1.what().id()
+
+
+def test_dict_parameters(c1):
+    class WhatableWithCollections(Whatable):
+        def __init__(self):
+            self.dict = {'c1': c1, 'two': 2}
+    sid = WhatableWithCollections().what().id()
+    assert sid == "WhatableWithCollections#dict={%s, \'second\'}" % c1.what().id()
+
+
 if __name__ == '__main__':
     pytest.main(__file__)

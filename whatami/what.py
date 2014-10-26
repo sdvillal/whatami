@@ -58,16 +58,13 @@ buy#currency='euro'#price=4294967296
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-import datetime
 import hashlib
 import inspect
 import shlex
 from copy import copy
-from collections import OrderedDict
-from functools import partial, wraps, update_wrapper, WRAPPER_ASSIGNMENTS
-from socket import gethostname
+from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 
-from whatami.misc import callable2call, is_iterable, internet_time
+from whatami.misc import callable2call, is_iterable
 
 
 # http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
@@ -85,6 +82,9 @@ class What(object):
     ----------
     name : string
         The name of this configuration (e.g. "RandomForest").
+
+    short_name : string
+        A shorter name for this configuration (e.g. "rf").
 
     configuration_dict : dictionary
         The {key:value} property dictionary for this configuration.
@@ -120,6 +120,7 @@ class What(object):
     def __init__(self,
                  name,
                  configuration_dict,
+                 short_name=None,
                  nickname=None,
                  # ID string building options
                  non_id_keys=None,
@@ -130,6 +131,7 @@ class What(object):
                  quote_string_values=True):
         super(What, self).__init__()
         self.name = name
+        self.short_name = short_name
         self.configdict = configuration_dict
         self.nickname = nickname
         self._prefix_keys = prefix_keys if prefix_keys else []
@@ -283,6 +285,13 @@ class What(object):
             config.name = name
             config.configdict = keywords
             return nest(config.id(quote_string_vals=quote_string_vals))
+        if isinstance(v, dict):
+            v = {k: self._nested_string(v, quote_string_vals) for k, v in v.iteritems()}
+            return u'%s' % v
+        if isinstance(v, list):
+            return u'[%s]' % ', '.join([self._nested_string(v, quote_string_vals) for v in v])
+        if isinstance(v, tuple):
+            return unicode(tuple([self._nested_string(v, quote_string_vals) for v in v]))
         if inspect.isfunction(v):
             args, _, _, defaults = inspect.getargspec(v)
             defaults = [] if not defaults else defaults
@@ -588,3 +597,7 @@ def configuration_as_string(obj):
             return obj.id()
         except:
             raise TypeError('the object must be None, a string, have a what() method or have an id() method')
+
+
+# TODO: _nested_string: numpy arrays,
+#       we could go for hashes for big ones and other custom reprs depending on their nature

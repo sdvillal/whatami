@@ -20,7 +20,10 @@ setup(
     url='https://github.com/sdvillal/whatami',
     author='Santi Villalba',
     author_email='sdvillal@gmail.com',
-    packages=['whatami', 'whatami.tests'],
+    packages=['whatami',
+              'whatami.tests',
+              'whatami.wrappers',
+              'whatami.wrappers.tests'],
     classifiers=[
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
@@ -32,5 +35,8 @@ setup(
         'Operating System :: Unix',
     ],
     tests_require=['pytest'],
+    extras_require={
+        'sklearn': ('scikit-learn',)
+    },
     platforms=['Any'],
 )

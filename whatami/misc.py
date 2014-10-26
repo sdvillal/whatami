@@ -114,3 +114,27 @@ def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
             return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
     except ImportError:
         return None
+
+
+def all_subclasses(cls):
+    """Returns a list with all the subclasses of cls in the current python session.
+
+    Examples
+    --------
+    This would only work on python 2 and if run as docstrings...
+    >>> str in all_subclasses(basestring) and unicode in all_subclasses(basestring)
+    True
+
+    Some C inheritance...
+    >>> bool in all_subclasses(int)
+    True
+    >>> int in all_subclasses(bool)
+    False
+
+    This is recursive...
+    >>> class my_unicode(unicode):
+    ...     pass
+    >>> my_unicode in all_subclasses(basestring)
+    True
+    """
+    return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in all_subclasses(s)]
