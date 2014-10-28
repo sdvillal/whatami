@@ -10,3 +10,5 @@ script:
   py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
 after_success:
   coveralls
+notifications:
+  email: false
