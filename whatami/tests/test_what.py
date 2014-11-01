@@ -403,27 +403,43 @@ def test_whatable_decorator():
 
 
 def test_list_parameters(c1):
-    class WhatableWithCollections(Whatable):
+    class WhatableWithList(Whatable):
         def __init__(self):
             self.list = [c1, 'second']
-    sid = WhatableWithCollections().what().id()
-    assert sid == "WhatableWithCollections#list=[%s, \'second\']" % c1.what().id()
+    w = WhatableWithList()
+    assert w.what().id() == "WhatableWithList#list=[%s, \'second\']" % c1.what().id()
+    w.list = []
+    assert w.what().id() == "WhatableWithList#list=[]"
 
 
 def test_tuple_parameters(c1):
-    class WhatableWithCollections(Whatable):
+    class WhatableWithTuple(Whatable):
         def __init__(self):
-            self.tuple = ['first', c1]
-    sid = WhatableWithCollections().what().id()
-    assert sid == "WhatableWithCollections#tuple=[\'first\', %s]" % c1.what().id()
+            self.tuple = ('first', c1)
+    w = WhatableWithTuple()
+    assert w.what().id() == "WhatableWithTuple#tuple=(\'first\', %s)" % c1.what().id()
+    w.tuple = ()
+    assert w.what().id() == "WhatableWithTuple#tuple=()"
 
 
 def test_dict_parameters(c1):
-    class WhatableWithCollections(Whatable):
+    class WhatableWithDict(Whatable):
         def __init__(self):
             self.dict = {'c1': c1, 'two': 2}
-    sid = WhatableWithCollections().what().id()
-    assert sid == "WhatableWithCollections#dict={%s, \'second\'}" % c1.what().id()
+    w = WhatableWithDict()
+    assert w.what().id() == "WhatableWithDict#dict={c1=\"C1#length=1#p1='blah'#p2='bleh'\"#two=2}"
+    w.dict = {}
+    assert w.what().id() == "WhatableWithDict#dict={}"
+
+
+def test_set_parameters(c1):
+    class WhatableWithSet(Whatable):
+        def __init__(self):
+            self.set = {c1, 2}
+    w = WhatableWithSet()
+    assert w.what().id() == "WhatableWithSet#set={2, C1#length=1#p1='blah'#p2='bleh'}"
+    w.set = set()
+    assert w.what().id() == "WhatableWithSet#set={}"
 
 
 if __name__ == '__main__':

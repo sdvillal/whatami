@@ -33,7 +33,7 @@ def test_pipeline():
         "KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#" \
         "precompute_distances=True#random_state=None#tol=0.0001#verbose=0"
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
-    assert pipeline_id == "Pipeline#steps=[('norm', \"%s\"), ('kmeans', \"%s\")]" % (norm_id, kmeans_id)
+    assert pipeline_id == "Pipeline#steps=[('norm', %s), ('kmeans', %s)]" % (norm_id, kmeans_id)
 
 
 if __name__ == '__main__':

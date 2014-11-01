@@ -263,8 +263,14 @@ class What(object):
 
     def _nested_string(self, v, quote_string_vals):
         """Returns the nested configuration string for a variety of value types."""
+
         def nest(string):
             return u'"%s"' % string
+
+        def unquote_whatable(v):
+            if hasattr(v, 'what'):
+                return self._nested_string(v, quote_string_vals)[1:-1]
+            return self._nested_string(v, quote_string_vals)
 
         if isinstance(v, What):
             return nest(v.id(quote_string_vals=quote_string_vals))
@@ -286,12 +292,14 @@ class What(object):
             config.configdict = keywords
             return nest(config.id(quote_string_vals=quote_string_vals))
         if isinstance(v, dict):
-            v = {k: self._nested_string(v, quote_string_vals) for k, v in v.iteritems()}
-            return u'%s' % v
+            v = What('', v)
+            return u'{%s}' % self._nested_string(v, quote_string_vals)[2:-1]
+        if isinstance(v, set):
+            return u'{%s}' % u', '.join(map(unquote_whatable, sorted(v)))
         if isinstance(v, list):
-            return u'[%s]' % ', '.join([self._nested_string(v, quote_string_vals) for v in v])
+            return u'[%s]' % u', '.join(map(unquote_whatable, v))
         if isinstance(v, tuple):
-            return unicode(tuple([self._nested_string(v, quote_string_vals) for v in v]))
+            return u'(%s)' % u', '.join(map(unquote_whatable, v))
         if inspect.isfunction(v):
             args, _, _, defaults = inspect.getargspec(v)
             defaults = [] if not defaults else defaults
