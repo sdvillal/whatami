@@ -133,6 +133,7 @@ class What(object):
         self.name = name
         self.short_name = short_name
         self.configdict = configuration_dict
+        self._nickname = None
         self.nickname = nickname
         self._prefix_keys = prefix_keys if prefix_keys else []
         self._postfix_keys = postfix_keys if postfix_keys else []
@@ -142,7 +143,7 @@ class What(object):
         self._synonyms = {}
         if synonyms is not None:
             for longname, shortname in synonyms.iteritems():
-                self.set_synonym(longname, shortname)
+                self.set_key_synonym(longname, shortname)
         # Keys here won't make it to the configuration string unless explicitly asked for
         if not non_id_keys:
             self._non_ids = set()
@@ -150,6 +151,8 @@ class What(object):
             self._non_ids = set(non_id_keys)
         else:
             raise Exception('non_ids must be None or an iterable')
+
+    # ---- Magics
 
     def __eq__(self, other):
         """Two configurations are equal if they have the same name and parameters."""
@@ -167,6 +170,132 @@ class What(object):
     def __str__(self):
         """The default representation is the configuration string including non_ids keys."""
         return self.id(nonids_too=True)
+
+    # ---- Nicknames and registered whatables (id <-> shortname -> whatable)
+
+    # Bidirectional mapping
+    _id2nickname = {}  # id -> (nickname, what)
+    _nickname2id = {}  # nickname -> id
+
+    @property
+    def nickname(self):
+        """Returns the nickname associated to this configuration, defaulting to the nickname in the register."""
+        if self._nickname is None:
+            return What._id2nickname.get(self.id(), (None,))[0]
+        return self._nickname
+
+    @nickname.setter
+    def nickname(self, nickname):
+        """Sets the nickname of this configuration (but do not touches )."""
+        self._nickname = nickname
+
+    def register_my_nickname(self, save_what=False):
+        if self.nickname is not None:
+            What.register_nickname(self.nickname, self.id(), save_what=save_what)
+
+    def nickname_or_id(self, nonids_too=False, maxlength=0, quote_string_vals=None):
+        """Returns the nickname if it exists, otherwise it returns the id.
+        In either case nonids_too and maxlength are honored.
+        """
+        nn = self.nickname
+        if nn is None:
+            nn = self.id(nonids_too=nonids_too,
+                         maxlength=maxlength,
+                         quote_string_vals=self._quote_strings if quote_string_vals is None else quote_string_vals)
+        return self._trim_too_long(nn, maxlength=maxlength)
+
+    @staticmethod
+    def register_nickname(nickname, what, save_what=False):
+        """Registers a new map nickname <-> what_id, optionally saving the object "what".
+
+        Parameters
+        ----------
+        nickname: string
+            The new nickname for what
+
+        what: string or whatable
+
+        save_what: boolean, default False
+
+        """
+
+        if hasattr(what, 'what') and hasattr(what.what(), 'id'):
+            new_id = what.what().id()
+            new_what = what if save_what else None
+        elif isinstance(what, basestring):
+            new_id = what
+            new_what = None
+        else:
+            raise TypeError('"what" must be a whatable or a string, but is a %r' % type(what))
+
+        i2n, n2i = What._id2nickname, What._nickname2id
+
+        # Ensure a one-to-one relationship
+        if nickname in n2i and not n2i[nickname] == new_id:
+            raise Exception('nickname "%s" is already associated with id "%s", delete it before updating' %
+                            (nickname, n2i[nickname]))
+        if new_id in i2n and not i2n[new_id][0] == nickname:
+            raise Exception('id "%s" is already associated with nickname "%s", delete it before updating' %
+                            (new_id, i2n[new_id][0]))
+
+        # Add binding
+        i2n[new_id] = (nickname, new_what)
+        n2i[nickname] = new_id
+
+    @staticmethod
+    def remove_nickname(nickname):
+        what_id = What.nickname2id(nickname)
+        if what_id is not None:
+            del What._nickname2id[nickname]
+            del What._id2nickname[what_id]
+
+    @staticmethod
+    def remove_id(what_id):
+        What.remove_nickname(What.id2nickname(what_id))
+
+    @staticmethod
+    def nickname2id(nickname):
+        return What._nickname2id.get(nickname)
+
+    @staticmethod
+    def id2nickname(what_id):
+        return What._id2nickname.get(what_id, (None,))[0]
+
+    @staticmethod
+    def nickname2what(nickname):
+        what_id = What.nickname2id(nickname)
+        if what_id is not None:
+            return What.id2what(what_id)
+        return None
+
+    @staticmethod
+    def id2what(what_id):
+        return What._id2nickname.get(what_id, (None, None))[1]
+
+    @staticmethod
+    def reset_nicknames():
+        What._id2nickname = {}
+        What._nickname2id = {}
+
+    @staticmethod
+    def all_nicknames():
+        return sorted(What._nickname2id.items())
+
+    # ---- Keys (property names)
+
+    def set_key_synonym(self, name, synonym):
+        """Configures the synonym for the property name."""
+        self._synonyms[name] = synonym
+
+    def key_synonym(self, name):
+        """Returns the global synonym for the property name, if it is registered, otherwise the name itself."""
+        return self._synonyms.get(name, name)
+
+    def keys(self):
+        """Returns the configuration keys."""
+        return self.configdict.keys()
+
+    # ---- ID string generation
 
     def as_string(self, nonids_too=False, sep='#', quote_string_vals=None):
         """Makes a best effort to represent this configuration as a string.
@@ -222,7 +351,7 @@ class What(object):
 
         kvs = sort_kvs_fl()
         return sep.join(
-            '%s=%s' % (self.synonym(k), self._nested_string(v, quote_string_vals=quote_string_vals))
+            '%s=%s' % (self.key_synonym(k), self._nested_string(v, quote_string_vals=quote_string_vals))
             for k, v in kvs
             if nonids_too or k not in self._non_ids)
 
@@ -248,18 +377,15 @@ class What(object):
         if quote_string_vals is False:
             print 'Here'
 
-        my_id = u'%s#%s' % (self.synonym(self.name), self.as_string(nonids_too=nonids_too,
-                                                                    quote_string_vals=quote_string_vals))
-        if 0 < maxlength < len(my_id):
-            return hashlib.sha256(my_id).hexdigest()
-        return my_id
+        my_id = u'%s#%s' % (self.key_synonym(self.name), self.as_string(nonids_too=nonids_too,
+                                                                        quote_string_vals=quote_string_vals))
+        return self._trim_too_long(my_id, maxlength=maxlength)
 
-    def nickname_or_id(self, nonids_too=False, maxlength=0, quote_string_vals=None):
-        """Returns the nickname if it exists, otherwise it returns the id (respecting nonids_too and maxlength)."""
-        if quote_string_vals is None:
-            quote_string_vals = self._quote_strings
-        return self.id(nonids_too=nonids_too, maxlength=maxlength, quote_string_vals=quote_string_vals) \
-            if self.nickname is None else self.nickname
+    @staticmethod
+    def _trim_too_long(string, maxlength=0):
+        if 0 < maxlength < len(string):
+            return hashlib.sha256(string).hexdigest()
+        return string
 
     def _nested_string(self, v, quote_string_vals):
         """Returns the nested configuration string for a variety of value types."""
@@ -319,18 +445,6 @@ class What(object):
                 return u'\'%s\'' % v
             return u'%s' % v
         return unicode(v)
-
-    def set_synonym(self, name, synonym):
-        """Configures the synonym for the property name."""
-        self._synonyms[name] = synonym
-
-    def synonym(self, name):
-        """Returns the global synonym for the property name, if it is registered, otherwise the name itself."""
-        return self._synonyms.get(name, name)
-
-    def keys(self):
-        """Returns the configuration keys."""
-        return self.configdict.keys()
 
 
 def _dict_or_slotsdict(obj):

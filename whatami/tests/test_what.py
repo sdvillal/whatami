@@ -14,6 +14,61 @@ from whatami import Whatable, WhatableD, whatable, What, \
 from whatami.what import _dict_or_slotsdict
 
 
+# ---- Fixtures and teardown
+
+def teardown_function(function):
+    """After each run, wipe nicknames registry."""
+    What.reset_nicknames()
+
+
+@pytest.fixture
+def c1():
+    """A simple whatable object."""
+    class C1(Whatable):
+        def __init__(self, p1='blah', p2='bleh', length=1):
+            super(C1, self).__init__()
+            self.p1 = p1
+            self.p2 = p2
+            self.length = length
+            self._p1p2 = p1 + p2
+            self.p2p1_ = p2 + p1
+    return C1()
+
+
+@pytest.fixture
+def c2(c1):
+    """A whatable object with a nested whatable."""
+    class C2(Whatable):
+        def __init__(self, name='roxanne', c1=c1):
+            super(C2, self).__init__()
+            self.name = name
+            self.c1 = c1
+    return C2()
+
+
+@pytest.fixture
+def c3(c1, c2, quote_string_values=True):
+    """A whatable object with nested whatables and irrelevant members."""
+    class C3(Whatable):
+        def __init__(self, c1=c1, c2=c2, irrelevant=True, quote_string_values=quote_string_values):
+            super(C3, self).__init__()
+            self.c1 = c1
+            self.c2 = c2
+            self.irrelevant = irrelevant
+            self._quote_string_values = quote_string_values
+
+        def what(self):
+            return What(
+                self.__class__.__name__,
+                non_id_keys=('irrelevant',),
+                configuration_dict=config_dict_for_object(self),
+                quote_string_values=self._quote_string_values)
+    return C3()
+
+
+# ---- Let the testing begin...
+
+
 def test_parse_id_simple():
     # Proper splitting
     name, parameters = parse_id_string('rfc#n_jobs=4#n_trees=100##', infer_numbers=False)
@@ -155,51 +210,6 @@ def test_configuration_as_string():
     assert excinfo.value.message == 'the object must be None, a string, have a what() method or have an id() method'
 
 
-@pytest.fixture
-def c1():
-    """A simple whatable object."""
-    class C1(Whatable):
-        def __init__(self, p1='blah', p2='bleh', length=1):
-            super(C1, self).__init__()
-            self.p1 = p1
-            self.p2 = p2
-            self.length = length
-            self._p1p2 = p1 + p2
-            self.p2p1_ = p2 + p1
-    return C1()
-
-
-@pytest.fixture
-def c2(c1):
-    """A whatable object with a nested whatable."""
-    class C2(Whatable):
-        def __init__(self, name='roxanne', c1=c1):
-            super(C2, self).__init__()
-            self.name = name
-            self.c1 = c1
-    return C2()
-
-
-@pytest.fixture
-def c3(c1, c2, quote_string_values=True):
-    """A whatable object with nested whatables and irrelevant members."""
-    class C3(Whatable):
-        def __init__(self, c1=c1, c2=c2, irrelevant=True, quote_string_values=quote_string_values):
-            super(C3, self).__init__()
-            self.c1 = c1
-            self.c2 = c2
-            self.irrelevant = irrelevant
-            self._quote_string_values = quote_string_values
-
-        def what(self):
-            return What(
-                self.__class__.__name__,
-                non_id_keys=('irrelevant',),
-                configuration_dict=config_dict_for_object(self),
-                quote_string_values=self._quote_string_values)
-    return C3()
-
-
 def test_non_nested_configurations(c1):
     # Non-nested configurations
     config_c1 = c1.what()
@@ -244,8 +254,8 @@ def test_non_id_keys(c3):
     sha2 = hashlib.sha256('C3#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#'
                           'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"').hexdigest()
     assert config_c3.id(maxlength=1) == sha2
-    config_c3.set_synonym('c1', 'C1Syn')
-    assert config_c3.synonym('c1') == 'C1Syn'
+    config_c3.set_key_synonym('c1', 'C1Syn')
+    assert config_c3.key_synonym('c1') == 'C1Syn'
     assert config_c3.id() == 'C3#C1Syn="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#' \
                              'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"'
 
@@ -367,6 +377,87 @@ def test_whatable_nickname(c1):
     # not nicknamed configurations
     assert c1.what().nickname is None
     assert c1.what().nickname_or_id() == 'C1#length=1#p1=\'blah\'#p2=\'bleh\''
+
+
+def test_regnick_with_what(c1):
+
+    # saving the what...
+    What.register_nickname('c1', c1, save_what=True)
+    assert c1.what().nickname == 'c1'
+    assert What.id2what(c1.what().id()) == c1
+    assert What.nickname2what('c1') == c1
+    assert What.id2nickname(c1.what().id()) == 'c1'
+    assert What.nickname2id('c1') == c1.what().id()
+    # not saving the what...
+    What.remove_nickname('c1')
+    What.register_nickname('c1', c1, save_what=False)
+    assert What.id2what(c1.what().id()) is None
+    assert What.nickname2what('c1') is None
+    # and of course not there if we haven't registered...
+    assert What.nickname2what('c2') is None
+    assert What.id2what('c2') is None
+
+
+def test_regnick_only_what():
+    with pytest.raises(Exception) as excinfo:
+        What.register_nickname('c1', 1)
+    assert excinfo.value.message == '"what" must be a whatable or a string, but is a <type \'int\'>'
+
+
+def test_regnick_remove_id(c1):
+    What.register_nickname('c1', c1, save_what=True)
+    # remove by id...
+    What.remove_id(c1.what().id())
+    # nothing in there
+    assert What.nickname2id('c1') is None
+    assert What.id2nickname(c1.what().id()) is None
+    assert What.id2what(c1.what().id()) is None
+
+
+def test_regnick_do_not_reregister(c1):
+    What.register_nickname('c1', c1)
+    # do not allow update...
+    What.register_nickname('c1', c1, save_what=False)
+    with pytest.raises(Exception) as excinfo:
+        What.register_nickname('c1', 'blahblehblih')
+    assert excinfo.value.message == 'nickname "c1" is already associated with id ' \
+                                    '"C1#length=1#p1=\'blah\'#p2=\'bleh\'", delete it before updating'
+    with pytest.raises(Exception) as excinfo:
+        What.register_nickname('c2', c1.what().id())
+    assert excinfo.value.message == 'id "%s" is already associated with nickname "c1", delete it before updating' %\
+                                    c1.what().id()
+    # no problem if we remove it first...
+    What.remove_nickname('c1')
+    assert c1.what().nickname is None
+    What.register_nickname('c1', c1)
+    assert c1.what().nickname == 'c1'
+
+
+def test_regnick_self(c1):
+    # self-registration
+    what = c1.what()
+    what.nickname = 'c1'
+    what.register_my_nickname()
+    what.nickname = None
+    assert what.nickname == 'c1'
+    assert c1.what().nickname == 'c1'  # Recall that a call to what() always return a new "What" object
+
+    # no problem on re-registering the same map
+    what.register_my_nickname()
+    assert what.nickname == 'c1'
+    assert c1.what().nickname == 'c1'
+    What.remove_nickname('c1')
+    assert what.nickname is None
+    assert c1.what().nickname is None
+
+
+def test_regnick_all_nicknames():
+    # listing nicknames, reset
+    What.register_nickname('one', 'oneblah')
+    What.register_nickname('two', 'twoblah')
+    assert What.all_nicknames() == [('one', 'oneblah'), ('two', 'twoblah')]
+    What.reset_nicknames()
+    assert What.all_nicknames() == []
 
 
 def test_whatable_duck():
