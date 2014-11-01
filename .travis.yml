@@ -12,9 +12,10 @@ before_install:
  - conda update conda
  - conda install scikit-learn
  - conda install pytest
- - pip install pytest-cov
- - pip install pytest-pep8
- - pip install coveralls
+ - conda info -a
+ - travis_retry conda create -n test python=2.7 pip pytest numpy scipy scikit-learn
+ - source activate test
+ - travis_retry pip install pytest-cov pytest-pep8 coveralls
 
 script:
   py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
