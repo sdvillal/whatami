@@ -1,16 +1,22 @@
 # coding=utf-8
 """Unobtrusive object (self-)identification for python.
-(aka an attempt to abstract configurability and experiment identifiability in a convenient way).
+
+*whatami* strives to abstract configurability and experiment identifiability in a convenient way,
+by allowing each object/computation to provide a string uniquelly and consistently self-identifying
+blah...
 
 It works this way:
 
-  - Objects provide their own ids based on parameters=value dictionaries.
-    They do so by returning an instance of the *What* class from a method called *"what()"*
-    (and that's all)
+  - Objects provide their own ids based on "parameter=value" dictionaries.
+    They do so by returning an instance of the *What* class from a method called *"what()"*.
+    What objects have in turn a method called "id()" providing reasonable strings
+    to describe the object.
 
-  - Optionally, this package provides a *Whatable* class that can be inherited to provide automatic
-    creation of *What* objects from the class dictionary (or *WhatableD* to do so from slots or propertes).
-    All attributes will be considered part of the configuration, except for those whose names start or end by '_'.
+  - whatami also provides a *Whatable* mixin and a *whatable* decorator. They can be
+    used to provide automatic creation of *What* objects from the object attributes or
+    functions default parameters.
+
+  - whatami automatically generated id strings tend to be long and therefore not human-friendly
 
 Examples
 --------
@@ -63,6 +69,7 @@ import inspect
 import shlex
 from copy import copy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
+import types
 
 from whatami.misc import callable2call, is_iterable
 
@@ -297,13 +304,18 @@ class What(object):
 
     # ---- ID string generation
 
-    def as_string(self, nonids_too=False, sep='#', quote_string_vals=None):
+    def as_string(self, nonids_too=False, sep='#', quote_strings=None):
         """Makes a best effort to represent this configuration as a string.
 
         Parameters
         ----------
         nonids_too : bool, default False
           if False, non-ids keys are ignored.
+
+        quote_strings : bool, defaults to None
+            if True, string values will be single-quoted
+            if False, string values will be unquoted
+            if None, string quoting policy defaults to this configuration's
 
         sep : string, default '#'
           the string to separate parameters; the default, '#', is a good value because
@@ -330,10 +342,6 @@ class What(object):
           "min_split=10" is another property
         """
 
-        # String quoting policy defaults to this configuration's if not specified
-        if quote_string_vals is None:
-            quote_string_vals = self._quote_strings
-
         # Key-value list
         def sort_kvs_fl():
             kvs = self.configdict.iteritems()
@@ -351,7 +359,8 @@ class What(object):
 
         kvs = sort_kvs_fl()
         return sep.join(
-            '%s=%s' % (self.key_synonym(k), self._nested_string(v, quote_string_vals=quote_string_vals))
+            '%s=%s' % (self.key_synonym(k),
+                       self._nested_string(v, self._quote_strings if quote_strings is None else quote_strings))
             for k, v in kvs
             if nonids_too or k not in self._non_ids)
 
@@ -378,7 +387,7 @@ class What(object):
             print 'Here'
 
         my_id = u'%s#%s' % (self.key_synonym(self.name), self.as_string(nonids_too=nonids_too,
-                                                                        quote_string_vals=quote_string_vals))
+                                                                        quote_strings=quote_string_vals))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
@@ -447,54 +456,166 @@ class What(object):
         return unicode(v)
 
 
-def _dict_or_slotsdict(obj):
-    """Returns a dictionary with the properties for an object, handling objects with __slots__ defined.
-    Example:
+def _dict(obj):
+    """Returns a copy of obj.__dict___ (or {} if obj has not __dict__).
+
+    Examples
+    --------
+    >>> from UserDict import UserDict
+    >>> _dict(UserDict())
+    {'data': {}}
     >>> class NoSlots(object):
     ...     def __init__(self):
     ...         self.prop = 3
-    >>> _dict_or_slotsdict(NoSlots())
+    >>> ns = NoSlots()
+    >>> _dict(ns)
     {'prop': 3}
+    >>> _dict(ns) is not ns.__dict__
+    True
     >>> class Slots(object):
     ...     __slots__ = ['prop']
     ...     def __init__(self):
     ...         self.prop = 3
-    >>> _dict_or_slotsdict(Slots())
-    {'prop': 3}
+    >>> _dict(Slots())
+    {}
     """
     try:
-        return obj.__dict__
+        return obj.__dict__.copy()
     except:
-        return {slot: getattr(obj, slot) for slot in obj.__slots__}
+        return {}
 
 
-def _data_descriptors(obj):
-    """Returns the data descriptors in an object (except __weakref__).
-    See: http://docs.python.org/2/reference/datamodel.html
-    Example:
-    >>> class PropertyCarrier(object):
+def _slotsdict(obj):
+    """Returns a dictionary with all attributes in obj.__slots___ (or {} if obj has not __slots__).
+
+    Examples
+    --------
+    >>> from UserDict import UserDict
+    >>> _slotsdict(UserDict())
+    {}
+    >>> class Slots(object):
+    ...     __slots__ = 'prop'
     ...     def __init__(self):
-    ...         self._prop = 3
+    ...         self.prop = 3
     ...     @property
-    ...     def prop(self):
-    ...         return self._prop
-    ...     @prop.setter
-    ...     def prop(self, prop):
-    ...         self._prop = prop
-    >>> _data_descriptors(PropertyCarrier())
+    ...     def prop2(self):
+    ...         return 5
+    >>> _slotsdict(Slots())
     {'prop': 3}
     """
     descriptors = inspect.getmembers(obj.__class__, inspect.isdatadescriptor)
-    return {dname: value.__get__(obj) for dname, value in descriptors if '__weakref__' != dname}
+    return {dname: value.__get__(obj) for dname, value in descriptors if
+            '__weakref__' != dname if inspect.ismemberdescriptor(value)}
 
 
-def config_dict_for_object(obj, add_descriptors=False):
-    """Returns a copy of the object __dict__ (or equivalent) but for properties that start or end by '_'."""
-    cd = _dict_or_slotsdict(obj)
-    if add_descriptors:
-        cd.update(_data_descriptors(obj))
-    return {k: v for k, v in cd.iteritems()
-            if not k.startswith('_') and not k.endswith('_')}
+def _properties(obj):
+    """Returns the @properties in an object.
+    Example:
+    >>> class PropertyCarrier(object):
+    ...     __slots__ = 'prop2'
+    ...     def __init__(self):
+    ...         self.prop2 = 3
+    ...     @property
+    ...     def prop(self):
+    ...         return self.prop2
+    ...     @prop.setter
+    ...     def prop(self, prop):
+    ...         self.prop2 = prop
+    >>> _properties(PropertyCarrier())
+    {'prop': 3}
+    """
+    descriptors = inspect.getmembers(obj.__class__, inspect.isdatadescriptor)
+    # All data descriptors except slots and __weakref__
+    # See: http://docs.python.org/2/reference/datamodel.html
+    return {dname: value.__get__(obj) for dname, value in descriptors if
+            '__weakref__' != dname and not inspect.ismemberdescriptor(value)}
+
+
+def config_dict_for_object(obj,
+                           add_dict=True,
+                           add_slots=True,
+                           add_properties=False,
+                           exclude_prefix='_',
+                           exclude_postfix='_',
+                           excludes=('what',)):
+    """Returns a dictionary with obj attributes defined in __dict__, __slots__ or as @properties.
+    Does not fail in case any of these are not defined.
+
+    Parameters
+    ----------
+    obj: anything
+        The object to introspect
+
+    add_dict: boolean, default True
+        Add all the attributes defined in obj.__dict__
+
+    add_slots: boolean, default True
+        Add all the attributes defined in obj.__slots__
+
+    add_properties: boolean, default False
+        Add all the attributes defined as obj @properties
+
+    exclude_prefix: string, default '_'
+        Exclude all attributes whose name starts with this string
+
+    exclude_postix: string, default '_'
+        Exclude all attributes whose name ends with this string
+
+    excludes: string iterable, default ('what',)
+        Exclude all attributes whose name appears in this collection
+
+    Returns
+    -------
+    A dictionary {atribute: value}
+
+    Examples
+    --------
+    >>> class NoSlots(object):
+    ...     def __init__(self):
+    ...         self.prop = 3
+    ...         self._hidden = 5
+    ...         self.hidden_ = 5
+    >>> class Slots(NoSlots):
+    ...     __slots__ = 'sprop'
+    ...     def __init__(self):
+    ...         super(Slots, self).__init__()
+    ...         self.sprop = 4
+    >>> class Props(Slots):
+    ...     def __init__(self):
+    ...         super(Props, self).__init__()
+    ...     @property
+    ...     def pprop(self):
+    ...         return 5
+    >>> obj = Props()
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=False).items())
+    []
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=False).items())
+    [('prop', 3)]
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=False).items())
+    [('prop', 3), ('sprop', 4)]
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=True).items())
+    [('pprop', 5), ('prop', 3)]
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=True).items())
+    [('pprop', 5), ('prop', 3), ('sprop', 4)]
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=False).items())
+    [('sprop', 4)]
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=True).items())
+    [('pprop', 5)]
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=True).items())
+    [('pprop', 5), ('sprop', 4)]
+    """
+    # see also dir
+    cd = {}
+    if add_dict:
+        cd.update(_dict(obj))
+    if add_slots:
+        cd.update(_slotsdict(obj))
+    if add_properties:
+        cd.update(_properties(obj))
+    return {k: v for k, v in cd.iteritems() if
+            (exclude_prefix and not k.startswith(exclude_prefix)) and
+            (exclude_postfix and not k.endswith(exclude_postfix)) and
+            k not in set(excludes)}
 
 
 class Whatable(object):
@@ -506,8 +627,8 @@ class Whatable(object):
     By default, the object is introspected to get the configuration, so that:
        - the name is the class name of the object
        - the parameters are the instance variables that do not start or end with '_'
-       - data descriptors (e.g. @property) are not part of the configuration
-
+       - __dict__ and __slots__ attributes are part of the configuration
+       - @properties are not part of the configuration
 
     See also
     --------
@@ -518,28 +639,40 @@ class Whatable(object):
         """Returns a Configuration object."""
         return What(
             self.__class__.__name__,
-            configuration_dict=config_dict_for_object(self, add_descriptors=False))
+            configuration_dict=config_dict_for_object(self))
 
 
-class WhatableD(object):
-    """Same as the Whatable mixin, but considering data-descriptors instead of the object configuration dict.
-
-    Recall: data-descriptors = __slots__ + @properties
-    """
-
-    def what(self):
-        """Returns a Configuration object."""
-        return What(
-            self.__class__.__name__,
-            configuration_dict=config_dict_for_object(self, add_descriptors=True))
+def is_whatable(obj):
+    """Whatable objects have a method what() that takes no parameters and return a What configuration."""
+    try:
+        return isinstance(obj.what(), What)
+    except:
+        return False
 
 
-def whatable(func):
-    """Decorates a callable (function, partial...) adding a what() method.
+def whatable(obj=None,
+             add_dict=True,
+             add_slots=True,
+             add_properties=False,
+             exclude_prefix='_',
+             exclude_postfix='_',
+             excludes=('what',)):
+    """Decorates an object (also classes) to add a "what()" method.
 
-    This provides safe ids for partials/functions with default parameters
-    that are idenfified uniquely before their intended call (for example, if we
-    have a function that operates on some data with possible extra, but fixed, parameters).
+    When decorating a callable (function, partial...), a brand new, equivalent callable will be
+    retourned (thus leaving the original intact). In this case, "what" provides safe ids
+    only for results obtained when the function is called with its default parameters.
+    This is useful in limited cases, for example, if we have a partial to fix all parameters
+    but the data.
+
+    When decorating non-callable objects or classes, this function adds a method "what"
+    that respects all the {add_dict, add_slots, add_properties, exclude_prefix, exclude_postfix
+    and excludes} as per "config_dict_for_object".
+
+    Returns
+    -------
+    obj with a "what" method.
+    :rtype: Whatable
 
     Examples
     --------
@@ -559,28 +692,73 @@ def whatable(func):
     ...     print x, name
     >>> print thunk.what().id()
     thunk#name='hi'
+    >>> from UserDict import UserDict
+    >>> ud = whatable(UserDict())
+    >>> is_whatable(ud)
+    True
+    >>> print ud.what().id()
+    UserDict#data={}
+    >>> @whatable(add_properties=True)
+    ... class WhatableWithProps(object):
+    ...     def __init__(self):
+    ...         super(WhatableWithProps, self).__init__()
+    ...         self.a = 3
+    ...         self._b = 2
+    ...         self._c = 1
+    ...     @property
+    ...     def d(self):
+    ...         return 0
+    >>> wwp = WhatableWithProps()
+    >>> is_whatable(wwp)
+    True
+    >>> print wwp.what().id()
+    WhatableWithProps#a=3#d=0
+    >>> wwp = whatable(wwp, add_dict=False, add_properties=True)
+    >>> print wwp.what().id()
+    WhatableWithProps#d=0
     """
 
-    # Do not modify func inplace
-    def whatablefunc(*args, **kwargs):
-        return func(*args, **kwargs)
+    # class decorator
+    if obj is None:
+        return partial(whatable, add_properties=add_properties)
 
-    #
-    # Wrapper to get proper '__name__', '__doc__' and '__module__' when present
-    # "wraps" won't work for partials or lambdas on python 2.x.
-    # See: http://bugs.python.org/issue3445
-    #
-    update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(func, method)]
-    if len(update_in_wrapper):
-        whatablefunc = update_wrapper(wrapper=whatablefunc,
-                                      wrapped=func,
-                                      assigned=update_in_wrapper)
+    # function decorator
+    if inspect.isfunction(obj) or isinstance(obj, partial):
 
-    # Adds what method
-    name, config_dict = callable2call(func, closure_extractor=extract_decorated_function_from_closure)
-    whatablefunc.what = lambda: What(name, configuration_dict=config_dict)
+        # Do not modify func inplace
+        def whatablefunc(*args, **kwargs):
+            return obj(*args, **kwargs)
 
-    return whatablefunc
+        #
+        # Wrapper to get proper '__name__', '__doc__' and '__module__' when present
+        # "wraps" won't work for partials or lambdas on python 2.x.
+        # See: http://bugs.python.org/issue3445
+        #
+        update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(obj, method)]
+        if len(update_in_wrapper):
+            whatablefunc = update_wrapper(wrapper=whatablefunc,
+                                          wrapped=obj,
+                                          assigned=update_in_wrapper)
+
+        # Adds what method
+        name, config_dict = callable2call(obj, closure_extractor=extract_decorated_function_from_closure)
+        whatablefunc.what = lambda: What(name, config_dict)
+
+        return whatablefunc
+
+    # At the moment we just monkey-patch the object
+    if hasattr(obj, 'what') and not is_whatable(obj):
+        raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
+    whatablefunc = lambda self: What(self.__class__.__name__,
+                                     config_dict_for_object(self,
+                                                            add_dict=add_dict,
+                                                            add_slots=add_slots,
+                                                            add_properties=add_properties,
+                                                            exclude_prefix=exclude_prefix,
+                                                            exclude_postfix=exclude_postfix,
+                                                            excludes=excludes))
+    obj.what = types.MethodType(whatablefunc, obj) if not inspect.isclass(obj) else whatablefunc
+    return obj
 
 
 def extract_decorated_function_from_closure(c):

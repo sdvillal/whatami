@@ -9,14 +9,13 @@ import hashlib
 
 import pytest
 
-from whatami import Whatable, WhatableD, whatable, What, \
-    configuration_as_string, parse_id_string, config_dict_for_object
-from whatami.what import _dict_or_slotsdict
+from whatami import Whatable, whatable, What, \
+    configuration_as_string, parse_id_string, config_dict_for_object, is_whatable
 
 
 # ---- Fixtures and teardown
 
-def teardown_function(function):
+def teardown_function(_):
     """After each run, wipe nicknames registry."""
     What.reset_nicknames()
 
@@ -141,23 +140,6 @@ def test_parse_id_invalid():
         parse_id_string('useless#at@is_invalid')
     assert excinfo.value.message == 'Splitting has not worked. ' \
                                     'There is something that is not a = where there should be.'
-
-
-def test_dict_or_slots():
-
-    # No matter we have a __dict__...
-    class NoSlots(object):
-        def __init__(self):
-            self.prop = 3
-    assert _dict_or_slotsdict(NoSlots()) == {'prop': 3}
-
-    # ...or a __slots__
-    class Slots(object):
-        __slots__ = ['prop']
-
-        def __init__(self):
-            self.prop = 3
-    assert _dict_or_slotsdict(Slots()) == {'prop': 3}
 
 
 def test_configuration_nonids_prefix_postfix():
@@ -312,14 +294,18 @@ def test_whatable_anyobject(c1):
 
 def test_whatable_data_descriptors():
 
-    # Objects with data descriptors
-    class ClassWithProps(WhatableD):
+    # Objects with @properties
+    class ClassWithProps(object):
         def __init__(self):
             self._prop = 3
 
         @property
         def prop(self):
             return self._prop
+
+        def what(self):
+            return What(self.__class__.__name__,
+                        config_dict_for_object(self, add_properties=True))
 
     cp = ClassWithProps()
     assert cp.what().id() == 'ClassWithProps#prop=3'
@@ -331,10 +317,15 @@ def test_whatable_data_descriptors():
     assert excinfo.value.message == 'Dynamic properties are not suppported.'
 
 
+def test_is_whatable(c1):
+    assert is_whatable(c1)
+    assert not is_whatable(str)
+
+
 def test_whatable_slots():
 
     # N.B. Slots are implemented as descriptors
-    class Slots(WhatableD):
+    class Slots(Whatable):
         __slots__ = ['prop']
 
         def __init__(self):
@@ -360,6 +351,85 @@ def test_whatable_inheritance():
             self.a = 'subA'
 
     assert Sub().what().id() == 'Sub#a=\'subA\'#b=\'superB\'#c=\'subC\''
+
+
+def test_whatable_does_not_override_what(c1):
+    c1.what = 33
+    assert not is_whatable(c1)
+    with pytest.raises(Exception) as excinfo:
+        whatable(c1)
+    assert excinfo.value.message == 'object already has an attribute what, and is not a whatami what, ' \
+                                    'if you know what I mean'
+
+
+def test_whatable_torturing_inheritance():
+
+    class D1(object):
+
+        def __init__(self):
+            self.d1 = 1
+
+    class S1(D1):
+        __slots__ = 's1'
+
+        def __init__(self):
+            super(S1, self).__init__()
+            self.s1 = 2
+
+    class S2(S1):
+        __slots__ = 's2'
+
+        def __init__(self):
+            super(S2, self).__init__()
+            self.s2 = 3
+
+    class D2(S2):
+
+        def __init__(self):
+            super(D2, self).__init__()
+            self.d2 = 4
+
+    class P1(D2):
+
+        def __init__(self):
+            super(P1, self).__init__()
+
+        @property
+        def p1(self):
+            return 5
+
+    class S3(P1):
+        __slots__ = 's3'
+
+        def __init__(self):
+            super(S3, self).__init__()
+            self.s3 = 6
+
+    s3 = S3()
+
+    s3 = whatable(s3, add_dict=True, add_slots=True, add_properties=True)
+    assert s3.what().id() == "S3#d1=1#d2=4#p1=5#s1=2#s2=3#s3=6"
+
+    s3 = whatable(s3, add_dict=True, add_slots=True, add_properties=False)
+    assert s3.what().id() == "S3#d1=1#d2=4#s1=2#s2=3#s3=6"
+
+    s3 = whatable(s3, add_dict=True, add_slots=False, add_properties=True)
+    assert s3.what().id() == "S3#d1=1#d2=4#p1=5"
+
+    s3 = whatable(s3, add_dict=True, add_slots=False, add_properties=False)
+    assert s3.what().id() == "S3#d1=1#d2=4"
+
+    s3 = whatable(s3, add_dict=False, add_slots=False, add_properties=False)
+    assert s3.what().id() == "S3#"
+
+    s3 = whatable(s3, add_dict=False, add_slots=True, add_properties=False)
+    assert s3.what().id() == "S3#s1=2#s2=3#s3=6"
+
+    s3 = whatable(s3, add_dict=False, add_slots=False, add_properties=True)
+    assert s3.what().id() == "S3#p1=5"
+
+    s3 = whatable(s3, add_dict=False, add_slots=True, add_properties=True)
+    assert s3.what().id() == "S3#p1=5#s1=2#s2=3#s3=6"
 
 
 def test_whatable_nickname(c1):
