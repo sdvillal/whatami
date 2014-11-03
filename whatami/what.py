@@ -822,7 +822,10 @@ def whatable(obj=None,
     # At the moment we just monkey-patch the object
     if hasattr(obj, 'what') and not is_whatable(obj):
         if force_flag_as_whatami:
-            obj.what.whatami = True  # mark this method as a whatami method
+            # http://legacy.python.org/dev/peps/pep-0232/
+            # http://stackoverflow.com/questions/23345005/does-pep-232-also-works-for-instance-methods
+            obj.what.__func__.whatami = True  # mark this method as a whatami method
+            return obj
         else:
             raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
     whatablefunc = lambda self: whatareyou(self,
