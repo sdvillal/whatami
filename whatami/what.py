@@ -474,7 +474,10 @@ def whatareyou(obj,
                exclude_prefix='_',
                exclude_postfix='_',
                excludes=('what',)):
-    """Returns a What configuration following default behavior."""
+    """Returns a What configuration following the specified behavior.
+
+    The meaning of all the parameters can be found in either *What* or *config_dict_for_object*.
+    """
     cd = config_dict_for_object(obj,
                                 add_dict=add_dict,
                                 add_slots=add_slots,
@@ -691,6 +694,18 @@ def is_whatable(obj):
 
 
 def whatable(obj=None,
+             force_flag_as_whatami=False,
+             # nickname
+             nickname=None,
+             # ID string building options
+             short_name=None,
+             non_id_keys=None,
+             synonyms=None,
+             sort_by_key=True,
+             prefix_keys=None,
+             postfix_keys=None,
+             quote_string_values=True,
+             # Config-dict building options
              add_dict=True,
              add_slots=True,
              add_properties=False,
@@ -759,7 +774,25 @@ def whatable(obj=None,
 
     # class decorator
     if obj is None:
-        return partial(whatable, add_properties=add_properties)
+        return partial(whatable,
+                       force_flag_as_whatami=force_flag_as_whatami,
+                       # nickname
+                       nickname=nickname,
+                       # ID string building options
+                       short_name=short_name,
+                       non_id_keys=non_id_keys,
+                       synonyms=synonyms,
+                       sort_by_key=sort_by_key,
+                       prefix_keys=prefix_keys,
+                       postfix_keys=postfix_keys,
+                       quote_string_values=quote_string_values,
+                       # Config-dict building options
+                       add_dict=add_dict,
+                       add_slots=add_slots,
+                       add_properties=add_properties,
+                       exclude_prefix=exclude_prefix,
+                       exclude_postfix=exclude_postfix,
+                       excludes=excludes)
 
     # function decorator
     if inspect.isfunction(obj) or isinstance(obj, partial):
@@ -788,16 +821,26 @@ def whatable(obj=None,
 
     # At the moment we just monkey-patch the object
     if hasattr(obj, 'what') and not is_whatable(obj):
-        raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
-    whatablefunc = lambda self: What(self.__class__.__name__,
-                                     config_dict_for_object(self,
-                                                            add_dict=add_dict,
-                                                            add_slots=add_slots,
-                                                            add_properties=add_properties,
-                                                            exclude_prefix=exclude_prefix,
-                                                            exclude_postfix=exclude_postfix,
-                                                            excludes=excludes))
-    whatablefunc.whatami = True  # mark this method as a whatami method
+        if force_flag_as_whatami:
+            obj.what.whatami = True  # mark this method as a whatami method
+        else:
+            raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
+    whatablefunc = lambda self: whatareyou(self,
+                                           nickname=nickname,
+                                           short_name=short_name,
+                                           non_id_keys=non_id_keys,
+                                           synonyms=synonyms,
+                                           sort_by_key=sort_by_key,
+                                           prefix_keys=prefix_keys,
+                                           postfix_keys=postfix_keys,
+                                           quote_string_values=quote_string_values,
+                                           add_dict=add_dict,
+                                           add_slots=add_slots,
+                                           add_properties=add_properties,
+                                           exclude_prefix=exclude_prefix,
+                                           exclude_postfix=exclude_postfix,
+                                           excludes=excludes)
+    whatablefunc.whatami = True
     obj.what = types.MethodType(whatablefunc, obj) if not inspect.isclass(obj) else whatablefunc
     return obj
 
