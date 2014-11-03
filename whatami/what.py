@@ -37,11 +37,11 @@ Examples
 >>> # The configuration id string sorts by key alphanumeric order, helping id consistency
 >>> print duckedc.what().id()
 ducked#company=None#name='salty-lollypops'#quantity=33
->>> # Inheriting from Whatable makes objects gain a what() method
+>>> # Using the whatable decorator makes objects gain a what() method
 >>> # In this case, what() is infered automatically
->>> class Company(Whatable):
+>>> @whatable
+... class Company():
 ...     def __init__(self, name, city, verbose=True):
-...          super(Company, self).__init__()
 ...          self.name = name
 ...          self.city = city
 ...          self._verbose = verbose  # not part of config
@@ -456,6 +456,44 @@ class What(object):
         return unicode(v)
 
 
+def whatareyou(obj,
+               # nickname
+               nickname=None,
+               # ID string building options
+               short_name=None,
+               non_id_keys=None,
+               synonyms=None,
+               sort_by_key=True,
+               prefix_keys=None,
+               postfix_keys=None,
+               quote_string_values=True,
+               # Config-dict building options
+               add_dict=True,
+               add_slots=True,
+               add_properties=False,
+               exclude_prefix='_',
+               exclude_postfix='_',
+               excludes=('what',)):
+    """Returns a What configuration following default behavior."""
+    cd = config_dict_for_object(obj,
+                                add_dict=add_dict,
+                                add_slots=add_slots,
+                                add_properties=add_properties,
+                                exclude_prefix=exclude_prefix,
+                                exclude_postfix=exclude_postfix,
+                                excludes=excludes)
+    return What(name=obj.__class__.__name__,
+                configuration_dict=cd,
+                nickname=nickname,
+                short_name=short_name,
+                non_id_keys=non_id_keys,
+                synonyms=synonyms,
+                sort_by_key=sort_by_key,
+                prefix_keys=prefix_keys,
+                postfix_keys=postfix_keys,
+                quote_string_values=quote_string_values)
+
+
 def _dict(obj):
     """Returns a copy of obj.__dict___ (or {} if obj has not __dict__).
 
@@ -508,7 +546,7 @@ def _slotsdict(obj):
             '__weakref__' != dname if inspect.ismemberdescriptor(value)}
 
 
-def _properties(obj):
+def _propsdict(obj):
     """Returns the @properties in an object.
     Example:
     >>> class PropertyCarrier(object):
@@ -521,7 +559,7 @@ def _properties(obj):
     ...     @prop.setter
     ...     def prop(self, prop):
     ...         self.prop2 = prop
-    >>> _properties(PropertyCarrier())
+    >>> _propsdict(PropertyCarrier())
     {'prop': 3}
     """
     descriptors = inspect.getmembers(obj.__class__, inspect.isdatadescriptor)
@@ -611,41 +649,43 @@ def config_dict_for_object(obj,
     if add_slots:
         cd.update(_slotsdict(obj))
     if add_properties:
-        cd.update(_properties(obj))
+        cd.update(_propsdict(obj))
     return {k: v for k, v in cd.iteritems() if
             (exclude_prefix and not k.startswith(exclude_prefix)) and
             (exclude_postfix and not k.endswith(exclude_postfix)) and
             k not in set(excludes)}
 
 
-class Whatable(object):
-    """A Whatable object has a what method returning a What configuration.
-
-    This mixin strives to be as unobtrusive as possible and performs all its
-    magic only on calling to "what".
-
-    By default, the object is introspected to get the configuration, so that:
-       - the name is the class name of the object
-       - the parameters are the instance variables that do not start or end with '_'
-       - __dict__ and __slots__ attributes are part of the configuration
-       - @properties are not part of the configuration
-
-    See also
-    --------
-    config_dict_for_object, What
-    """
-
-    def what(self):
-        """Returns a Configuration object."""
-        return What(
-            self.__class__.__name__,
-            configuration_dict=config_dict_for_object(self))
-
-
 def is_whatable(obj):
-    """Whatable objects have a method what() that takes no parameters and return a What configuration."""
+    """Whatable objects have a method what() that takes no parameters and return a What configuration.
+
+    Examples
+    --------
+    >>> wp = whatable(partial(str, a=3))
+    >>> is_whatable(wp)
+    True
+    >>> is_whatable(str)
+    False
+    >>> @whatable
+    ... class WO():
+    ...     def __init__(self):
+    ...         self.a = 3
+    >>> # The class is whatable...
+    >>> is_whatable(WO)
+    True
+    >>> # ...so they are the instances
+    >>> is_whatable(WO())
+    True
+    """
     try:
-        return isinstance(obj.what(), What)
+        what_method = obj.what
+        if hasattr(what_method, 'im_self') and what_method.im_self is None:
+            # Unbounded method, so this comes from a class
+            if hasattr(what_method, 'whatami'):
+                return True
+            raise Exception('Cannot infer return type for unbound method what, '
+                            'please pass a %r instance instead of the class' % obj)
+        return isinstance(what_method(), What)
     except:
         return False
 
@@ -672,7 +712,6 @@ def whatable(obj=None,
     Returns
     -------
     obj with a "what" method.
-    :rtype: Whatable
 
     Examples
     --------
@@ -743,6 +782,7 @@ def whatable(obj=None,
         # Adds what method
         name, config_dict = callable2call(obj, closure_extractor=extract_decorated_function_from_closure)
         whatablefunc.what = lambda: What(name, config_dict)
+        whatablefunc.what.whatami = True
 
         return whatablefunc
 
@@ -757,6 +797,7 @@ def whatable(obj=None,
                                                             exclude_prefix=exclude_prefix,
                                                             exclude_postfix=exclude_postfix,
                                                             excludes=excludes))
+    whatablefunc.whatami = True  # mark this method as a whatami method
     obj.what = types.MethodType(whatablefunc, obj) if not inspect.isclass(obj) else whatablefunc
     return obj
 

@@ -9,29 +9,33 @@ from time import strptime, mktime
 
 import pytest
 
-from whatami import Whatable, mlexp_info_helper
+from whatami import mlexp_info_helper, whatable
 
 
 def test_mlexp_info_helper():
 
-    class TestDataset(Whatable):
+    @whatable
+    class TestDataset(object):
         def __init__(self):
             super(TestDataset, self).__init__()
 
-    class Prepro(Whatable):
+    @whatable
+    class Prepro(object):
         def __init__(self, lower=0, upper=1):
             super(Prepro, self).__init__()
             self.min = lower
             self.max = upper
 
-    class PreproModel(Whatable):
+    @whatable
+    class PreproModel(object):
         def __init__(self, prepro=None, reg='l1', C=1.):
             super(PreproModel, self).__init__()
             self.prepro = prepro
             self.reg = reg
             self.C = C
 
-    class CVEval(Whatable):
+    @whatable
+    class CVEval(object):
         def __init__(self, num_folds=10, seed=0):
             super(CVEval, self).__init__()
             self.num_folds = num_folds

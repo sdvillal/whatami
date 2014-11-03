@@ -9,7 +9,7 @@ import hashlib
 
 import pytest
 
-from whatami import Whatable, whatable, What, \
+from whatami import whatable, whatareyou, What, \
     configuration_as_string, parse_id_string, config_dict_for_object, is_whatable
 
 
@@ -23,7 +23,8 @@ def teardown_function(_):
 @pytest.fixture
 def c1():
     """A simple whatable object."""
-    class C1(Whatable):
+    @whatable
+    class C1(object):
         def __init__(self, p1='blah', p2='bleh', length=1):
             super(C1, self).__init__()
             self.p1 = p1
@@ -37,7 +38,8 @@ def c1():
 @pytest.fixture
 def c2(c1):
     """A whatable object with a nested whatable."""
-    class C2(Whatable):
+    @whatable
+    class C2(object):
         def __init__(self, name='roxanne', c1=c1):
             super(C2, self).__init__()
             self.name = name
@@ -48,7 +50,7 @@ def c2(c1):
 @pytest.fixture
 def c3(c1, c2, quote_string_values=True):
     """A whatable object with nested whatables and irrelevant members."""
-    class C3(Whatable):
+    class C3(object):
         def __init__(self, c1=c1, c2=c2, irrelevant=True, quote_string_values=quote_string_values):
             super(C3, self).__init__()
             self.c1 = c1
@@ -57,11 +59,9 @@ def c3(c1, c2, quote_string_values=True):
             self._quote_string_values = quote_string_values
 
         def what(self):
-            return What(
-                self.__class__.__name__,
-                non_id_keys=('irrelevant',),
-                configuration_dict=config_dict_for_object(self),
-                quote_string_values=self._quote_string_values)
+            return whatareyou(self,
+                              non_id_keys=('irrelevant',),
+                              quote_string_values=self._quote_string_values)
     return C3()
 
 
@@ -325,7 +325,8 @@ def test_is_whatable(c1):
 def test_whatable_slots():
 
     # N.B. Slots are implemented as descriptors
-    class Slots(Whatable):
+    @whatable
+    class Slots(object):
         __slots__ = ['prop']
 
         def __init__(self):
@@ -338,7 +339,8 @@ def test_whatable_slots():
 def test_whatable_inheritance():
 
     # Inheritance works as spected
-    class Super(Whatable):
+    @whatable
+    class Super(object):
         def __init__(self):
             super(Super, self).__init__()
             self.a = 'superA'
@@ -434,9 +436,9 @@ def test_whatable_torturing_inheritance():
 
 def test_whatable_nickname(c1):
 
-    class NicknamedConfigurable(Whatable):
+    class NicknamedConfigurable(object):
         def what(self):
-            c = super(NicknamedConfigurable, self).what()
+            c = whatareyou(self)
             c.nickname = 'bigforest'
             return c
 
@@ -538,7 +540,8 @@ def test_whatable_duck():
     cduck = DuckedWhatable()
     assert cduck.what().id() == 'DuckedWhatable#param1=33'
 
-    class NestedDuckedWhatable(Whatable):
+    @whatable
+    class NestedDuckedWhatable(object):
         def __init__(self):
             super(NestedDuckedWhatable, self).__init__()
             self.ducked = cduck
@@ -564,7 +567,8 @@ def test_whatable_decorator():
 
 
 def test_list_parameters(c1):
-    class WhatableWithList(Whatable):
+    @whatable
+    class WhatableWithList():
         def __init__(self):
             self.list = [c1, 'second']
     w = WhatableWithList()
@@ -574,7 +578,8 @@ def test_list_parameters(c1):
 
 
 def test_tuple_parameters(c1):
-    class WhatableWithTuple(Whatable):
+    @whatable
+    class WhatableWithTuple():
         def __init__(self):
             self.tuple = ('first', c1)
     w = WhatableWithTuple()
@@ -584,7 +589,8 @@ def test_tuple_parameters(c1):
 
 
 def test_dict_parameters(c1):
-    class WhatableWithDict(Whatable):
+    @whatable
+    class WhatableWithDict():
         def __init__(self):
             self.dict = {'c1': c1, 'two': 2}
     w = WhatableWithDict()
@@ -594,7 +600,8 @@ def test_dict_parameters(c1):
 
 
 def test_set_parameters(c1):
-    class WhatableWithSet(Whatable):
+    @whatable
+    class WhatableWithSet():
         def __init__(self):
             self.set = {c1, 2}
     w = WhatableWithSet()
