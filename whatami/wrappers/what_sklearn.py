@@ -54,7 +54,7 @@ from sklearn.linear_model import Ridge, Lasso, ElasticNet, Lars, OrthogonalMatch
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor, \
     RadiusNeighborsRegressor, NearestCentroid
-from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.pipeline import FeatureUnion
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor

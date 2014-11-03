@@ -10,7 +10,7 @@ from sklearn.preprocessing import Normalizer
 
 from whatami.wrappers.what_sklearn import whatamise_sklearn, _check_all_monkeypatched
 
-whatamise_sklearn()
+whatamise_sklearn(check=True, log=True)
 
 
 def test_monkeypatch():
@@ -34,7 +34,3 @@ def test_pipeline():
         "precompute_distances=True#random_state=None#tol=0.0001#verbose=0"
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
     assert pipeline_id == "Pipeline#steps=[('norm', %s), ('kmeans', %s)]" % (norm_id, kmeans_id)
-
-
-if __name__ == '__main__':
-    pytest.main(__file__)

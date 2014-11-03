@@ -38,6 +38,7 @@ def test_callable2call_functions():
         return x + y
 
     assert callable2call(f) == ('f', {'y': 3})
+    assert f(3) == 6
 
 
 def test_callable2call_builtins():
@@ -55,7 +56,3 @@ def test_callable2call_lambdas():
     # Anonymous functions are a bit of a corner case
     assert callable2call(lambda x: x) == ('<lambda>', {})
     assert callable2call(lambda x=5: x) == ('<lambda>', {'x': 5})
-
-
-if __name__ == '__main__':
-    pytest.main(__file__)

@@ -58,7 +58,3 @@ def test_mlexp_info_helper():
     assert info['comments'] == 'comments4nothing'
     recorded_time = mktime(strptime(info['date'], '%Y-%m-%d %H:%M:%S'))
     assert (recorded_time - before) < 2
-
-
-if __name__ == '__main__':
-    pytest.main(__file__)

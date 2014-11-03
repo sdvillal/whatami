@@ -50,6 +50,7 @@ def c2(c1):
 @pytest.fixture
 def c3(c1, c2, quote_string_values=True):
     """A whatable object with nested whatables and irrelevant members."""
+
     class C3(object):
         def __init__(self, c1=c1, c2=c2, irrelevant=True, quote_string_values=quote_string_values):
             super(C3, self).__init__()
@@ -58,6 +59,7 @@ def c3(c1, c2, quote_string_values=True):
             self.irrelevant = irrelevant
             self._quote_string_values = quote_string_values
 
+        @whatable(force_flag_as_whatami=True)
         def what(self):
             return whatareyou(self,
                               non_id_keys=('irrelevant',),
@@ -261,6 +263,7 @@ def test_whatable_functions(c1):
     # Functions
     c1.p1 = identity
     assert c1.what().id() == 'C1#length=1#p1="identity#"#p2=\'bleh\''
+    assert c1.p1(1) == 1
 
 
 def test_whatable_partial(c1):
@@ -271,6 +274,7 @@ def test_whatable_partial(c1):
     # Partial functions
     c1.p1 = partial(identity, x=1)
     assert c1.what().id() == 'C1#length=1#p1="identity#x=1"#p2=\'bleh\''
+    assert c1.p1() == 1
 
 
 def test_whatable_builtins(c1):
@@ -290,6 +294,22 @@ def test_whatable_anyobject(c1):
             self.param = 'yes'
     c1.p1 = RandomClass()
     assert c1.what().id() == 'C1#length=1#p1="RandomClass#param=\'yes\'"#p2=\'bleh\''
+
+
+def test_whatable_force_flag():
+    @whatable(force_flag_as_whatami=True)
+    class A(object):
+
+        def __init__(self):
+            super(A, self).__init__()
+            self.a = 3
+
+        def what(self):
+            return whatareyou(self)
+
+    assert is_whatable(A)
+    assert is_whatable(A())
+    assert A().what().id() == 'A#a=3'
 
 
 def test_whatable_data_descriptors():
@@ -564,6 +584,7 @@ def test_whatable_decorator():
     assert not hasattr(normalize6, '__name__')  # partials have no name
     normalize6 = whatable(normalize6)
     assert normalize6.what().id() == 'normalize#loc=6#scale=3'
+    assert normalize6(3) == 3
 
 
 def test_list_parameters(c1):
@@ -608,7 +629,3 @@ def test_set_parameters(c1):
     assert w.what().id() == "WhatableWithSet#set={2, C1#length=1#p1='blah'#p2='bleh'}"
     w.set = set()
     assert w.what().id() == "WhatableWithSet#set={}"
-
-
-if __name__ == '__main__':
-    pytest.main(__file__)
