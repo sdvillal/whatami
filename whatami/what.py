@@ -90,9 +90,6 @@ class What(object):
     name : string
         The name of this configuration (e.g. "RandomForest").
 
-    short_name : string
-        A shorter name for this configuration (e.g. "rf").
-
     configuration_dict : dictionary
         The {key:value} property dictionary for this configuration.
 
@@ -127,7 +124,6 @@ class What(object):
     def __init__(self,
                  name,
                  configuration_dict,
-                 short_name=None,
                  nickname=None,
                  # ID string building options
                  non_id_keys=None,
@@ -138,7 +134,6 @@ class What(object):
                  quote_string_values=True):
         super(What, self).__init__()
         self.name = name
-        self.short_name = short_name
         self.configdict = configuration_dict
         self._nickname = None
         self.nickname = nickname
@@ -457,6 +452,7 @@ class What(object):
 
 
 def whatareyou(obj,
+               name=None,
                # nickname
                nickname=None,
                # ID string building options
@@ -485,10 +481,9 @@ def whatareyou(obj,
                                 exclude_prefix=exclude_prefix,
                                 exclude_postfix=exclude_postfix,
                                 excludes=excludes)
-    return What(name=obj.__class__.__name__,
+    return What(name=obj.__class__.__name__ if name is None else name,
                 configuration_dict=cd,
                 nickname=nickname,
-                short_name=short_name,
                 non_id_keys=non_id_keys,
                 synonyms=synonyms,
                 sort_by_key=sort_by_key,
