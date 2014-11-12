@@ -84,7 +84,7 @@ class _SklearnEstimatorID:
                  non_id_params=(),
                  notes=None):
         self.skclass = skclass
-        self.short_name = short_name
+        self.short_name = short_name if short_name is not None else skclass.__name__
         self.non_id_params = non_id_params
         self.notes = notes
 
@@ -158,10 +158,10 @@ _a(PLSSVD, 'plssvd')
 _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
 
 # Clusterers
-_a(KMeans, 'kmeans', ('n_jobs', 'copy_x'))
+_a(KMeans, None, ('n_jobs', 'copy_x'))
 
 # Preprocessing
-_a(Normalizer, 'norm', ('copy',))
+_a(Normalizer, None, ('copy',))
 
 # Pipelines
 _a(FeatureUnion, 'f_union', ('n_jobs',))
@@ -180,9 +180,8 @@ def _what_for_sklearn(x):
     configuration_dict = x.get_params(deep=False)   # N.B. we take care of recursing ourselves
     pinfo = _SKLRegistry.get(name, None)
     if pinfo is not None:
-        return What(name,
+        return What(pinfo.short_name,
                     configuration_dict=configuration_dict,
-                    short_name=pinfo.short_name,
                     non_id_keys=pinfo.non_id_params)
     return What(name, configuration_dict=configuration_dict)
 
