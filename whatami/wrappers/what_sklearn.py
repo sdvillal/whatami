@@ -14,9 +14,9 @@ Example
 >>> from sklearn.ensemble import RandomForestClassifier
 >>> rfc = RandomForestClassifier(n_jobs=8, n_estimators=23)
 >>> print rfc.what().id()
-RandomForestClassifier#bootstrap=True#compute_importances=None#criterion='gini'#max_depth=None#max_features='auto'#max_leaf_nodes=None#min_density=None#min_samples_leaf=1#min_samples_split=2#n_estimators=23#random_state=None
+rfc#bootstrap=True#compute_importances=None#criterion='gini'#max_depth=None#max_features='auto'#max_leaf_nodes=None#min_density=None#min_samples_leaf=1#min_samples_split=2#n_estimators=23#random_state=None
 >>> print rfc.what()
-RandomForestClassifier#bootstrap=True#compute_importances=None#criterion='gini'#max_depth=None#max_features='auto'#max_leaf_nodes=None#min_density=None#min_samples_leaf=1#min_samples_split=2#n_estimators=23#n_jobs=8#oob_score=False#random_state=None#verbose=0
+rfc#bootstrap=True#compute_importances=None#criterion='gini'#max_depth=None#max_features='auto'#max_leaf_nodes=None#min_density=None#min_samples_leaf=1#min_samples_split=2#n_estimators=23#n_jobs=8#oob_score=False#random_state=None#verbose=0
 
 Implementation Notes
 --------------------
