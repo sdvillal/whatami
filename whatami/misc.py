@@ -105,7 +105,9 @@ def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
     """Makes a best effort to retrieve current UTC time from reliable internet sources.
     Returns a string like "Thu, 13 Mar 2014 11:35:41 UTC"
     """
-    # Maybe also parse from, e.g., the webpage of the time service of the U.S. army
+    # Maybe also parse from, e.g., the webpage of the time service of the U.S. army:
+    #  http://tycho.usno.navy.mil/what.html
+    #  http://tycho.usno.navy.mil/timer.html (still)
     try:
         import ntplib
         for server in ntpservers:
@@ -113,7 +115,13 @@ def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
             dt = datetime.datetime.utcfromtimestamp(response.tx_time)
             return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
     except ImportError:
-        return None
+        try:
+            import urllib2
+            for line in urllib2.urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
+                if 'UTC' in line:
+                    return line.strip()[4:]
+        except:
+            return None
 
 
 def all_subclasses(cls):

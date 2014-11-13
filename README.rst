@@ -25,6 +25,16 @@ It works this way:
    end by '\_'.
 
 
+Features
+--------
+
+- **Represent your computations as standardized strings.**
+- **whatamise your library: custom support for:**
+ - scikit-learn
+ - arch
+ - pyopy
+
+
 Example
 -------
 

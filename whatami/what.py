@@ -473,6 +473,16 @@ def whatareyou(obj,
     """Returns a What configuration following the specified behavior.
 
     The meaning of all the parameters can be found in either *What* or *config_dict_for_object*.
+
+    FIXME Broken functionality with functions and partials (adds everything in slots!)
+    ----------------------------------------------------------------------------
+    >>> def mola(a, n=5):
+    ...     print a + n
+    >>> print whatareyou(mola).id()
+    mola#n=5
+    >>> from functools import partial
+    >>> print whatareyou(partial(mola, n=7))
+    mola#n=7
     """
     cd = config_dict_for_object(obj,
                                 add_dict=add_dict,
