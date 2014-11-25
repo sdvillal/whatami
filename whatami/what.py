@@ -474,8 +474,8 @@ def whatareyou(obj,
 
     The meaning of all the parameters can be found in either *What* or *config_dict_for_object*.
 
-    FIXME Broken functionality with functions and partials (adds everything in slots!)
-    ----------------------------------------------------------------------------
+    Examples
+    --------
     >>> def mola(a, n=5):
     ...     print a + n
     >>> print whatareyou(mola).id()
@@ -484,13 +484,17 @@ def whatareyou(obj,
     >>> print whatareyou(partial(mola, n=7))
     mola#n=7
     """
-    cd = config_dict_for_object(obj,
-                                add_dict=add_dict,
-                                add_slots=add_slots,
-                                add_properties=add_properties,
-                                exclude_prefix=exclude_prefix,
-                                exclude_postfix=exclude_postfix,
-                                excludes=excludes)
+    try:
+        c_name, cd = callable2call(obj)
+        name = c_name if name is None else name
+    except:
+        cd = config_dict_for_object(obj,
+                                    add_dict=add_dict,
+                                    add_slots=add_slots,
+                                    add_properties=add_properties,
+                                    exclude_prefix=exclude_prefix,
+                                    exclude_postfix=exclude_postfix,
+                                    excludes=excludes)
     return What(name=obj.__class__.__name__ if name is None else name,
                 configuration_dict=cd,
                 nickname=nickname,
