@@ -456,7 +456,6 @@ def whatareyou(obj,
                # nickname
                nickname=None,
                # ID string building options
-               short_name=None,
                non_id_keys=None,
                synonyms=None,
                sort_by_key=True,
@@ -707,7 +706,6 @@ def whatable(obj=None,
              # nickname
              nickname=None,
              # ID string building options
-             short_name=None,
              non_id_keys=None,
              synonyms=None,
              sort_by_key=True,
@@ -788,7 +786,6 @@ def whatable(obj=None,
                        # nickname
                        nickname=nickname,
                        # ID string building options
-                       short_name=short_name,
                        non_id_keys=non_id_keys,
                        synonyms=synonyms,
                        sort_by_key=sort_by_key,
@@ -839,7 +836,6 @@ def whatable(obj=None,
             raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
     whatablefunc = lambda self: whatareyou(self,
                                            nickname=nickname,
-                                           short_name=short_name,
                                            non_id_keys=non_id_keys,
                                            synonyms=synonyms,
                                            sort_by_key=sort_by_key,
