@@ -991,5 +991,12 @@ def configuration_as_string(obj):
             raise TypeError('the object must be None, a string, have a what() method or have an id() method')
 
 
+#
 # TODO: _nested_string: numpy arrays,
 #       we could go for hashes for big ones and other custom reprs depending on their nature
+#
+# TODO: consider a different id string ala "python constructors"
+#       rf.what().id() -> RandomForests(a=blah, b=bleh...)
+#
+# TODO: some classes in pyopy and flydata are getting non-sorted ids, bug...
+#
