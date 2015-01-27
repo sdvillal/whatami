@@ -378,9 +378,6 @@ class What(object):
         if quote_string_vals is None:
             quote_string_vals = self._quote_strings
 
-        if quote_string_vals is False:
-            print 'Here'
-
         my_id = u'%s#%s' % (self.key_synonym(self.name), self.as_string(nonids_too=nonids_too,
                                                                         quote_strings=quote_string_vals))
         return self._trim_too_long(my_id, maxlength=maxlength)
