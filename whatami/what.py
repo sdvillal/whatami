@@ -825,6 +825,9 @@ def whatable(obj=None,
 
         return whatablefunc
 
+    if inspect.isbuiltin(obj):
+        raise TypeError('builtins cannot be whatamised')
+
     # At the moment we just monkey-patch the object
     if hasattr(obj, 'what') and not is_whatable(obj):
         if force_flag_as_whatami:
@@ -834,23 +837,27 @@ def whatable(obj=None,
             return obj
         else:
             raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
-    whatablefunc = lambda self: whatareyou(self,
-                                           nickname=nickname,
-                                           non_id_keys=non_id_keys,
-                                           synonyms=synonyms,
-                                           sort_by_key=sort_by_key,
-                                           prefix_keys=prefix_keys,
-                                           postfix_keys=postfix_keys,
-                                           quote_string_values=quote_string_values,
-                                           add_dict=add_dict,
-                                           add_slots=add_slots,
-                                           add_properties=add_properties,
-                                           exclude_prefix=exclude_prefix,
-                                           exclude_postfix=exclude_postfix,
-                                           excludes=excludes)
-    whatablefunc.whatami = True
-    obj.what = types.MethodType(whatablefunc, obj) if not inspect.isclass(obj) else whatablefunc
-    return obj
+
+    try:
+        whatablefunc = lambda self: whatareyou(self,
+                                               nickname=nickname,
+                                               non_id_keys=non_id_keys,
+                                               synonyms=synonyms,
+                                               sort_by_key=sort_by_key,
+                                               prefix_keys=prefix_keys,
+                                               postfix_keys=postfix_keys,
+                                               quote_string_values=quote_string_values,
+                                               add_dict=add_dict,
+                                               add_slots=add_slots,
+                                               add_properties=add_properties,
+                                               exclude_prefix=exclude_prefix,
+                                               exclude_postfix=exclude_postfix,
+                                               excludes=excludes)
+        whatablefunc.whatami = True
+        obj.what = types.MethodType(whatablefunc, obj) if not inspect.isclass(obj) else whatablefunc
+        return obj
+    except:
+        raise Exception('cannot whatamise %s' % type(obj))
 
 
 def extract_decorated_function_from_closure(c):
