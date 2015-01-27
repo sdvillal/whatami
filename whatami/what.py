@@ -379,7 +379,7 @@ class What(object):
             quote_string_vals = self._quote_strings
 
         my_id = u'%s#%s' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
-                                                                        quote_strings=quote_string_vals))
+                                                                         quote_strings=quote_string_vals))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
