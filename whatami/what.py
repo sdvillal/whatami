@@ -354,8 +354,8 @@ class What(object):
 
         kvs = sort_kvs_fl()
         return sep.join(
-            '%s=%s' % (self.key_synonym(k),
-                       self._nested_string(v, self._quote_strings if quote_strings is None else quote_strings))
+            u'%s=%s' % (self.key_synonym(k),
+                        self._nested_string(v, self._quote_strings if quote_strings is None else quote_strings))
             for k, v in kvs
             if nonids_too or k not in self._non_ids)
 
