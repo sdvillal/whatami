@@ -299,7 +299,7 @@ class What(object):
 
     # ---- ID string generation
 
-    def as_string(self, nonids_too=False, sep='#', quote_strings=None):
+    def _as_string(self, nonids_too=False, sep='#', quote_strings=None):
         """Makes a best effort to represent this configuration as a string.
 
         Parameters
@@ -378,7 +378,7 @@ class What(object):
         if quote_string_vals is None:
             quote_string_vals = self._quote_strings
 
-        my_id = u'%s#%s' % (self.key_synonym(self.name), self.as_string(nonids_too=nonids_too,
+        my_id = u'%s#%s' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
                                                                         quote_strings=quote_string_vals))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
