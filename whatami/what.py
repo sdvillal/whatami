@@ -870,7 +870,24 @@ def whatable(obj=None,
                                                exclude_postfix=exclude_postfix,
                                                excludes=excludes)
         whatablefunc.whatami = True
-        obj.what = types.MethodType(whatablefunc, obj) if not inspect.isclass(obj) else whatablefunc
+        #
+        # Nastily monkey patching extension types (e.g. cython cdef class)
+        #   http://stackoverflow.com/questions/6738987/extension-method-for-python-built-in-types
+        #   http://stackoverflow.com/questions/17267587/in-python-how-to-mock-a-c-extension-class
+        # forbiddenfruit is small and cute and the comments on the issues quite interesting
+        # but it is GPL, do we really want to use it?
+        #
+        if inspect.isclass(obj):
+            try:
+                obj.what = whatablefunc
+            except:
+                from forbiddenfruit import curse
+                curse(obj, 'what', whatablefunc)
+                print 'WARNING, patched builtin/extension type %s' % type(obj)
+        else:
+            obj.what = types.MethodType(whatablefunc, obj)
+            # This will anyway fail for extension types (can we make forbiddenfruit work with instances?)
+
         return obj
     except:
         raise Exception('cannot whatamise %s' % type(obj))
