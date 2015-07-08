@@ -991,25 +991,44 @@ def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, r
     return name, dict(zip(parameters[1::3], (map(val_postproc, parameters[3::3]))))
 
 
-def parse_id_string_arpeggio(id_string):
+_ARPEGGIO_PARSER = None
 
-    from arpeggio import ParserPython, ZeroOrMore, EOF
-    from arpeggio import RegExMatch as _
+def parse_id_string_arpeggio(id_string,
+                             separator='#',
+                             kv_separator='=',
+                             nested_opens='"',
+                             nested_closes='"',
+                             debug=False):
+    """Parses a whatami id string and returns the AST."""
 
-    def name():             return _('[^#"=]*')
-    def sep():              return _('#')
-    def kvsep():            return _('=')
-    def nested_open():      return _('"')
-    def nested_close():     return _('"')
-    def nested():           return nested_open, whatami_id, nested_close
-    def value():            return [name, nested]
-    def kvs():              return ZeroOrMore(name, kvsep, value, ZeroOrMore(sep, name, kvsep, value))
-    def whatami_id():       return name, sep, kvs
-    def whatami_id_top():   return whatami_id, EOF
+    global _ARPEGGIO_PARSER
+    if _ARPEGGIO_PARSER is None:
 
-    parser = ParserPython(whatami_id_top)
+        from arpeggio import ParserPython, ZeroOrMore, EOF, StrMatch
+        from arpeggio import RegExMatch as _
 
-    tree = parser.parse(id_string)
+        def anything():         return _('[^%s%s%s%s]*' % (separator,
+                                                           kv_separator,
+                                                           nested_opens,
+                                                           nested_closes))
+        def key():             return _('[_A-Za-z][_a-zA-Z0-9]*')
+        def sep():             return StrMatch(separator)
+        def kvsep():           return StrMatch(kv_separator)
+        def nested_open():     return StrMatch(nested_opens)
+        def nested_close():    return StrMatch(nested_closes)
+        def nested():          return nested_open, whatami_id, nested_close
+        def value():           return [nested, anything]
+        def kvs():             return ZeroOrMore(key, kvsep, value,
+                                                 ZeroOrMore(sep, key, kvsep, value))
+        def whatami_id():      return anything, sep, kvs
+        def whatami_id_top():  return whatami_id, EOF
+
+        # maybe `anything` would be better as the definition for `key`, given that we allow synonyms and the likes
+        # arpeggio does not allow unicode in regexps, it is easy by just allowing arbitrary re flags in RegExMatch
+
+        _ARPEGGIO_PARSER = ParserPython(whatami_id_top, debug=debug)
+
+    tree = _ARPEGGIO_PARSER.parse(id_string)
 
     return tree
 
@@ -1059,3 +1078,7 @@ if __name__ == '__main__':
     print parse_id_string_arpeggio('rfc#n_jobs=4#n_trees=100#seed=2#name=\'mola\'')
     print parse_id_string_arpeggio("KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#"
                                    "precompute_distances=True#random_state=None#tol=0.0001#verbose=0")
+    norm_id = 'Normalizer#norm=\'l1\''
+    kmeans_id = "KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#" \
+                "precompute_distances=True#random_state=None#tol=0.0001#verbose=0"
+    print parse_id_string_arpeggio("Pipeline#steps=[('norm', %s), ('kmeans', %s)]" % (norm_id, kmeans_id))
