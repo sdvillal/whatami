@@ -991,6 +991,29 @@ def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, r
     return name, dict(zip(parameters[1::3], (map(val_postproc, parameters[3::3]))))
 
 
+def parse_id_string_arpeggio(id_string):
+
+    from arpeggio import ParserPython, ZeroOrMore, EOF
+    from arpeggio import RegExMatch as _
+
+    def name():             return _('[^#"=]*')
+    def sep():              return _('#')
+    def kvsep():            return _('=')
+    def nested_open():      return _('"')
+    def nested_close():     return _('"')
+    def nested():           return nested_open, whatami_id, nested_close
+    def value():            return [name, nested]
+    def kvs():              return ZeroOrMore(name, kvsep, value, ZeroOrMore(sep, name, kvsep, value))
+    def whatami_id():       return name, sep, kvs
+    def whatami_id_top():   return whatami_id, EOF
+
+    parser = ParserPython(whatami_id_top)
+
+    tree = parser.parse(id_string)
+
+    return tree
+
+
 def configuration_as_string(obj):
     """Returns the configuration of obj as a string.
 
@@ -1013,17 +1036,26 @@ def configuration_as_string(obj):
         except:
             raise TypeError('the object must be None, a string, have a what() method or have an id() method')
 
-
 #
-# TODO: _nested_string: numpy arrays,
+# TODO: simple nested_string for numpy arrays,
 #       we could go for hashes for big ones and other custom reprs depending on their nature
 #
 # TODO: consider a different id string ala "python constructors"
 #       rf.what().id() -> RandomForests(a=blah, b=bleh...)
-#
-# TODO: some classes in pyopy and flydata are getting non-sorted ids, bug...
+#     python_like : boolean, default False
+#         If True, the id string will look like python instantiation. For example:
+#         What('rf', {n_trees=10}).id() will equal to rf(n_trees=10)
+#       If doing something like this, we should:
+#         - change the design to a more modular one, with string construction and parsing factored out
+#         - require application-wide consistent configuration
 #
 
 if __name__ == '__main__':
-    ss = What('RF', dict(n_trees=1, split={1: 2, 3: 4}), python_like=True).id()
-    assert ss == 'RF(n_trees=1,split={1=2,3=4})'
+    print parse_id_string_arpeggio('rfc#n_jobs=4#n_trees=100')
+    print parse_id_string_arpeggio('rfc#n_jobs="multiple#"')
+    print parse_id_string_arpeggio('rfc#n_jobs="multiple#here=100"')
+    print parse_id_string_arpeggio('C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'')
+    print parse_id_string_arpeggio('C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'')
+    print parse_id_string_arpeggio('rfc#n_jobs=4#n_trees=100#seed=2#name=\'mola\'')
+    print parse_id_string_arpeggio("KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#"
+                                   "precompute_distances=True#random_state=None#tol=0.0001#verbose=0")
