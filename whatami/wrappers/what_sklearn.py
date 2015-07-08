@@ -74,7 +74,8 @@ class _SklearnEstimatorID:
     """
     Stores information about sklearn short names, non_id_params, notes and possibly others.
 
-    N.B. it is better to include a non-existing non_id_param (innocuous, can help to support several sklearn versions)
+    N.B. it is better to include a non-existing non_id_param
+    (innocuous, can help to support several sklearn versions)
     than to leave out existing non_id_params.
     """
 
