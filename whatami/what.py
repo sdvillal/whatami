@@ -96,10 +96,6 @@ class What(object):
     nickname : string, default None
         The nickname can be an arbitrary, short, human-friendly string used to represent this configuration.
 
-    python_like : boolean, default False
-        If True, the id string will look like python instantiation. For example:
-        What('rf', {n_trees=10}).id() will equal to rf(n_trees=10)
-
     non_id_keys : iterable (usually of strings), default None
         A list of keys that should not be considered when generating ids.
         For example: "num_threads" or "verbose" should not change results when fitting a model.
@@ -129,8 +125,6 @@ class What(object):
                  name,
                  configuration_dict,
                  nickname=None,
-                 # ID string style
-                 python_like=False,
                  # ID string building options
                  non_id_keys=None,
                  synonyms=None,
@@ -147,7 +141,6 @@ class What(object):
         self._postfix_keys = postfix_keys if postfix_keys else []
         self._sort_by_key = sort_by_key
         self._quote_strings = quote_string_values
-        self._python_like = python_like
         # Synonyms to allow more concise representations
         self._synonyms = {}
         if synonyms is not None:
@@ -360,12 +353,6 @@ class What(object):
                    [(f, kvs_dict[f]) for f in self._postfix_keys]
 
         kvs = sort_kvs_fl()
-        if self._python_like:
-            return u','.join(
-                u'%s=%s' % (self.key_synonym(k),
-                            self._nested_string(v, self._quote_strings if quote_strings is None else quote_strings))
-                for k, v in kvs
-                if nonids_too or k not in self._non_ids)
         return unicode(sep).join(
             u'%s=%s' % (self.key_synonym(k),
                         self._nested_string(v, self._quote_strings if quote_strings is None else quote_strings))
@@ -391,12 +378,8 @@ class What(object):
         if quote_string_vals is None:
             quote_string_vals = self._quote_strings
 
-        if self._python_like:
-            my_id = u'%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
-                                                                              quote_strings=quote_string_vals))
-        else:
-            my_id = u'%s#%s' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
-                                                                             quote_strings=quote_string_vals))
+        my_id = u'%s#%s' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
+                                                                         quote_strings=quote_string_vals))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
