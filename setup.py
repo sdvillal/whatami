@@ -36,7 +36,9 @@ setup(
     ],
     tests_require=['pytest'],
     extras_require={
-        'sklearn': ('scikit-learn',)
+        'sklearn': ('scikit-learn',),
+        'ubermonkey': ('forbiddenfruit',),
+        'parse': ('arpeggio',)
     },
     platforms=['Any'],
 )
