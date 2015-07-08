@@ -40,7 +40,7 @@ ducked#company=None#name='salty-lollypops'#quantity=33
 >>> # Using the whatable decorator makes objects gain a what() method
 >>> # In this case, what() is infered automatically
 >>> @whatable
-... class Company():
+... class Company(object):
 ...     def __init__(self, name, city, verbose=True):
 ...          self.name = name
 ...          self.city = city
@@ -373,7 +373,7 @@ class What(object):
             if nonids_too or k not in self._non_ids)
 
     def id(self, nonids_too=False, maxlength=0, quote_string_vals=None):
-        """Returns the id unicode string of this configuration.
+        """Returns the id string (unicode) of this configuration.
 
         Parameters
         ----------
@@ -694,7 +694,7 @@ def is_whatable(obj):
     >>> is_whatable(str)
     False
     >>> @whatable
-    ... class WO():
+    ... class WO(object):
     ...     def __init__(self):
     ...         self.a = 3
     >>> # The class is whatable...
