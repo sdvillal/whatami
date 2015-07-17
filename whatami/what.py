@@ -388,11 +388,11 @@ class What(object):
             return hashlib.sha256(string).hexdigest()
         return string
 
-    def _nested_string(self, v, quote_string_vals):
+    def _nested_string(self, v, quote_string_vals, nested_start='"', nested_end='"'):
         """Returns the nested configuration string for a variety of value types."""
 
         def nest(string):
-            return u'"%s"' % string
+            return u'%s%s%s' % (nested_start, string, nested_end)
 
         def unquote_whatable(v):
             if hasattr(v, 'what'):
@@ -993,11 +993,12 @@ def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, r
 
 _ARPEGGIO_PARSER = None
 
+
 def parse_id_string_arpeggio(id_string,
                              separator='#',
                              kv_separator='=',
                              nested_opens='"',
-                             nested_closes='"',
+                             nested_closes='"',  # Alternatives: @, ~...
                              debug=False):
     """Parses a whatami id string and returns the AST."""
 
