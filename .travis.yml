@@ -15,7 +15,7 @@ before_install:
  - conda info -a
  - travis_retry conda create -n test python=2.7 pip pytest numpy scipy scikit-learn
  - source activate test
- - travis_retry pip install pytest-cov pytest-pep8 coveralls
+ - travis_retry pip install arpeggio pytest-cov pytest-pep8 coveralls
 
 script:
   py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
