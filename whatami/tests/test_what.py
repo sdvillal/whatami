@@ -10,7 +10,7 @@ import hashlib
 import pytest
 
 from whatami import whatable, whatareyou, What, \
-    configuration_as_string, parse_id_string, config_dict_for_object, is_whatable, deprecated
+    configuration_as_string, parse_id_string, config_dict_for_object, is_whatable
 
 
 # ---- Fixtures and teardown
@@ -210,7 +210,7 @@ def test_non_nested_configurations(c1):
     assert config_c1.p2 == 'bleh'
     assert config_c1.length == 1
     assert config_c1 == config_c1
-    assert config_c1.id() == 'C1(length=1,p1=\'blah\',p2=\'bleh\')'
+    assert config_c1.id() == "C1(length=1,p1='blah',p2='bleh')"
     assert len(set(config_c1.keys()) | {'p1', 'p2', 'length'}) == 3
 
 
@@ -221,46 +221,44 @@ def test_nested_whatables(c1, c2):
     assert len(config_c2.configdict) == 2
     assert config_c2['name'] == 'roxanne'
     assert config_c2.c1.what() == c1.what()
-    assert config_c2.id() == 'C2(c1=C1(length=1,p1=\'blah\',p2=\'bleh\'),name=\'roxanne\')'
+    assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
 
 
 def test_nested_configurations(c1, c2):
     # Nested
     c2.c1 = c1.what()
     config_c2 = c2.what()
-    assert config_c2.id() == 'C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\''
+    assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
 
 
 def test_non_id_keys(c3):
     # non-id keys
     config_c3 = c3.what()
-    assert config_c3.id() == 'C3#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#' \
-                             'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"'
-    assert config_c3.id(nonids_too=True) == 'C3#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#' \
-                                            'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"#' \
-                                            'irrelevant=True'
-    assert config_c3.id(nonids_too=True) == 'C3#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#' \
-                                            'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"#' \
-                                            'irrelevant=True'
-    sha2 = hashlib.sha256('C3#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#'
-                          'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"').hexdigest()
+    assert config_c3.id() == "C3(c1=C1(length=1,p1='blah',p2='bleh')," \
+                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
+    assert config_c3.id(nonids_too=True) == "C3(c1=C1(length=1,p1='blah',p2='bleh')," \
+                                            "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')," \
+                                            "irrelevant=True)"
+    c3id = "C3(c1=C1(length=1,p1='blah',p2='bleh'),c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
+    assert config_c3.id(nonids_too=False) == c3id
+    sha2 = hashlib.sha256(c3id).hexdigest()
     assert config_c3.id(maxlength=1) == sha2
     config_c3.set_key_synonym('c1', 'C1Syn')
     assert config_c3.key_synonym('c1') == 'C1Syn'
-    assert config_c3.id() == 'C3#C1Syn="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#' \
-                             'c2="C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'"'
+    assert config_c3.id() == "C3(C1Syn=C1(length=1,p1='blah',p2='bleh')," \
+                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
 
 
 def test_non_quoted_string_values(c3):
     # non-quoted string values must cascade recursively
     # - this makes things complex, should get rid of this feat
-    assert c3.what().id(quote_string_vals=False) == 'C3#c1="C1#length=1#p1=blah#p2=bleh"#' \
-                                                    'c2="C2#c1="C1#length=1#p1=blah#p2=bleh"#name=roxanne"'
+    c3id = "C3(c1=C1(length=1,p1=blah,p2=bleh),c2=C2(c1=C1(length=1,p1=blah,p2=bleh),name=roxanne))"
+    assert c3.what().id(quote_string_vals=False) == c3id
 
 
 def test_whatable_magics(c1):
     # configuration magics
-    assert str(c1.what()) == 'C1#length=1#p1=\'blah\'#p2=\'bleh\''
+    assert str(c1.what()) == "C1(length=1,p1='blah',p2='bleh')"
 
 
 def test_whatable_functions(c1):
@@ -269,7 +267,7 @@ def test_whatable_functions(c1):
 
     # Functions
     c1.p1 = identity
-    assert c1.what().id() == 'C1#length=1#p1="identity#"#p2=\'bleh\''
+    assert c1.what().id() == "C1(length=1,p1=identity(),p2='bleh')"
     assert c1.p1(1) == 1
 
 
@@ -280,7 +278,7 @@ def test_whatable_partial(c1):
 
     # Partial functions
     c1.p1 = partial(identity, x=1)
-    assert c1.what().id() == 'C1#length=1#p1="identity#x=1"#p2=\'bleh\''
+    assert c1.what().id() == "C1(length=1,p1=identity(x=1),p2='bleh')"
     assert c1.p1() == 1
 
 
@@ -300,7 +298,7 @@ def test_whatable_anyobject(c1):
         def __init__(self):
             self.param = 'yes'
     c1.p1 = RandomClass()
-    assert c1.what().id() == 'C1#length=1#p1="RandomClass#param=\'yes\'"#p2=\'bleh\''
+    assert c1.what().id() == "C1(length=1,p1=RandomClass(param='yes'),p2='bleh')"
 
 
 def test_whatable_force_flag():
@@ -316,7 +314,7 @@ def test_whatable_force_flag():
 
     assert is_whatable(A)
     assert is_whatable(A())
-    assert A().what().id() == 'A#a=3'
+    assert A().what().id() == 'A(a=3)'
 
 
 def test_whatable_data_descriptors():
@@ -335,7 +333,7 @@ def test_whatable_data_descriptors():
                         config_dict_for_object(self, add_properties=True))
 
     cp = ClassWithProps()
-    assert cp.what().id() == 'ClassWithProps#prop=3'
+    assert cp.what().id() == 'ClassWithProps(prop=3)'
 
     # Objects with dynamically added properties
     setattr(cp, 'dprop', property(lambda: 5))
@@ -360,7 +358,7 @@ def test_whatable_slots():
             self.prop = 3
 
     slots = Slots()
-    assert slots.what().id() == 'Slots#prop=3'
+    assert slots.what().id() == 'Slots(prop=3)'
 
 
 def test_whatable_inheritance():
@@ -379,7 +377,7 @@ def test_whatable_inheritance():
             self.c = 'subC'
             self.a = 'subA'
 
-    assert Sub().what().id() == 'Sub#a=\'subA\'#b=\'superB\'#c=\'subC\''
+    assert Sub().what().id() == "Sub(a='subA',b='superB',c='subC')"
 
 
 def test_whatable_does_not_override_what(c1):
@@ -437,28 +435,28 @@ def test_whatable_torturing_inheritance():
     s3 = S3()
 
     s3 = whatable(s3, add_dict=True, add_slots=True, add_properties=True)
-    assert s3.what().id() == "S3#d1=1#d2=4#p1=5#s1=2#s2=3#s3=6"
+    assert s3.what().id() == "S3(d1=1,d2=4,p1=5,s1=2,s2=3,s3=6)"
 
     s3 = whatable(s3, add_dict=True, add_slots=True, add_properties=False)
-    assert s3.what().id() == "S3#d1=1#d2=4#s1=2#s2=3#s3=6"
+    assert s3.what().id() == "S3(d1=1,d2=4,s1=2,s2=3,s3=6)"
 
     s3 = whatable(s3, add_dict=True, add_slots=False, add_properties=True)
-    assert s3.what().id() == "S3#d1=1#d2=4#p1=5"
+    assert s3.what().id() == "S3(d1=1,d2=4,p1=5)"
 
     s3 = whatable(s3, add_dict=True, add_slots=False, add_properties=False)
-    assert s3.what().id() == "S3#d1=1#d2=4"
+    assert s3.what().id() == "S3(d1=1,d2=4)"
 
     s3 = whatable(s3, add_dict=False, add_slots=False, add_properties=False)
-    assert s3.what().id() == "S3#"
+    assert s3.what().id() == "S3()"
 
     s3 = whatable(s3, add_dict=False, add_slots=True, add_properties=False)
-    assert s3.what().id() == "S3#s1=2#s2=3#s3=6"
+    assert s3.what().id() == "S3(s1=2,s2=3,s3=6)"
 
     s3 = whatable(s3, add_dict=False, add_slots=False, add_properties=True)
-    assert s3.what().id() == "S3#p1=5"
+    assert s3.what().id() == "S3(p1=5)"
 
     s3 = whatable(s3, add_dict=False, add_slots=True, add_properties=True)
-    assert s3.what().id() == "S3#p1=5#s1=2#s2=3#s3=6"
+    assert s3.what().id() == "S3(p1=5,s1=2,s2=3,s3=6)"
 
 
 def test_whatable_nickname(c1):
@@ -475,7 +473,7 @@ def test_whatable_nickname(c1):
 
     # not nicknamed configurations
     assert c1.what().nickname is None
-    assert c1.what().nickname_or_id() == 'C1#length=1#p1=\'blah\'#p2=\'bleh\''
+    assert c1.what().nickname_or_id() == "C1(length=1,p1='blah',p2='bleh')"
 
 
 def test_regnick_with_what(c1):
@@ -520,7 +518,7 @@ def test_regnick_do_not_reregister(c1):
     with pytest.raises(Exception) as excinfo:
         What.register_nickname('c1', 'blahblehblih')
     assert excinfo.value.message == 'nickname "c1" is already associated with id ' \
-                                    '"C1#length=1#p1=\'blah\'#p2=\'bleh\'", delete it before updating'
+                                    '"C1(length=1,p1=\'blah\',p2=\'bleh\')", delete it before updating'
     with pytest.raises(Exception) as excinfo:
         What.register_nickname('c2', c1.what().id())
     assert excinfo.value.message == 'id "%s" is already associated with nickname "c1", delete it before updating' %\
@@ -565,7 +563,7 @@ def test_whatable_duck():
         def what(self):
             return What(self.__class__.__name__, {'param1': 33})
     cduck = DuckedWhatable()
-    assert cduck.what().id() == 'DuckedWhatable#param1=33'
+    assert cduck.what().id() == 'DuckedWhatable(param1=33)'
 
     @whatable
     class NestedDuckedWhatable(object):
@@ -573,7 +571,7 @@ def test_whatable_duck():
             super(NestedDuckedWhatable, self).__init__()
             self.ducked = cduck
     nested_duck = NestedDuckedWhatable()
-    assert nested_duck.what().id() == 'NestedDuckedWhatable#ducked="DuckedWhatable#param1=33"'
+    assert nested_duck.what().id() == 'NestedDuckedWhatable(ducked=DuckedWhatable(param1=33))'
 
 
 def test_whatable_decorator():
@@ -581,7 +579,7 @@ def test_whatable_decorator():
     def normalize(x, loc=5, scale=3):
         """returns (x+loc) / scale"""
         return (x + loc) / scale
-    assert normalize.what().id() == 'normalize#loc=5#scale=3'
+    assert normalize.what().id() == 'normalize(loc=5,scale=3)'
     assert normalize.__name__ == 'normalize'
     assert normalize.__doc__ == 'returns (x+loc) / scale'
 
@@ -590,7 +588,7 @@ def test_whatable_decorator():
     assert not hasattr(normalize6, 'what')
     assert not hasattr(normalize6, '__name__')  # partials have no name
     normalize6 = whatable(normalize6)
-    assert normalize6.what().id() == 'normalize#loc=6#scale=3'
+    assert normalize6.what().id() == 'normalize(loc=6,scale=3)'
     assert normalize6(3) == 3
 
 
@@ -600,9 +598,9 @@ def test_list_parameters(c1):
         def __init__(self):
             self.list = [c1, 'second']
     w = WhatableWithList()
-    assert w.what().id() == "WhatableWithList#list=[%s, \'second\']" % c1.what().id()
+    assert w.what().id() == "WhatableWithList(list=[%s,'second'])" % c1.what().id()
     w.list = []
-    assert w.what().id() == "WhatableWithList#list=[]"
+    assert w.what().id() == "WhatableWithList(list=[])"
 
 
 def test_tuple_parameters(c1):
@@ -611,9 +609,9 @@ def test_tuple_parameters(c1):
         def __init__(self):
             self.tuple = ('first', c1)
     w = WhatableWithTuple()
-    assert w.what().id() == "WhatableWithTuple#tuple=(\'first\', %s)" % c1.what().id()
+    assert w.what().id() == "WhatableWithTuple(tuple=('first',%s))" % c1.what().id()
     w.tuple = ()
-    assert w.what().id() == "WhatableWithTuple#tuple=()"
+    assert w.what().id() == "WhatableWithTuple(tuple=())"
 
 
 def test_dict_parameters(c1):
@@ -622,18 +620,18 @@ def test_dict_parameters(c1):
         def __init__(self):
             self.dict = {'c1': c1, 'two': 2}
     w = WhatableWithDict()
-    assert w.what().id() == "WhatableWithDict#dict={c1=\"C1#length=1#p1='blah'#p2='bleh'\"#two=2}"
+    assert w.what().id() == "WhatableWithDict(dict={c1=C1(length=1,p1='blah',p2='bleh'),two=2})"
     w.dict = {}
-    assert w.what().id() == "WhatableWithDict#dict={}"
+    assert w.what().id() == "WhatableWithDict(dict={})"
 
 
-def test_afterset_parameters(c1):
-    """Whatables must have no memory of configuration"""
+def test_set_parameters(c1):
     @whatable
     class WhatableWithSet(object):
         def __init__(self):
             self.set = {c1, 2}
     w = WhatableWithSet()
-    assert w.what().id() == "WhatableWithSet#set={2, C1#length=1#p1='blah'#p2='bleh'}"
+    assert w.what().id() == "WhatableWithSet(set={2,C1(length=1,p1='blah',p2='bleh')})"
+    # whatables must have no memory of configuration
     w.set = set()
-    assert w.what().id() == "WhatableWithSet#set={}"
+    assert w.what().id() == "WhatableWithSet(set={})"

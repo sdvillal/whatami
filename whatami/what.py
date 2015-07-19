@@ -389,25 +389,16 @@ class What(object):
             return hashlib.sha256(string).hexdigest()
         return string
 
-    def _nested_string(self, v, quote_string_vals, nested_start='(', nested_end=')'):
+    def _nested_string(self, v, quote_string_vals):
         """Returns the nested configuration string for a variety of value types."""
 
-        def nest(string):
-            # u'%s%s%s' % (nested_start, string, nested_end)
-            return string
-
-        def unquote_whatable(v):
-            if hasattr(v, 'what'):
-                return self._nested_string(v, quote_string_vals)[1:-1]
-            return self._nested_string(v, quote_string_vals)
-
         if isinstance(v, What):
-            return nest(v.id(quote_string_vals=quote_string_vals))
+            return v.id(quote_string_vals=quote_string_vals)
         if hasattr(v, 'what'):
             configuration = getattr(v, 'what')
             configuration = configuration() if callable(configuration) else configuration
             if isinstance(configuration, What):
-                return nest(configuration.id(quote_string_vals=quote_string_vals))
+                return configuration.id(quote_string_vals=quote_string_vals)
             raise Exception('object has a "configuration" attribute, but it is not of Configuration class')
         if inspect.isbuiltin(v):  # Special message if we try to pass something like sorted or np.array
             raise Exception('Cannot determine the argspec of a non-python function (%s). '
@@ -419,18 +410,21 @@ class What(object):
             config = copy(self)
             config.name = name
             config.configdict = keywords
-            return nest(config.id(quote_string_vals=quote_string_vals))
+            return config.id(quote_string_vals=quote_string_vals)
         if isinstance(v, dict):
             my_copy = copy(self)
             my_copy.name = ''
             my_copy.configdict = v
-            return u'{%s}' % self._nested_string(my_copy, quote_string_vals)[2:-1]
+            return u'{%s}' % self._nested_string(my_copy, quote_string_vals)[1:-1]
         if isinstance(v, set):
-            return u'{%s}' % u', '.join(map(unquote_whatable, sorted(v)))
+            return u'{%s}' % u','.join(
+                map(partial(self._nested_string, quote_string_vals=quote_string_vals), sorted(v)))
         if isinstance(v, list):
-            return u'[%s]' % u', '.join(map(unquote_whatable, v))
+            return u'[%s]' % u','.join(
+                map(partial(self._nested_string, quote_string_vals=quote_string_vals), v))
         if isinstance(v, tuple):
-            return u'(%s)' % u', '.join(map(unquote_whatable, v))
+            return u'(%s)' % u','.join(
+                map(partial(self._nested_string, quote_string_vals=quote_string_vals), v))
         if inspect.isfunction(v):
             args, _, _, defaults = inspect.getargspec(v)
             defaults = [] if not defaults else defaults
@@ -439,12 +433,12 @@ class What(object):
             config = copy(self)
             config.name = v.__name__
             config.configdict = params_with_defaults
-            return nest(config.id(quote_string_vals=quote_string_vals))
+            return config.id(quote_string_vals=quote_string_vals)
         if ' at 0x' in unicode(v):  # An object without proper representation, try a best effort
             config = copy(self)  # Careful
             config.name = v.__class__.__name__
             config.configdict = config_dict_for_object(v)
-            return nest(config.id(quote_string_vals=quote_string_vals))
+            return config.id(quote_string_vals=quote_string_vals)
         if isinstance(v, (unicode, basestring)):
             if quote_string_vals:
                 return u'\'%s\'' % v
