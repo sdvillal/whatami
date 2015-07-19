@@ -157,8 +157,8 @@ def test_configuration_nonids_prefix_postfix():
     c1 = What('tc',
               {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
               non_id_keys=('verbose', 'n_jobs'))
-    assert c1.id() == 'tc#p1=1#p2=2#p3=3'
-    assert c1.id(nonids_too=True) == 'tc#n_jobs=None#p1=1#p2=2#p3=3#verbose=True'
+    assert c1.id() == 'tc(p1=1,p2=2,p3=3)'
+    assert c1.id(nonids_too=True) == 'tc(n_jobs=None,p1=1,p2=2,p3=3,verbose=True)'
 
     with pytest.raises(Exception) as excinfo:
         What('tc',
@@ -171,7 +171,7 @@ def test_configuration_nonids_prefix_postfix():
               {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
               non_id_keys=('verbose', 'n_jobs'),
               synonyms={'verbose': 'v'})
-    assert c1.id(nonids_too=True) == 'tc#n_jobs=None#p1=1#p2=2#p3=3#v=True'
+    assert c1.id(nonids_too=True) == 'tc(n_jobs=None,p1=1,p2=2,p3=3,v=True)'
 
     # Prefix and postfix keys
     c1 = What('tc',
@@ -179,7 +179,7 @@ def test_configuration_nonids_prefix_postfix():
               non_id_keys=('verbose', 'n_jobs'),
               prefix_keys=('p3', 'p2'),
               postfix_keys=('p1',))
-    assert c1.id(nonids_too=True) == 'tc#p3=3#p2=2#n_jobs=None#verbose=True#p1=1'
+    assert c1.id(nonids_too=True) == 'tc(p3=3,p2=2,n_jobs=None,verbose=True,p1=1)'
 
     with pytest.raises(Exception) as excinfo:
         What('tc',

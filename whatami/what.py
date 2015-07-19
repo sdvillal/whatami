@@ -84,7 +84,7 @@ class What(object):
 
     Configurations are just dictionaries {key: value} that can nest and have a name.
 
-    This helper class allows to represent configurations as (reasonable) strings.
+    This helper class allows to represent configurations as (reasonable, python-like) strings.
 
     Parameters
     ----------
@@ -300,7 +300,7 @@ class What(object):
 
     # ---- ID string generation
 
-    def _as_string(self, nonids_too=False, sep='#', quote_strings=None):
+    def _as_string(self, nonids_too=False, sep=',', quote_strings=None):
         """Makes a best effort to represent this configuration as a string.
 
         Parameters
@@ -379,8 +379,8 @@ class What(object):
         if quote_string_vals is None:
             quote_string_vals = self._quote_strings
 
-        my_id = u'%s#%s' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
-                                                                         quote_strings=quote_string_vals))
+        my_id = u'%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
+                                                                          quote_strings=quote_string_vals))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
