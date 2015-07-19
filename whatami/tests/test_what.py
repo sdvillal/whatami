@@ -289,7 +289,7 @@ def test_whatable_builtins(c1):
 def test_whatable_anyobject(c1):
 
     # Objects without proper representation
-    class RandomClass():
+    class RandomClass(object):
         def __init__(self):
             self.param = 'yes'
     c1.p1 = RandomClass()
@@ -589,7 +589,7 @@ def test_whatable_decorator():
 
 def test_list_parameters(c1):
     @whatable
-    class WhatableWithList():
+    class WhatableWithList(object):
         def __init__(self):
             self.list = [c1, 'second']
     w = WhatableWithList()
@@ -600,7 +600,7 @@ def test_list_parameters(c1):
 
 def test_tuple_parameters(c1):
     @whatable
-    class WhatableWithTuple():
+    class WhatableWithTuple(object):
         def __init__(self):
             self.tuple = ('first', c1)
     w = WhatableWithTuple()
@@ -611,7 +611,7 @@ def test_tuple_parameters(c1):
 
 def test_dict_parameters(c1):
     @whatable
-    class WhatableWithDict():
+    class WhatableWithDict(object):
         def __init__(self):
             self.dict = {'c1': c1, 'two': 2}
     w = WhatableWithDict()
@@ -622,7 +622,7 @@ def test_dict_parameters(c1):
 
 def test_set_parameters(c1):
     @whatable
-    class WhatableWithSet():
+    class WhatableWithSet(object):
         def __init__(self):
             self.set = {c1, 2}
     w = WhatableWithSet()
