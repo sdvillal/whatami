@@ -1112,15 +1112,6 @@ def configuration_as_string(obj):
 # TODO: simple nested_string for numpy arrays,
 #       we could go for hashes for big ones and other custom reprs depending on their nature
 #
-# TODO: consider a different id string ala "python constructors"
-#       rf.what().id() -> RandomForests(a=blah, b=bleh...)
-#     python_like : boolean, default False
-#         If True, the id string will look like python instantiation. For example:
-#         What('rf', {n_trees=10}).id() will equal to rf(n_trees=10)
-#       If doing something like this, we should:
-#         - change the design to a more modular one, with string construction and parsing factored out
-#         - require application-wide consistent configuration
-#
 
 if __name__ == '__main__':
 
