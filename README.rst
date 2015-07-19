@@ -98,6 +98,6 @@ Example
 .. |Pypi Version| image:: https://badge.fury.io/py/whatami.svg
    :target: http://badge.fury.io/py/whatami
 .. _semantic versioning: http://semver.org/
-.. _scikit_learn: http://scikit-learn.org
+.. _scikit-learn: http://scikit-learn.org
 .. _arch: https://github.com/bashtage/arch
 .. _pyopy: https://github.com/sdvillal/pyopy
