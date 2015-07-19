@@ -7,8 +7,6 @@ from datetime import datetime
 import inspect
 from time import strptime, mktime
 
-import pytest
-
 from whatami import mlexp_info_helper, whatable
 
 
@@ -51,9 +49,9 @@ def test_mlexp_info_helper():
         comments='comments4nothing',
         itime=False)
     assert info['title'] == 'test'
-    assert info['data_setup'] == 'TestDataset#'
-    assert info['model_setup'] == 'PreproModel#C=1.0#prepro="Prepro#max=1#min=0"#reg=\'l2\''
-    assert info['eval_setup'] == 'CVEval#num_folds=5#seed=2147483647'
+    assert info['data_setup'] == 'TestDataset()'
+    assert info['model_setup'] == "PreproModel(C=1.0,prepro=Prepro(max=1,min=0),reg='l2')"
+    assert info['eval_setup'] == 'CVEval(num_folds=5,seed=2147483647)'
     assert info['fsource'] == inspect.getsourcelines(test_mlexp_info_helper)
     assert info['comments'] == 'comments4nothing'
     recorded_time = mktime(strptime(info['date'], '%Y-%m-%d %H:%M:%S'))

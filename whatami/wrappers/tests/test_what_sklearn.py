@@ -26,11 +26,11 @@ def test_non_ids():
 def test_pipeline():
     norm = Normalizer(norm='l1')
     norm_id = norm.what().id()
-    assert norm_id == 'Normalizer#norm=\'l1\''
+    assert norm_id == "Normalizer(norm='l1')"
     kmeans = KMeans(n_clusters=12)
     kmeans_id = kmeans.what().id()
     assert kmeans_id == \
-        "KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#" \
-        "precompute_distances=True#random_state=None#tol=0.0001#verbose=0"
+        "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10," \
+        "precompute_distances='auto',random_state=None,tol=0.0001,verbose=0)"
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
-    assert pipeline_id == "Pipeline#steps=[('norm', %s), ('kmeans', %s)]" % (norm_id, kmeans_id)
+    assert pipeline_id == "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id)

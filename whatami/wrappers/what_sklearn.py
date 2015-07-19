@@ -14,9 +14,9 @@ Example
 >>> from sklearn.ensemble import RandomForestClassifier
 >>> rfc = RandomForestClassifier(n_jobs=8, n_estimators=23)
 >>> print rfc.what().id()
-rfc#bootstrap=True#compute_importances=None#criterion='gini'#max_depth=None#max_features='auto'#max_leaf_nodes=None#min_density=None#min_samples_leaf=1#min_samples_split=2#n_estimators=23#random_state=None
+rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,random_state=None,warm_start=False)
 >>> print rfc.what()
-rfc#bootstrap=True#compute_importances=None#criterion='gini'#max_depth=None#max_features='auto'#max_leaf_nodes=None#min_density=None#min_samples_leaf=1#min_samples_split=2#n_estimators=23#n_jobs=8#oob_score=False#random_state=None#verbose=0
+rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,n_jobs=8,oob_score=False,random_state=None,verbose=0,warm_start=False)
 
 Implementation Notes
 --------------------
@@ -49,8 +49,9 @@ from sklearn.cross_decomposition import PLSRegression, PLSCanonical, CCA, PLSSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, ExtraTreesClassifier, ExtraTreesRegressor
 from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.gaussian_process import GaussianProcess
-from sklearn.linear_model import Ridge, Lasso, ElasticNet, Lars, OrthogonalMatchingPursuit, BayesianRidge, ARDRegression, \
-    LogisticRegression, SGDClassifier, SGDRegressor, Perceptron, LassoLars, LinearRegression
+from sklearn.linear_model import Ridge, Lasso, ElasticNet, Lars, OrthogonalMatchingPursuit, \
+    BayesianRidge, ARDRegression, LogisticRegression, SGDClassifier, SGDRegressor, Perceptron, LassoLars, \
+    LinearRegression
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor, \
     RadiusNeighborsRegressor, NearestCentroid

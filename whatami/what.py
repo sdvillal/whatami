@@ -473,10 +473,10 @@ def whatareyou(obj,
     >>> def mola(a, n=5):
     ...     print a + n
     >>> print whatareyou(mola).id()
-    mola#n=5
+    mola(n=5)
     >>> from functools import partial
     >>> print whatareyou(partial(mola, n=7))
-    mola#n=7
+    mola(n=7)
     """
     try:
         c_name, cd = callable2call(obj)
@@ -834,20 +834,21 @@ def whatable(obj=None,
             raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
 
     try:
-        whatablefunc = lambda self: whatareyou(self,
-                                               nickname=nickname,
-                                               non_id_keys=non_id_keys,
-                                               synonyms=synonyms,
-                                               sort_by_key=sort_by_key,
-                                               prefix_keys=prefix_keys,
-                                               postfix_keys=postfix_keys,
-                                               quote_string_values=quote_string_values,
-                                               add_dict=add_dict,
-                                               add_slots=add_slots,
-                                               add_properties=add_properties,
-                                               exclude_prefix=exclude_prefix,
-                                               exclude_postfix=exclude_postfix,
-                                               excludes=excludes)
+        def whatablefunc(self):
+            return whatareyou(self,
+                              nickname=nickname,
+                              non_id_keys=non_id_keys,
+                              synonyms=synonyms,
+                              sort_by_key=sort_by_key,
+                              prefix_keys=prefix_keys,
+                              postfix_keys=postfix_keys,
+                              quote_string_values=quote_string_values,
+                              add_dict=add_dict,
+                              add_slots=add_slots,
+                              add_properties=add_properties,
+                              exclude_prefix=exclude_prefix,
+                              exclude_postfix=exclude_postfix,
+                              excludes=excludes)
         whatablefunc.whatami = True
         #
         # Nastily monkey patching extension types (e.g. cython cdef class)
