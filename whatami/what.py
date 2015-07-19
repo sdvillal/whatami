@@ -308,7 +308,7 @@ class What(object):
         Examples
         --------
         The strings look like follows:
-          "rfc#n_trees=10#verbose=True#splitter="gini#verbose=True"#min_split=10"
+          "rfc(n_trees=10,verbose=True,splitter="gini,verbose=True",min_split=10)"
         where
           "rfc" is the name of the configuration
           "n_trees=10" is one of the properties
