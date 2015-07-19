@@ -25,6 +25,13 @@ It works this way:
    end by '\_'.
 
 
+Versioning
+----------
+
+Since release 2.0.0 whatami uses `semantic versioning`_, where a major version bump
+happens also if the default id strings can be generated differently, even if no API
+actually changes.
+
 Features
 --------
 
@@ -89,3 +96,4 @@ Example
    :target: https://coveralls.io/r/sdvillal/whatami
 .. |Pypi Version| image:: https://badge.fury.io/py/whatami.svg
    :target: http://badge.fury.io/py/whatami
+.. _semantic versioning: http://semver.org/
