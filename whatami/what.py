@@ -71,7 +71,7 @@ from copy import copy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
 
-from whatami.misc import callable2call, is_iterable
+from whatami.misc import callable2call, is_iterable, deprecated
 
 
 # http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
@@ -890,23 +890,7 @@ def extract_decorated_function_from_closure(c):
     return c
 
 
-#
-# def configure(self, configuration):
-#     """Configures a new object with the requested configuration.
-#
-#     Parameters
-#     ----------
-#     configuration : Configuration
-#
-#     Returns
-#     -------
-#     A new object with the requested configuration
-#     """
-#     raise NotImplementedError  # If wanted, concrete cases need to implement this.
-#                                # For example, easy for sklearn estimators (just pass params to the constructor).
-#
-
-
+@deprecated
 def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, remove_quotes=True):
     """
     Parses configuration string into a pair (name, configuration).

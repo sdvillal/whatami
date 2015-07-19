@@ -10,7 +10,7 @@ import hashlib
 import pytest
 
 from whatami import whatable, whatareyou, What, \
-    configuration_as_string, parse_id_string, config_dict_for_object, is_whatable
+    configuration_as_string, parse_id_string, config_dict_for_object, is_whatable, deprecated
 
 
 # ---- Fixtures and teardown
@@ -70,6 +70,9 @@ def c3(c1, c2, quote_string_values=True):
 # ---- Let the testing begin...
 
 
+# --- Parsing id strings (these are deprecated)
+
+@pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
 def test_parse_id_simple():
     # Proper splitting
     name, parameters = parse_id_string('rfc#n_jobs=4#n_trees=100##', infer_numbers=False)
@@ -93,6 +96,7 @@ def test_parse_id_simple():
     assert excinfo.value.message == '#param=55 has no name, and it should (it starts already by #)'
 
 
+@pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
 def test_parse_id_nested():
     name, parameters = parse_id_string('rfc#n_jobs="multiple#here=100"', infer_numbers=False, parse_nested=False)
     assert name == 'rfc'
@@ -115,6 +119,7 @@ def test_parse_id_nested():
     assert nested_parameters['here'] == 100
 
 
+@pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
 def test_parse_id_invalid():
 
     # Configurations should not be empty
@@ -143,6 +148,8 @@ def test_parse_id_invalid():
     assert excinfo.value.message == 'Splitting has not worked. ' \
                                     'There is something that is not a = where there should be.'
 
+
+# --- Generating id strings
 
 def test_configuration_nonids_prefix_postfix():
 
@@ -620,7 +627,8 @@ def test_dict_parameters(c1):
     assert w.what().id() == "WhatableWithDict#dict={}"
 
 
-def test_set_parameters(c1):
+def test_afterset_parameters(c1):
+    """Whatables must have no memory of configuration"""
     @whatable
     class WhatableWithSet(object):
         def __init__(self):
