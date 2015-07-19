@@ -70,9 +70,9 @@ import shlex
 from copy import copy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
+from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor
 
 from whatami.misc import callable2call, is_iterable, deprecated
-
 
 
 # http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
@@ -976,103 +976,114 @@ def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, r
     return name, dict(zip(parameters[1::3], (map(val_postproc, parameters[3::3]))))
 
 
-class WhatamiParser(object):
+def _build_whatami_parser(reduce_tree=False, debug=False):
 
-    _separator = '#'
-    _kv_separator = '='
-    _nested_open = '"'
-    _nested_close = '"'  # Alternatives: @, ~...
+    # Syntactic noise
+
+    def list_sep():
+        return StrMatch(',')
+
+    def kv_sep():
+        return StrMatch('=')
+
+    def string_quote():
+        return StrMatch('\'')
+
+    def anything_but_quotes():
+        return RegExMatch('[^\']*')  # FIXME: how is scaping hadled here?
+
+    # Basic types
+
+    def an_id():
+        # These account for valid python 2 identifiers. Python 3 allow unicode in identifiers.
+        # See:
+        #   http://stackoverflow.com/questions/5474008/regular-expression-to-confirm-whether-a-string-is-a-valid-identifier-in-python
+        # When/if adapting to py3, that should be handled.
+        # Note also that arpeggio does not allow unicode in regexps;
+        # it should be easy to implement by just allowing arbitrary re flags in RegExMatch
+        return RegExMatch(r'[_A-Za-z][_a-zA-Z0-9]*')
+
+    def a_number():
+        return RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
+
+    def a_string():
+        return string_quote, anything_but_quotes, string_quote
+
+    def a_true():
+        return StrMatch('True')
+
+    def a_false():
+        return StrMatch('False')
+
+    def a_bool():
+        return [a_true, a_false]
+
+    def a_none():
+        return StrMatch('None')
+
+    # Collection types: lists, tuples, dictionaries
+
+    def list_elements():
+        return value, ZeroOrMore(list_sep, value)
+
+    def a_list():
+        return StrMatch('['), Optional(list_elements), StrMatch(']')
+
+    def a_tuple():
+        return StrMatch('('), Optional(list_elements), StrMatch(')')
+
+    def dictkv():
+        return an_id, kv_sep, value
+
+    def dict_elements():
+        return dictkv, Optional(list_sep, dictkv)
+
+    def a_dict():
+        return StrMatch('{'), ZeroOrMore(dict_elements), StrMatch('}')
+
+    # Key-values
+
+    def value():
+        return [whatami_id, a_number, a_string, a_none, a_bool, a_tuple, a_list, a_dict]
+
+    def kv():
+        return an_id, kv_sep, value
+
+    def kvs():
+        return kv, ZeroOrMore(list_sep, kv)
+
+    # Top level
+
+    def whatami_id():
+        return an_id, StrMatch('('), Optional(kvs), StrMatch(')')
+
+    def whatami_id_top():
+        return whatami_id, EOF
+
+    return ParserPython(whatami_id_top, reduce_tree=reduce_tree, debug=debug)
+
+
+class WhatamiParser(object):
 
     def __init__(self, debug=False):
         super(WhatamiParser, self).__init__()
-        self._parser = self._build_parser(debug=debug)
-
-    def _build_parser(self, debug=False):
-
-        # maybe `anything` would be better as the definition for `key`, given that we allow synonyms and the likes
-        # arpeggio does not allow unicode in regexps, it is easy by just allowing arbitrary re flags in RegExMatch
-
-        from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF
-
-        def identifier():
-            return RegExMatch(r'[_A-Za-z][_a-zA-Z0-9]*')
-
-        def number():
-            return RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
-
-        def string():
-            return StrMatch('\''), RegExMatch('[^\']*'), StrMatch('\'')
-
-        # def anything():
-        #     """Anything that does not contain the reserved characters."""
-        #     return RegExMatch(r'[^,:%s%s%s%s\[\]\{\}\(\)]*' % (self._separator,
-        #                                                        self._kv_separator,
-        #                                                        self._nested_open,
-        #                                                        self._nested_close))
-        #                                                        # FIXME: many of these are OK in strings
-
-        def sep():
-            return StrMatch(WhatamiParser._separator)
-
-        # Key-values
-        def key():
-            return identifier
-
-        def value():
-            return [nested, alist, atuple, adict, number, string]
-
-        def kvsep():
-            return StrMatch(self._kv_separator)
-
-        def kv():
-            return key, kvsep, value
-
-        def kvs():
-            return kv, ZeroOrMore(sep, key, kvsep, value)
-
-        # Nested
-        def nested_open():
-            return StrMatch(WhatamiParser._nested_open)
-
-        def nested_close():
-            return StrMatch(WhatamiParser._nested_close)
-
-        def nested():
-            return nested_open, whatami_id, nested_close
-
-        # Lists, tuples
-        def list_elements():
-            return value, ZeroOrMore(StrMatch(','), value)
-
-        def alist():
-            return StrMatch('['), Optional(list_elements), StrMatch(']')
-
-        def atuple():
-            return StrMatch('('), Optional(list_elements), StrMatch(')')
-
-        # Dictionary
-        def dictkv():
-            return key, StrMatch(':'), value
-
-        def dict_elements():
-            return dictkv, Optional(StrMatch(','), dictkv)
-
-        def adict():
-            return StrMatch('{'), ZeroOrMore(dict_elements), StrMatch('}')
-
-        # Top level
-
-        def whatami_id():
-            return identifier, StrMatch('('), Optional(kvs), StrMatch(')')
-
-        def whatami_id_top():
-            return whatami_id, EOF
-
-        return ParserPython(whatami_id_top, debug=debug)
+        self._parser = _build_whatami_parser(debug=debug)
 
     def parse(self, id_string):
         """Parses a whatami id string and returns the AST."""
         return self._parser.parse(id_string)
+
+
+class WhatamiTreeVisitor(PTNodeVisitor):
+
+    def __init__(self, defaults=True, debug=False, numbers_as_floats=True):
+        super(WhatamiTreeVisitor, self).__init__(defaults, debug)
+
+    def visit_number(self, node, children):
+        try:
+            return int(node.value)
+        except:
+            return float(node.value)
 
 
 def configuration_as_string(obj):
@@ -1113,26 +1124,29 @@ def configuration_as_string(obj):
 
 if __name__ == '__main__':
 
-    parser = WhatamiParser(debug=True)
+    parser = WhatamiParser(debug=False)
 
-    print parser.parse('rfc(n_jobs=4#n_trees=100')
+    print parser.parse('rfc(n_jobs=4, n_trees=100, seed=\'rng\', deep=True)')
 
-    # print parser.parse('rfc#n_jobs="multiple#"')
+    print parser.parse('rfc(n_jobs=4, n_trees=100)')
 
-    # print parser.parse('rfc#n_jobs="multiple#here=100"')
+    print parser.parse('rfc(n_jobs=multiple())')
 
-    # print parser.parse('C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'')
+    print parser.parse('rfc(n_jobs=multiple(here=100))')
 
-    # print parser.parse('C2#c1="C1#length=1#p1=\'blah\'#p2=\'bleh\'"#name=\'roxanne\'')
+    print parser.parse('C2(c1=C1(length=1,p1=\'blah\',p2=\'bleh\'), name=\'roxanne\')')
 
-    # print parser.parse('rfc#n_jobs=4#n_trees=100#seed=2#name=\'mola\'')
+    print parser.parse('C2(c1=C1(length=1, p1=\'blah\', p2=\'bleh\'), name=\'roxanne\')')
 
-    # print parser.parse("KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#"
-    #                    "precompute_distances=True#random_state=None#tol=0.0001#verbose=0")
+    print parser.parse('rfc(n_jobs=4, n_trees=100, seed=2, name=\'mola\')')
 
-    # norm_id = 'Normalizer#norm=\'l1\''
-    # kmeans_id = "KMeans#init='k-means++'#max_iter=300#n_clusters=12#n_init=10#" \
-    #             "precompute_distances=True#random_state=None#tol=0.0001#verbose=0"
-    # print parser.parse("Pipeline#steps=[('norm', %s), ('kmeans', %s)]" % (norm_id, kmeans_id))
+    print parser.parse("KMeans(init='k-means++', max_iter=300, n_clusters=12, n_init=10,"
+                       "precompute_distances=True, random_state=None, tol=0.0001, verbose=0)")
 
-    # print parser.parse('test#mola=[1, 2,         3]')
+    print parser.parse('test(mola=[1, 2,         3, True, False])')
+
+    norm_id = 'Normalizer(norm=\'l1\')'
+    kmeans_id = "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10," \
+                "precompute_distances=True,random_state=None,tol=0.0001,verbose=0)"
+    pipeline_id = "Pipeline(steps=[('norm', %s), ('kmeans', %s)])" % (norm_id, kmeans_id)
+    print parser.parse(pipeline_id)
