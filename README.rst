@@ -15,14 +15,13 @@ that python objects can adhere to.
 It works this way:
 
 -  Objects provide their own ids based on parameters=value dictionaries.
-   They do so by returning an instance of the *Configuration* class from
+   They do so by returning an instance of the *What* class from
    a method called *"what()"* (and that's all).
 
--  Optionally, this package provides a *Whatable* mixin that can be inherited
-   to provide automatic creation of *What* objects from the class dictionary
-   (or *WhatableD* to do so from slots or propertes). All attributes will be
-   considered part of the configuration, except for those whose names start or
-   end by '\_'.
+-  Optionally, this package provides a *whatable* decorator to provide automatic
+   creation of *What* objects from the class dictionary, slots and properties.
+   All attributes will be considered part of the configuration, except for those
+   whose names start or end by '\_'.
 
 
 Versioning
@@ -35,11 +34,12 @@ actually changes.
 Features
 --------
 
-- **Represent your computations as standardized strings.**
-- **whatamise your library: custom support for:**
- - scikit-learn
- - arch
- - pyopy
+* **Represent your computations as standardized strings.**
+* **"whatamise" your library**. Included support for:
+
+ * `scikit-learn`_
+ * `arch`_
+ * `pyopy`_
 
 
 Example
@@ -47,7 +47,7 @@ Example
 
 .. code:: python
 
-    # Objects of this class provide a configuration (What object)
+    # Objects of this class provide a configuration (`What` object)
     class DuckedConfigurable(object):
         def __init__(self, quantity, name, company=None, verbose=True):
            self.quantity = quantity
@@ -64,9 +64,10 @@ Example
     print duckedc.what().id()
     # ducked#company=None#name='salty-lollypops'#quantity=33
 
-    # Inheriting from Whatable makes objects gain a what() method;
+    # Using the whatable decorator makes objects gain a what() method;
     # in this case, what() is infered automatically
-    class Company(Whatable):
+    @whatable
+    class Company(object):
         def __init__(self, name, city, verbose=True):
             super(Company, self).__init__()
             self.name = name
@@ -82,7 +83,7 @@ Example
     print duckedc.what().id()
     # ducked#company="Company#city='Barcelona'#name='Chupa Chups'"#name='salty-lollypops'#quantity=33
 
-    # Also a function decorator is provided - use with caution
+    # We can also decorate functions and partials - use with caution
     @whatable
     def buy(company, price=2**32, currency='euro'):
         return '%s is now mine for %g %s' % (company.name, price, currency)
@@ -97,3 +98,6 @@ Example
 .. |Pypi Version| image:: https://badge.fury.io/py/whatami.svg
    :target: http://badge.fury.io/py/whatami
 .. _semantic versioning: http://semver.org/
+.. _scikit_learn: http://scikit-learn.org
+.. _arch: https://github.com/bashtage/arch
+.. _pyopy: https://github.com/sdvillal/pyopy
