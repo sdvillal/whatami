@@ -61,9 +61,7 @@ def c3(c1, c2, quote_string_values=True):
 
         @whatable(force_flag_as_whatami=True)
         def what(self):
-            return whatareyou(self,
-                              non_id_keys=('irrelevant',),
-                              quote_string_values=self._quote_string_values)
+            return whatareyou(self, non_id_keys=('irrelevant',))
     return C3()
 
 
@@ -247,13 +245,6 @@ def test_non_id_keys(c3):
     assert config_c3.key_synonym('c1') == 'C1Syn'
     assert config_c3.id() == "C3(C1Syn=C1(length=1,p1='blah',p2='bleh')," \
                              "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
-
-
-def test_non_quoted_string_values(c3):
-    # non-quoted string values must cascade recursively
-    # - this makes things complex, should get rid of this feat
-    c3id = "C3(c1=C1(length=1,p1=blah,p2=bleh),c2=C2(c1=C1(length=1,p1=blah,p2=bleh),name=roxanne))"
-    assert c3.what().id(quote_string_vals=False) == c3id
 
 
 def test_whatable_magics(c1):

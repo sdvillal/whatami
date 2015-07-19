@@ -116,10 +116,6 @@ class What(object):
     postfix_keys : list of keys, default None
         These keys will appear last in the configuration string.
         Their order is not affected by "sorted_by_key" flag.
-
-    quote_strings : boolean, default True
-        If True string values will be single-quoted in the configuration string.
-        This value can be overrided at anytime by specifying quote_string_values when calling to id()
     """
 
     def __init__(self,
@@ -131,8 +127,7 @@ class What(object):
                  synonyms=None,
                  sort_by_key=True,
                  prefix_keys=None,
-                 postfix_keys=None,
-                 quote_string_values=True):
+                 postfix_keys=None):
         super(What, self).__init__()
         self.name = name
         self.configdict = configuration_dict
@@ -141,7 +136,6 @@ class What(object):
         self._prefix_keys = prefix_keys if prefix_keys else []
         self._postfix_keys = postfix_keys if postfix_keys else []
         self._sort_by_key = sort_by_key
-        self._quote_strings = quote_string_values
         # Synonyms to allow more concise representations
         self._synonyms = {}
         if synonyms is not None:
@@ -196,15 +190,14 @@ class What(object):
         if self.nickname is not None:
             What.register_nickname(self.nickname, self.id(), save_what=save_what)
 
-    def nickname_or_id(self, nonids_too=False, maxlength=0, quote_string_vals=None):
+    def nickname_or_id(self, nonids_too=False, maxlength=0):
         """Returns the nickname if it exists, otherwise it returns the id.
         In either case nonids_too and maxlength are honored.
         """
         nn = self.nickname
         if nn is None:
             nn = self.id(nonids_too=nonids_too,
-                         maxlength=maxlength,
-                         quote_string_vals=self._quote_strings if quote_string_vals is None else quote_string_vals)
+                         maxlength=maxlength)
         return self._trim_too_long(nn, maxlength=maxlength)
 
     @staticmethod
@@ -300,25 +293,13 @@ class What(object):
 
     # ---- ID string generation
 
-    def _as_string(self, nonids_too=False, sep=',', quote_strings=None):
+    def _as_string(self, nonids_too=False):
         """Makes a best effort to represent this configuration as a string.
 
         Parameters
         ----------
         nonids_too : bool, default False
           if False, non-ids keys are ignored.
-
-        quote_strings : bool, defaults to None
-            if True, string values will be single-quoted
-            if False, string values will be unquoted
-            if None, string quoting policy defaults to this configuration's
-
-        sep : string, default '#'
-          the string to separate parameters; the default, '#', is a good value because
-          it comes early in the ASCII table (before any alphanum character); the caveat
-          is that it requires quotes when using on shell scripts
-          (as usually # is the comment opening character)
-          Choose carefully and be consistent.
 
         Returns
         -------
@@ -354,13 +335,12 @@ class What(object):
                    [(f, kvs_dict[f]) for f in self._postfix_keys]
 
         kvs = sort_kvs_fl()
-        return unicode(sep).join(
-            u'%s=%s' % (self.key_synonym(k),
-                        self._nested_string(v, self._quote_strings if quote_strings is None else quote_strings))
+        return u','.join(
+            u'%s=%s' % (self.key_synonym(k), self._nested_string(v))
             for k, v in kvs
             if nonids_too or k not in self._non_ids)
 
-    def id(self, nonids_too=False, maxlength=0, quote_string_vals=None):
+    def id(self, nonids_too=False, maxlength=0):
         """Returns the id string (unicode) of this configuration.
 
         Parameters
@@ -371,16 +351,9 @@ class What(object):
         malength: int, default 0
           If the id length goes over maxlength, the parameters part get replaced by its sha256.
           If <= 0, it is ignored and the full id string will be returned.
-
-        quote_string_vals: boolean, default None
-          If True, string values will be quoted.
-          If None, we use the Configuration set property.
         """
-        if quote_string_vals is None:
-            quote_string_vals = self._quote_strings
 
-        my_id = u'%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too,
-                                                                          quote_strings=quote_string_vals))
+        my_id = u'%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
@@ -389,16 +362,16 @@ class What(object):
             return hashlib.sha256(string).hexdigest()
         return string
 
-    def _nested_string(self, v, quote_string_vals):
+    def _nested_string(self, v):
         """Returns the nested configuration string for a variety of value types."""
 
         if isinstance(v, What):
-            return v.id(quote_string_vals=quote_string_vals)
+            return v.id()
         if hasattr(v, 'what'):
             configuration = getattr(v, 'what')
             configuration = configuration() if callable(configuration) else configuration
             if isinstance(configuration, What):
-                return configuration.id(quote_string_vals=quote_string_vals)
+                return configuration.id()
             raise Exception('object has a "configuration" attribute, but it is not of Configuration class')
         if inspect.isbuiltin(v):  # Special message if we try to pass something like sorted or np.array
             raise Exception('Cannot determine the argspec of a non-python function (%s). '
@@ -410,21 +383,18 @@ class What(object):
             config = copy(self)
             config.name = name
             config.configdict = keywords
-            return config.id(quote_string_vals=quote_string_vals)
+            return config.id()
         if isinstance(v, dict):
             my_copy = copy(self)
             my_copy.name = ''
             my_copy.configdict = v
-            return u'{%s}' % self._nested_string(my_copy, quote_string_vals)[1:-1]
+            return u'{%s}' % self._nested_string(my_copy)[1:-1]
         if isinstance(v, set):
-            return u'{%s}' % u','.join(
-                map(partial(self._nested_string, quote_string_vals=quote_string_vals), sorted(v)))
+            return u'{%s}' % u','.join(map(self._nested_string, sorted(v)))
         if isinstance(v, list):
-            return u'[%s]' % u','.join(
-                map(partial(self._nested_string, quote_string_vals=quote_string_vals), v))
+            return u'[%s]' % u','.join(map(self._nested_string, v))
         if isinstance(v, tuple):
-            return u'(%s)' % u','.join(
-                map(partial(self._nested_string, quote_string_vals=quote_string_vals), v))
+            return u'(%s)' % u','.join(map(self._nested_string, v))
         if inspect.isfunction(v):
             args, _, _, defaults = inspect.getargspec(v)
             defaults = [] if not defaults else defaults
@@ -433,16 +403,14 @@ class What(object):
             config = copy(self)
             config.name = v.__name__
             config.configdict = params_with_defaults
-            return config.id(quote_string_vals=quote_string_vals)
+            return config.id()
         if ' at 0x' in unicode(v):  # An object without proper representation, try a best effort
             config = copy(self)  # Careful
             config.name = v.__class__.__name__
             config.configdict = config_dict_for_object(v)
-            return config.id(quote_string_vals=quote_string_vals)
+            return config.id()
         if isinstance(v, (unicode, basestring)):
-            if quote_string_vals:
-                return u'\'%s\'' % v
-            return u'%s' % v
+            return u'\'%s\'' % v
         return unicode(v)
 
 
@@ -456,7 +424,6 @@ def whatareyou(obj,
                sort_by_key=True,
                prefix_keys=None,
                postfix_keys=None,
-               quote_string_values=True,
                # Config-dict building options
                add_dict=True,
                add_slots=True,
@@ -496,8 +463,7 @@ def whatareyou(obj,
                 synonyms=synonyms,
                 sort_by_key=sort_by_key,
                 prefix_keys=prefix_keys,
-                postfix_keys=postfix_keys,
-                quote_string_values=quote_string_values)
+                postfix_keys=postfix_keys)
 
 
 def _dict(obj):
@@ -706,7 +672,6 @@ def whatable(obj=None,
              sort_by_key=True,
              prefix_keys=None,
              postfix_keys=None,
-             quote_string_values=True,
              # Config-dict building options
              add_dict=True,
              add_slots=True,
@@ -786,7 +751,6 @@ def whatable(obj=None,
                        sort_by_key=sort_by_key,
                        prefix_keys=prefix_keys,
                        postfix_keys=postfix_keys,
-                       quote_string_values=quote_string_values,
                        # Config-dict building options
                        add_dict=add_dict,
                        add_slots=add_slots,
@@ -842,7 +806,6 @@ def whatable(obj=None,
                               sort_by_key=sort_by_key,
                               prefix_keys=prefix_keys,
                               postfix_keys=postfix_keys,
-                              quote_string_values=quote_string_values,
                               add_dict=add_dict,
                               add_slots=add_slots,
                               add_properties=add_properties,
