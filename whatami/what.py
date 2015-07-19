@@ -36,7 +36,7 @@ Examples
 >>> duckedc = DuckedConfigurable(33, 'salty-lollypops', verbose=False)
 >>> # The configuration id string sorts by key alphanumeric order, helping id consistency
 >>> print duckedc.what().id()
-ducked#company=None#name='salty-lollypops'#quantity=33
+ducked(company=None,name='salty-lollypops',quantity=33)
 >>> # Using the whatable decorator makes objects gain a what() method
 >>> # In this case, what() is infered automatically
 >>> @whatable
@@ -48,17 +48,17 @@ ducked#company=None#name='salty-lollypops'#quantity=33
 ...          self.social_reason_ = '%s S.A., %s' % (name, city)  # not part of config
 >>> cc = Company(name='Chupa Chups', city='Barcelona')
 >>> print cc.what().id()
-Company#city='Barcelona'#name='Chupa Chups'
+Company(city='Barcelona',name='Chupa Chups')
 >>> # Ultimately, we can nest whatables...
 >>> duckedc = DuckedConfigurable(33, 'salty-lollypops', company=cc, verbose=False)
 >>> print duckedc.what().id()
-ducked#company="Company#city='Barcelona'#name='Chupa Chups'"#name='salty-lollypops'#quantity=33
+ducked(company=Company(city='Barcelona',name='Chupa Chups'),name='salty-lollypops',quantity=33)
 >>> # Also a function decorator is provided - use with caution
 >>> @whatable
 ... def buy(company, price=2**32, currency='euro'):
 ...     return '%s is now mine for %g %s' % (company.name, price, currency)
 >>> print buy.what().id()
-buy#currency='euro'#price=4294967296
+buy(currency='euro',price=4294967296)
 """
 
 # Authors: Santi Villalba <sdvillal@gmail.com>
@@ -736,7 +736,7 @@ def whatable(obj=None,
     ...     return (x - mean) / std
     >>> cnormalize = whatable(normalize)
     >>> print cnormalize.what().id()
-    normalize#mean=3#std=2
+    normalize(mean=3,std=2)
     >>> print cnormalize.__name__
     normalize
     >>> cnormalize(5)
@@ -747,13 +747,13 @@ def whatable(obj=None,
     ... def thunk(x, name='hi'):
     ...     print x, name
     >>> print thunk.what().id()
-    thunk#name='hi'
+    thunk(name='hi')
     >>> from UserDict import UserDict
     >>> ud = whatable(UserDict())
     >>> is_whatable(ud)
     True
     >>> print ud.what().id()
-    UserDict#data={}
+    UserDict(data={})
     >>> @whatable(add_properties=True)
     ... class WhatableWithProps(object):
     ...     def __init__(self):
@@ -768,10 +768,10 @@ def whatable(obj=None,
     >>> is_whatable(wwp)
     True
     >>> print wwp.what().id()
-    WhatableWithProps#a=3#d=0
+    WhatableWithProps(a=3,d=0)
     >>> wwp = whatable(wwp, add_dict=False, add_properties=True)
     >>> print wwp.what().id()
-    WhatableWithProps#d=0
+    WhatableWithProps(d=0)
     """
 
     # class decorator
