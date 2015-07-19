@@ -37,9 +37,9 @@ Features
 * **Represent your computations as standardized strings.**
 * **"whatamise" your library**. Included support for:
 
- * `scikit-learn`_
- * `arch`_
- * `pyopy`_
+  * `scikit-learn`_
+  * `arch`_
+  * `pyopy`_
 
 
 Example
