@@ -1108,10 +1108,6 @@ def configuration_as_string(obj):
         except:
             raise TypeError('the object must be None, a string, have a what() method or have an id() method')
 
-#
-# TODO: simple nested_string for numpy arrays,
-#       we could go for hashes for big ones and other custom reprs depending on their nature
-#
 
 if __name__ == '__main__':
 
@@ -1141,3 +1137,10 @@ if __name__ == '__main__':
                 "precompute_distances=True,random_state=None,tol=0.0001,verbose=0)"
     pipeline_id = "Pipeline(steps=[('norm', %s), ('kmeans', %s)])" % (norm_id, kmeans_id)
     print parser.parse(pipeline_id)
+
+#
+# TODO: simple nested_string for numpy arrays, pandas dataframes and the like
+#       we could go for hashes for big ones and other custom reprs depending on their nature
+#       since we do not want to depend on these libes, we need to branch code for when they are
+#       not present, or just add a pligin mechanism
+#
