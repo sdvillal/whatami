@@ -34,11 +34,11 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Operating System :: Unix',
     ],
+    requires=['arpeggio'],
     tests_require=['pytest'],
     extras_require={
         'sklearn': ('scikit-learn',),
         'ubermonkey': ('forbiddenfruit',),
-        'parse': ('arpeggio',)
     },
     platforms=['Any'],
 )
