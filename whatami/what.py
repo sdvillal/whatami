@@ -389,11 +389,12 @@ class What(object):
             return hashlib.sha256(string).hexdigest()
         return string
 
-    def _nested_string(self, v, quote_string_vals, nested_start='"', nested_end='"'):
+    def _nested_string(self, v, quote_string_vals, nested_start='(', nested_end=')'):
         """Returns the nested configuration string for a variety of value types."""
 
         def nest(string):
-            return u'%s%s%s' % (nested_start, string, nested_end)
+            # u'%s%s%s' % (nested_start, string, nested_end)
+            return string
 
         def unquote_whatable(v):
             if hasattr(v, 'what'):
