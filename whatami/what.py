@@ -72,7 +72,7 @@ from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor
 
-from whatami.misc import callable2call, is_iterable, deprecated
+from whatami.misc import callable2call, is_iterable
 
 
 # http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
@@ -850,7 +850,7 @@ def extract_decorated_function_from_closure(c):
     return c
 
 
-@deprecated
+# DELETEME
 def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, remove_quotes=True):
     """
     Parses configuration string into a pair (name, configuration).
