@@ -3,6 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from future.builtins import str
 from datetime import datetime
 import inspect
 from time import strptime, mktime

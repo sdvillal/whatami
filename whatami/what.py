@@ -35,7 +35,7 @@ Examples
 >>>
 >>> duckedc = DuckedConfigurable(33, 'salty-lollypops', verbose=False)
 >>> # The configuration id string sorts by key alphanumeric order, helping id consistency
->>> print duckedc.what().id()
+>>> print(duckedc.what().id())
 ducked(company=None,name='salty-lollypops',quantity=33)
 >>> # Using the whatable decorator makes objects gain a what() method
 >>> # In this case, what() is infered automatically
@@ -47,23 +47,26 @@ ducked(company=None,name='salty-lollypops',quantity=33)
 ...          self._verbose = verbose  # not part of config
 ...          self.social_reason_ = '%s S.A., %s' % (name, city)  # not part of config
 >>> cc = Company(name='Chupa Chups', city='Barcelona')
->>> print cc.what().id()
+>>> print(cc.what().id())
 Company(city='Barcelona',name='Chupa Chups')
 >>> # Ultimately, we can nest whatables...
 >>> duckedc = DuckedConfigurable(33, 'salty-lollypops', company=cc, verbose=False)
->>> print duckedc.what().id()
+>>> print(duckedc.what().id())
 ducked(company=Company(city='Barcelona',name='Chupa Chups'),name='salty-lollypops',quantity=33)
 >>> # Also a function decorator is provided - use with caution
 >>> @whatable
 ... def buy(company, price=2**32, currency='euro'):
 ...     return '%s is now mine for %g %s' % (company.name, price, currency)
->>> print buy.what().id()
+>>> print(buy.what().id())
 buy(currency='euro',price=4294967296)
 """
 
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import print_function, unicode_literals
+from future.builtins import str
+from past.builtins import basestring as basestring23
 import hashlib
 import inspect
 import shlex
@@ -139,7 +142,7 @@ class What(object):
         # Synonyms to allow more concise representations
         self._synonyms = {}
         if synonyms is not None:
-            for longname, shortname in synonyms.iteritems():
+            for longname, shortname in synonyms.items():
                 self.set_key_synonym(longname, shortname)
         # Keys here won't make it to the configuration string unless explicitly asked for
         if not non_id_keys:
@@ -218,7 +221,7 @@ class What(object):
         if hasattr(what, 'what') and hasattr(what.what(), 'id'):
             new_id = what.what().id()
             new_what = what if save_what else None
-        elif isinstance(what, basestring):
+        elif isinstance(what, basestring23):
             new_id = what
             new_what = None
         else:
@@ -321,7 +324,7 @@ class What(object):
 
         # Key-value list
         def sort_kvs_fl():
-            kvs = self.configdict.iteritems()
+            kvs = self.configdict.items()
             if self._sort_by_key:
                 kvs = sorted(kvs)
             first_set = set(self._prefix_keys)
@@ -335,8 +338,8 @@ class What(object):
                    [(f, kvs_dict[f]) for f in self._postfix_keys]
 
         kvs = sort_kvs_fl()
-        return u','.join(
-            u'%s=%s' % (self.key_synonym(k), self._nested_string(v))
+        return ','.join(
+            '%s=%s' % (self.key_synonym(k), self._nested_string(v))
             for k, v in kvs
             if nonids_too or k not in self._non_ids)
 
@@ -353,7 +356,7 @@ class What(object):
           If <= 0, it is ignored and the full id string will be returned.
         """
 
-        my_id = u'%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too))
+        my_id = '%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
@@ -388,13 +391,13 @@ class What(object):
             my_copy = copy(self)
             my_copy.name = ''
             my_copy.configdict = v
-            return u'{%s}' % self._nested_string(my_copy)[1:-1]
+            return '{%s}' % self._nested_string(my_copy)[1:-1]
         if isinstance(v, set):
-            return u'{%s}' % u','.join(map(self._nested_string, sorted(v)))
+            return '{%s}' % ','.join(map(self._nested_string, sorted(v)))
         if isinstance(v, list):
-            return u'[%s]' % u','.join(map(self._nested_string, v))
+            return '[%s]' % ','.join(map(self._nested_string, v))
         if isinstance(v, tuple):
-            return u'(%s)' % u','.join(map(self._nested_string, v))
+            return '(%s)' % ','.join(map(self._nested_string, v))
         if inspect.isfunction(v):
             args, _, _, defaults = inspect.getargspec(v)
             defaults = [] if not defaults else defaults
@@ -404,14 +407,14 @@ class What(object):
             config.name = v.__name__
             config.configdict = params_with_defaults
             return config.id()
-        if ' at 0x' in unicode(v):  # An object without proper representation, try a best effort
+        if ' at 0x' in str(v):  # An object without proper representation, try a best effort
             config = copy(self)  # Careful
             config.name = v.__class__.__name__
             config.configdict = config_dict_for_object(v)
             return config.id()
-        if isinstance(v, (unicode, basestring)):
-            return u'\'%s\'' % v
-        return unicode(v)
+        if isinstance(v, basestring23):
+            return '\'%s\'' % v
+        return str(v)
 
 
 def whatareyou(obj,
@@ -438,11 +441,11 @@ def whatareyou(obj,
     Examples
     --------
     >>> def mola(a, n=5):
-    ...     print a + n
-    >>> print whatareyou(mola).id()
+    ...     print(a + n)
+    >>> print(whatareyou(mola).id())
     mola(n=5)
     >>> from functools import partial
-    >>> print whatareyou(partial(mola, n=7))
+    >>> print(whatareyou(partial(mola, n=7)))
     mola(n=7)
     """
     try:
@@ -471,7 +474,7 @@ def _dict(obj):
 
     Examples
     --------
-    >>> from UserDict import UserDict
+    >>> from future.moves.collections import UserDict
     >>> _dict(UserDict())
     {'data': {}}
     >>> class NoSlots(object):
@@ -500,7 +503,7 @@ def _slotsdict(obj):
 
     Examples
     --------
-    >>> from UserDict import UserDict
+    >>> from future.moves.collections import UserDict
     >>> _slotsdict(UserDict())
     {}
     >>> class Slots(object):
@@ -622,7 +625,7 @@ def config_dict_for_object(obj,
         cd.update(_slotsdict(obj))
     if add_properties:
         cd.update(_propsdict(obj))
-    return {k: v for k, v in cd.iteritems() if
+    return {k: v for k, v in cd.items() if
             (exclude_prefix and not k.startswith(exclude_prefix)) and
             (exclude_postfix and not k.endswith(exclude_postfix)) and
             k not in set(excludes)}
@@ -700,9 +703,9 @@ def whatable(obj=None,
     >>> def normalize(x, mean=3, std=2):
     ...     return (x - mean) / std
     >>> cnormalize = whatable(normalize)
-    >>> print cnormalize.what().id()
+    >>> print(cnormalize.what().id())
     normalize(mean=3,std=2)
-    >>> print cnormalize.__name__
+    >>> print(cnormalize.__name__)
     normalize
     >>> cnormalize(5)
     1
@@ -710,14 +713,14 @@ def whatable(obj=None,
     False
     >>> @whatable
     ... def thunk(x, name='hi'):
-    ...     print x, name
-    >>> print thunk.what().id()
+    ...     print(x, name)
+    >>> print(thunk.what().id())
     thunk(name='hi')
-    >>> from UserDict import UserDict
+    >>> from future.moves.collections import UserDict
     >>> ud = whatable(UserDict())
     >>> is_whatable(ud)
     True
-    >>> print ud.what().id()
+    >>> print(ud.what().id())
     UserDict(data={})
     >>> @whatable(add_properties=True)
     ... class WhatableWithProps(object):
@@ -732,10 +735,10 @@ def whatable(obj=None,
     >>> wwp = WhatableWithProps()
     >>> is_whatable(wwp)
     True
-    >>> print wwp.what().id()
+    >>> print(wwp.what().id())
     WhatableWithProps(a=3,d=0)
     >>> wwp = whatable(wwp, add_dict=False, add_properties=True)
-    >>> print wwp.what().id()
+    >>> print(wwp.what().id())
     WhatableWithProps(d=0)
     """
 
@@ -826,7 +829,7 @@ def whatable(obj=None,
             except:
                 from forbiddenfruit import curse
                 curse(obj, 'what', whatablefunc)
-                print 'WARNING, patched builtin/extension type %s' % type(obj)
+                print('WARNING, patched builtin/extension type %s' % type(obj))
         else:
             obj.what = types.MethodType(whatablefunc, obj)
             # This will anyway fail for extension types (can we make forbiddenfruit work with instances?)
@@ -880,11 +883,11 @@ def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, r
     Examples
     --------
     >>> (name, config) = parse_id_string('rfc#n_jobs="multiple#here=100"')
-    >>> print name
+    >>> print(name)
     rfc
-    >>> print len(config)
+    >>> print(len(config))
     1
-    >>> print config['n_jobs']
+    >>> print(config['n_jobs'])
     ('multiple', {'here': 100})
     """
     # Auxiliary functions
@@ -1035,7 +1038,7 @@ class WhatamiParser(object):
 
 class WhatamiTreeVisitor(PTNodeVisitor):
 
-    def __init__(self, defaults=True, debug=False, numbers_as_floats=True):
+    def __init__(self, defaults=True, debug=False):
         super(WhatamiTreeVisitor, self).__init__(defaults, debug)
 
     def visit_number(self, node, children):
@@ -1057,7 +1060,7 @@ def configuration_as_string(obj):
     """
     if obj is None:
         return None
-    if isinstance(obj, basestring):
+    if isinstance(obj, basestring23):
         return obj
     try:
         return obj.what().id()
@@ -1072,30 +1075,30 @@ if __name__ == '__main__':
 
     parser = WhatamiParser(debug=False)
 
-    print parser.parse('rfc(n_jobs=4, n_trees=100, seed=\'rng\', deep=True)')
+    print(parser.parse('rfc(n_jobs=4, n_trees=100, seed=\'rng\', deep=True)'))
 
-    print parser.parse('rfc(n_jobs=4, n_trees=100)')
+    print(parser.parse('rfc(n_jobs=4, n_trees=100)'))
 
-    print parser.parse('rfc(n_jobs=multiple())')
+    print(parser.parse('rfc(n_jobs=multiple())'))
 
-    print parser.parse('rfc(n_jobs=multiple(here=100))')
+    print(parser.parse('rfc(n_jobs=multiple(here=100))'))
 
-    print parser.parse('C2(c1=C1(length=1,p1=\'blah\',p2=\'bleh\'), name=\'roxanne\')')
+    print(parser.parse('C2(c1=C1(length=1,p1=\'blah\',p2=\'bleh\'), name=\'roxanne\')'))
 
-    print parser.parse('C2(c1=C1(length=1, p1=\'blah\', p2=\'bleh\'), name=\'roxanne\')')
+    print(parser.parse('C2(c1=C1(length=1, p1=\'blah\', p2=\'bleh\'), name=\'roxanne\')'))
 
-    print parser.parse('rfc(n_jobs=4, n_trees=100, seed=2, name=\'mola\')')
+    print(parser.parse('rfc(n_jobs=4, n_trees=100, seed=2, name=\'mola\')'))
 
-    print parser.parse("KMeans(init='k-means++', max_iter=300, n_clusters=12, n_init=10,"
-                       "precompute_distances=True, random_state=None, tol=0.0001, verbose=0)")
+    print(parser.parse("KMeans(init='k-means++', max_iter=300, n_clusters=12, n_init=10,"
+                       "precompute_distances=True, random_state=None, tol=0.0001, verbose=0)"))
 
-    print parser.parse('test(mola=[1, 2,         3, True, False])')
+    print(parser.parse('test(mola=[1, 2,         3, True, False])'))
 
     norm_id = 'Normalizer(norm=\'l1\')'
     kmeans_id = "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10," \
                 "precompute_distances=True,random_state=None,tol=0.0001,verbose=0)"
     pipeline_id = "Pipeline(steps=[('norm', %s), ('kmeans', %s)])" % (norm_id, kmeans_id)
-    print parser.parse(pipeline_id)
+    print(parser.parse(pipeline_id))
 
 #
 # TODO: simple nested_string for numpy arrays, pandas dataframes and the like

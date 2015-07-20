@@ -34,7 +34,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Operating System :: Unix',
     ],
-    requires=['arpeggio'],
+    requires=['arpeggio', 'future'],
     tests_require=['pytest'],
     extras_require={
         'sklearn': ('scikit-learn',),
