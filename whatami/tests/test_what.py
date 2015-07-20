@@ -92,7 +92,7 @@ def test_parse_id_simple():
     # No name
     with pytest.raises(Exception) as excinfo:
         parse_id_string('#param=55')
-    assert excinfo.value.message == '#param=55 has no name, and it should (it starts already by #)'
+    assert str(excinfo.value) == '#param=55 has no name, and it should (it starts already by #)'
 
 
 @pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
@@ -124,28 +124,28 @@ def test_parse_id_invalid():
     # Configurations should not be empty
     with pytest.raises(Exception) as excinfo:
         parse_id_string('')
-    assert excinfo.value.message == 'Cannot parse empty configuration strings'
+    assert str(excinfo.value) == 'Cannot parse empty configuration strings'
 
     # Configurations should have a name
     with pytest.raises(Exception) as excinfo:
         parse_id_string('#noname=invalid')
-    assert excinfo.value.message == '#noname=invalid has no name, and it should (it starts already by #)'
+    assert str(excinfo.value) == '#noname=invalid has no name, and it should (it starts already by #)'
 
     # Keys should exist
     with pytest.raises(Exception) as excinfo:
         parse_id_string('useless#=no_key_is_invalid')
-    assert excinfo.value.message == 'Splitting has not worked. Missing at least one key or a value.'
+    assert str(excinfo.value) == 'Splitting has not worked. Missing at least one key or a value.'
 
     # Values should exist
     with pytest.raises(Exception) as excinfo:
         parse_id_string('useless#no_value_is_invalid=')
-    assert excinfo.value.message == 'Splitting has not worked. Missing at least one key or a value.'
+    assert str(excinfo.value) == 'Splitting has not worked. Missing at least one key or a value.'
 
     # The only non-word character should be "="
     with pytest.raises(Exception) as excinfo:
         parse_id_string('useless#at@is_invalid')
-    assert excinfo.value.message == 'Splitting has not worked. ' \
-                                    'There is something that is not a = where there should be.'
+    assert str(excinfo.value) == 'Splitting has not worked. ' \
+                                 'There is something that is not a = where there should be.'
 
 
 # --- Generating id strings
@@ -163,7 +163,7 @@ def test_configuration_nonids_prefix_postfix():
         What('tc',
              {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
              non_id_keys=str)
-    assert excinfo.value.message == 'non_ids must be None or an iterable'
+    assert str(excinfo.value) == 'non_ids must be None or an iterable'
 
     # Synonyms
     c1 = What('tc',
@@ -186,7 +186,7 @@ def test_configuration_nonids_prefix_postfix():
              non_id_keys=('verbose', 'n_jobs'),
              prefix_keys=('p3', 'p2'),
              postfix_keys=('p1', 'p2')).id()
-    assert excinfo.value.message == 'Some identifiers (set([u\'p2\'])) appear in both first and last, they should not'
+    assert str(excinfo.value) == 'Some identifiers (set([u\'p2\'])) appear in both first and last, they should not'
 
 
 def test_configuration_as_string():
@@ -197,7 +197,7 @@ def test_configuration_as_string():
 
     with pytest.raises(Exception) as excinfo:
         configuration_as_string(datetime)
-    assert excinfo.value.message == 'the object must be None, a string, have a what() method or have an id() method'
+    assert str(excinfo.value) == 'the object must be None, a string, have a what() method or have an id() method'
 
 
 def test_non_nested_configurations(c1):
@@ -279,8 +279,8 @@ def test_whatable_builtins(c1):
     c1.p1 = sorted
     with pytest.raises(Exception) as excinfo:
         c1.what().id()
-    assert excinfo.value.message == 'Cannot determine the argspec of a non-python function (sorted). ' \
-                                    'Please wrap it in a whatable'
+    assert str(excinfo.value) == 'Cannot determine the argspec of a non-python function (sorted). ' \
+                                 'Please wrap it in a whatable'
 
 
 def test_whatable_anyobject(c1):
@@ -331,7 +331,7 @@ def test_whatable_data_descriptors():
     setattr(cp, 'dprop', property(lambda: 5))
     with pytest.raises(Exception) as excinfo:
         cp.what().id()
-    assert excinfo.value.message == 'Dynamic properties are not suppported.'
+    assert str(excinfo.value) == 'Dynamic properties are not suppported.'
 
 
 def test_is_whatable(c1):
@@ -377,8 +377,8 @@ def test_whatable_does_not_override_what(c1):
     assert not is_whatable(c1)
     with pytest.raises(Exception) as excinfo:
         whatable(c1)
-    assert excinfo.value.message == 'object already has an attribute what, and is not a whatami what, ' \
-                                    'if you know what I mean'
+    assert str(excinfo.value) == 'object already has an attribute what, and is not a whatami what, ' \
+                                 'if you know what I mean'
 
 
 def test_whatable_torturing_inheritance():
@@ -490,7 +490,7 @@ def test_regnick_with_what(c1):
 def test_regnick_only_what():
     with pytest.raises(Exception) as excinfo:
         What.register_nickname('c1', 1)
-    assert excinfo.value.message == '"what" must be a whatable or a string, but is a <type \'int\'>'
+    assert str(excinfo.value) == '"what" must be a whatable or a string, but is a <type \'int\'>'
 
 
 def test_regnick_remove_id(c1):
@@ -509,12 +509,12 @@ def test_regnick_do_not_reregister(c1):
     What.register_nickname('c1', c1, save_what=False)
     with pytest.raises(Exception) as excinfo:
         What.register_nickname('c1', 'blahblehblih')
-    assert excinfo.value.message == 'nickname "c1" is already associated with id ' \
-                                    '"C1(length=1,p1=\'blah\',p2=\'bleh\')", delete it before updating'
+    assert str(excinfo.value) == 'nickname "c1" is already associated with id ' \
+                                 '"C1(length=1,p1=\'blah\',p2=\'bleh\')", delete it before updating'
     with pytest.raises(Exception) as excinfo:
         What.register_nickname('c2', c1.what().id())
-    assert excinfo.value.message == 'id "%s" is already associated with nickname "c1", delete it before updating' %\
-                                    c1.what().id()
+    assert str(excinfo.value) == 'id "%s" is already associated with nickname "c1", delete it before updating' %\
+                                 c1.what().id()
     # no problem if we remove it first...
     What.remove_nickname('c1')
     assert c1.what().nickname is None

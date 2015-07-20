@@ -49,8 +49,8 @@ def test_callable2call_builtins():
 def test_callable2call_wrongargs():
     with pytest.raises(Exception) as excinfo:
         callable2call('sorted')
-    assert excinfo.value.message == 'Only callables (partials, functions, builtins...) are allowed, ' \
-                                    'u\'sorted\' is none of them'
+    assert str(excinfo.value) == 'Only callables (partials, functions, builtins...) are allowed, ' \
+                                 '\'sorted\' is none of them'
 
 
 def test_callable2call_lambdas():
