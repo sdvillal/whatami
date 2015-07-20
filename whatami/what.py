@@ -65,7 +65,9 @@ buy(currency='euro',price=4294967296)
 # Licence: BSD 3 clause
 
 from __future__ import print_function, unicode_literals, absolute_import
+import future
 from future.builtins import str
+from future.utils import PY3
 from past.builtins import basestring as basestring23
 import hashlib
 import inspect
@@ -636,11 +638,11 @@ def is_whatable(obj):
 
     Examples
     --------
-    >>> wp = whatable(partial(str, a=3))
-    >>> is_whatable(wp)
-    True
-    >>> is_whatable(str)
-    False
+    # >>> wp = whatable(partial(str, a=3))
+    # >>> is_whatable(wp)
+    # True
+    # >>> is_whatable(str)
+    # False
     >>> @whatable
     ... class WO(object):
     ...     def __init__(self):
@@ -654,7 +656,8 @@ def is_whatable(obj):
     """
     try:
         what_method = obj.what
-        if hasattr(what_method, 'im_self') and what_method.im_self is None:
+        selfbind = '__self__' if PY3 else 'im_self'
+        if getattr(what_method, selfbind, None) is None:
             # Unbounded method, so this comes from a class
             if hasattr(what_method, 'whatami'):
                 return True
