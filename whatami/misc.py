@@ -8,6 +8,7 @@ from __future__ import unicode_literals, absolute_import
 import datetime
 import inspect
 from functools import partial
+from itertools import chain
 
 
 def callable2call(c, closure_extractor=lambda c: c):
@@ -66,7 +67,7 @@ def callable2call(c, closure_extractor=lambda c: c):
             args = [] if not args else args
             args_set = set(args)
             # Check that everything is fine...
-            keywords = dict(zip(args[-len(defaults):], defaults) + keywords.items())  # N.B. order matters
+            keywords = dict(chain(zip(args[-len(defaults):], defaults) + keywords.items()))  # N.B. order matters
             keywords_set = set(keywords.keys())
             if len(keywords_set - args_set) > 0:
                 raise Exception('Some partial %r keywords are not parameters of the function %s' %
@@ -80,7 +81,7 @@ def callable2call(c, closure_extractor=lambda c: c):
             return callable2call_recursive(
                 c.func,
                 positional=positional + list(c.args),                  # N.B. order matters
-                keywords=dict(pkeywords.items() + keywords.items()))   # N.B. order matters
+                keywords=dict(chain(pkeywords.items() + keywords.items())))   # N.B. order matters
         if hasattr(c, '__call__'):
             # No way to get the argspec from anything arriving here (builtins and the like...)
             return c.__name__, keywords
