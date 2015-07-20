@@ -42,11 +42,19 @@ def callable2call(c, closure_extractor=lambda c: c):
     >>> callable2call(partial(map))
     ('map', {})
 
-    >>> callable2call(partial(map, function=str))
-    ('map', {'function': <type 'str'>})
+    >>> name, params = callable2call(partial(map, function=str))
+    >>> name
+    'map'
+    >>> 'str' in str(params['function'])
+    True
 
-    >>> callable2call(partial(partial(map, function=str), iterable1=()))
-    ('map', {'function': <type 'str'>, 'iterable1': ()})
+    >>> name, params = callable2call(partial(partial(map, function=str), iterable1=()))
+    >>> name
+    'map'
+    >>> 'str' in str(params['function'])
+    True
+    >>> () == params['iterable1']
+    True
 
     >>> callable2call(lambda x: x)
     ('<lambda>', {})
