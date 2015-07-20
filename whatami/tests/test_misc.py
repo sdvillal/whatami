@@ -5,6 +5,7 @@
 
 from __future__ import unicode_literals, absolute_import
 from functools import partial
+from future.utils import PY3
 
 import pytest
 
@@ -49,8 +50,11 @@ def test_callable2call_builtins():
 def test_callable2call_wrongargs():
     with pytest.raises(Exception) as excinfo:
         callable2call('sorted')
-    assert str(excinfo.value) == 'Only callables (partials, functions, builtins...) are allowed, ' \
-                                 '\'sorted\' is none of them'
+    if PY3:
+        expected = 'Only callables (partials, functions, builtins...) are allowed, \'sorted\' is none of them'
+    else:
+        expected = 'Only callables (partials, functions, builtins...) are allowed, u\'sorted\' is none of them'
+    assert str(excinfo.value) == expected
 
 
 def test_callable2call_lambdas():
