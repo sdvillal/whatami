@@ -3,6 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import unicode_literals
 from datetime import datetime
 from functools import partial
 import hashlib
@@ -185,7 +186,7 @@ def test_configuration_nonids_prefix_postfix():
              non_id_keys=('verbose', 'n_jobs'),
              prefix_keys=('p3', 'p2'),
              postfix_keys=('p1', 'p2')).id()
-    assert excinfo.value.message == 'Some identifiers (set([\'p2\'])) appear in both first and last, they should not'
+    assert excinfo.value.message == 'Some identifiers (set([u\'p2\'])) appear in both first and last, they should not'
 
 
 def test_configuration_as_string():

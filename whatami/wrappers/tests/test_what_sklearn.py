@@ -2,7 +2,8 @@
 
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
-import pytest
+from __future__ import unicode_literals
+from future.builtins import str
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline

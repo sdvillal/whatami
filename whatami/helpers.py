@@ -4,6 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import unicode_literals
 import datetime
 import inspect
 from collections import OrderedDict

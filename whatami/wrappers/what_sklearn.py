@@ -13,9 +13,9 @@ Example
 >>> # Use what() to retrieve the id of a model
 >>> from sklearn.ensemble import RandomForestClassifier
 >>> rfc = RandomForestClassifier(n_jobs=8, n_estimators=23)
->>> print rfc.what().id()
+>>> print(rfc.what().id())
 rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,random_state=None,warm_start=False)
->>> print rfc.what()
+>>> print(rfc.what())
 rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,n_jobs=8,oob_score=False,random_state=None,verbose=0,warm_start=False)
 
 Implementation Notes
@@ -40,6 +40,7 @@ It also makes really easy to add a what() method to scikit estimators.
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import unicode_literals
 import inspect
 import warnings
 
@@ -71,7 +72,7 @@ _LAST_SKLEARN_CHECKED = '1.5.1'
 _SKLRegistry = {}
 
 
-class _SklearnEstimatorID:
+class _SklearnEstimatorID(object):
     """
     Stores information about sklearn short names, non_id_params, notes and possibly others.
 
@@ -170,7 +171,7 @@ _a(FeatureUnion, 'f_union', ('n_jobs',))
 
 
 # Make the invese map: short_name -> long_name
-_SKLShort2Long = dict((v.short_name, k) for k, v in _SKLRegistry.iteritems())
+_SKLShort2Long = dict((v.short_name, k) for k, v in _SKLRegistry.items())
 
 
 # ----- Monkey-patching for whatability
@@ -201,7 +202,7 @@ def whatamise_sklearn(check=False, log=False):
     if check:
         _check_all_monkeypatched()
     if log:
-        print 'Scikit-Learn estimators now are whatable'
+        print('Scikit-Learn estimators now are whatable')
 
 
 def _check_all_monkeypatched():

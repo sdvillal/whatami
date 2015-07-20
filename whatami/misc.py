@@ -4,10 +4,10 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import unicode_literals
 import datetime
 import inspect
 from functools import partial
-import warnings
 
 
 def callable2call(c, closure_extractor=lambda c: c):
@@ -117,8 +117,8 @@ def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
             return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
     except ImportError:
         try:
-            import urllib2
-            for line in urllib2.urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
+            from future.moves.urllib.request import urlopen
+            for line in urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
                 if 'UTC' in line:
                     return line.strip()[4:]
         except:
@@ -130,10 +130,6 @@ def all_subclasses(cls):
 
     Examples
     --------
-    This would only work on python 2 and if run as docstrings...
-    >>> str in all_subclasses(basestring) and unicode in all_subclasses(basestring)
-    True
-
     Some C inheritance...
     >>> bool in all_subclasses(int)
     True
@@ -141,9 +137,9 @@ def all_subclasses(cls):
     False
 
     This is recursive...
-    >>> class my_unicode(unicode):
+    >>> class my_str(str):
     ...     pass
-    >>> my_unicode in all_subclasses(basestring)
+    >>> my_str in all_subclasses(str)
     True
     """
     return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in all_subclasses(s)]

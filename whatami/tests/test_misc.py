@@ -3,6 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import unicode_literals
 from functools import partial
 
 import pytest
@@ -15,7 +16,7 @@ def test_is_iterable():
     assert is_iterable([]) is True
     assert is_iterable((1, 2, 3)) is True
     assert is_iterable(()) is True
-    assert is_iterable(xrange(19)) is True
+    assert is_iterable(range(19)) is True
     assert is_iterable('abc') is True
     assert is_iterable(None) is False
     assert is_iterable(2) is False
@@ -49,7 +50,7 @@ def test_callable2call_wrongargs():
     with pytest.raises(Exception) as excinfo:
         callable2call('sorted')
     assert excinfo.value.message == 'Only callables (partials, functions, builtins...) are allowed, ' \
-                                    '\'sorted\' is none of them'
+                                    'u\'sorted\' is none of them'
 
 
 def test_callable2call_lambdas():
