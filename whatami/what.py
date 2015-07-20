@@ -793,7 +793,10 @@ def whatable(obj=None,
         if force_flag_as_whatami:
             # http://legacy.python.org/dev/peps/pep-0232/
             # http://stackoverflow.com/questions/23345005/does-pep-232-also-works-for-instance-methods
-            obj.what.__func__.whatami = True  # mark this method as a whatami method
+            if not PY3:
+                obj.what.__func__.whatami = True  # mark this method as a whatami method
+            else:
+                obj.what.whatami = True
             return obj
         else:
             raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
