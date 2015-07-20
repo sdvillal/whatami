@@ -359,7 +359,7 @@ class What(object):
     @staticmethod
     def _trim_too_long(string, maxlength=0):
         if 0 < maxlength < len(string):
-            return hashlib.sha256(string).hexdigest()
+            return hashlib.sha256(string.encode('utf-8')).hexdigest()
         return string
 
     def _nested_string(self, v):

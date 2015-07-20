@@ -7,6 +7,7 @@ from __future__ import unicode_literals, absolute_import
 from datetime import datetime
 from functools import partial
 import hashlib
+from future.utils import PY3
 
 import pytest
 
@@ -186,7 +187,7 @@ def test_configuration_nonids_prefix_postfix():
              non_id_keys=('verbose', 'n_jobs'),
              prefix_keys=('p3', 'p2'),
              postfix_keys=('p1', 'p2')).id()
-    assert str(excinfo.value) == 'Some identifiers (set([u\'p2\'])) appear in both first and last, they should not'
+    assert str(excinfo.value) == 'Some identifiers ({\'p2\'}) appear in both first and last, they should not'
 
 
 def test_configuration_as_string():
@@ -240,7 +241,7 @@ def test_non_id_keys(c3):
                                             "irrelevant=True)"
     c3id = "C3(c1=C1(length=1,p1='blah',p2='bleh'),c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
     assert config_c3.id(nonids_too=False) == c3id
-    sha2 = hashlib.sha256(c3id).hexdigest()
+    sha2 = hashlib.sha256(c3id.encode('utf-8')).hexdigest()
     assert config_c3.id(maxlength=1) == sha2
     config_c3.set_key_synonym('c1', 'C1Syn')
     assert config_c3.key_synonym('c1') == 'C1Syn'
@@ -490,7 +491,9 @@ def test_regnick_with_what(c1):
 def test_regnick_only_what():
     with pytest.raises(Exception) as excinfo:
         What.register_nickname('c1', 1)
-    assert str(excinfo.value) == '"what" must be a whatable or a string, but is a <type \'int\'>'
+    expected = '"what" must be a whatable or a string, but is a <type \'int\'>' if not PY3 else \
+        '"what" must be a whatable or a string, but is a <class \'int\'>'
+    assert str(excinfo.value) == expected
 
 
 def test_regnick_remove_id(c1):
