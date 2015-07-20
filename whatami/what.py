@@ -387,7 +387,7 @@ class What(object):
             my_copy.configdict = v
             return '{%s}' % self._nested_string(my_copy)[1:-1]
         if isinstance(v, set):
-            return '{%s}' % ','.join(map(self._nested_string, sorted(v)))
+            return '{%s}' % ','.join(sorted(map(self._nested_string, v)))
         if isinstance(v, list):
             return '[%s]' % ','.join(map(self._nested_string, v))
         if isinstance(v, tuple):
