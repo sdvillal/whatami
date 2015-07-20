@@ -702,7 +702,7 @@ def whatable(obj=None,
     normalize(mean=3,std=2)
     >>> print(cnormalize.__name__)
     normalize
-    >>> cnormalize(5)
+    >>> int(cnormalize(5))
     1
     >>> hasattr(normalize, 'what')
     False
