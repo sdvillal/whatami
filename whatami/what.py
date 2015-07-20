@@ -154,6 +154,9 @@ class What(object):
         else:
             raise Exception('non_ids must be None or an iterable')
 
+    def valuefor(self, key):
+        return self.configdict[key]
+
     # ---- Magics
 
     def __eq__(self, other):
