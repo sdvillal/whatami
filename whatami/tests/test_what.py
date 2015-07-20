@@ -187,7 +187,11 @@ def test_configuration_nonids_prefix_postfix():
              non_id_keys=('verbose', 'n_jobs'),
              prefix_keys=('p3', 'p2'),
              postfix_keys=('p1', 'p2')).id()
-    assert str(excinfo.value) == 'Some identifiers ({\'p2\'}) appear in both first and last, they should not'
+    if PY3:
+        expected = 'Some identifiers ({\'p2\'}) appear in both first and last, they should not'
+    else:
+        expected = 'Some identifiers (set([u\'p2\'])) appear in both first and last, they should not'
+    assert str(excinfo.value) == expected
 
 
 def test_configuration_as_string():
