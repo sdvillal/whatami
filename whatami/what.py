@@ -161,14 +161,6 @@ class What(object):
         return hasattr(other, 'name') and self.name == other.name and \
             hasattr(other, 'configdict') and self.configdict == other.configdict
 
-    def __getattr__(self, item):
-        """Allow to retrieve configuration values using dot notation over Configuration objects."""
-        return self.configdict[item]
-
-    def __getitem__(self, item):
-        """Allow to retrieve configuration values using [] notation over Configuration objects."""
-        return self.configdict[item]
-
     def __str__(self):
         """The default representation is the configuration string including non_ids keys."""
         return self.id(nonids_too=True)
