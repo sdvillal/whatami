@@ -64,7 +64,7 @@ buy(currency='euro',price=4294967296)
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, absolute_import
 from future.builtins import str
 from past.builtins import basestring as basestring23
 import hashlib
