@@ -427,7 +427,7 @@ def whatareyou(obj,
                # Config-dict building options
                add_dict=True,
                add_slots=True,
-               add_properties=False,
+               add_properties=True,
                exclude_prefix='_',
                exclude_postfix='_',
                excludes=('what',)):
@@ -544,7 +544,7 @@ def _propsdict(obj):
 def config_dict_for_object(obj,
                            add_dict=True,
                            add_slots=True,
-                           add_properties=False,
+                           add_properties=True,
                            exclude_prefix='_',
                            exclude_postfix='_',
                            excludes=('what',)):
@@ -562,7 +562,7 @@ def config_dict_for_object(obj,
     add_slots: boolean, default True
         Add all the attributes defined in obj.__slots__
 
-    add_properties: boolean, default False
+    add_properties: boolean, default True
         Add all the attributes defined as obj @properties
 
     exclude_prefix: string, default '_'
@@ -676,7 +676,7 @@ def whatable(obj=None,
              # Config-dict building options
              add_dict=True,
              add_slots=True,
-             add_properties=False,
+             add_properties=True,
              exclude_prefix='_',
              exclude_postfix='_',
              excludes=('what',)):
