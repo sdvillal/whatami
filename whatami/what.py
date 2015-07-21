@@ -74,7 +74,7 @@ import shlex
 from copy import copy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
-from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor
+from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
 
 from whatami.misc import callable2call, is_iterable
 
@@ -953,7 +953,7 @@ def _build_whatami_parser(reduce_tree=False, debug=False):
         return StrMatch('\'')
 
     def anything_but_quotes():
-        return RegExMatch('[^\']*')  # FIXME: how is scaping hadled here?
+        return RegExMatch('[^\']*')  # FIXME: how is escaping handled here?
 
     # Basic types
 
@@ -1028,9 +1028,9 @@ def _build_whatami_parser(reduce_tree=False, debug=False):
 
 class WhatamiParser(object):
 
-    def __init__(self, debug=False):
+    def __init__(self, reduce_tree=False, debug=False):
         super(WhatamiParser, self).__init__()
-        self._parser = _build_whatami_parser(debug=debug)
+        self._parser = _build_whatami_parser(reduce_tree=reduce_tree, debug=debug)
 
     def parse(self, id_string):
         """Parses a whatami id string and returns the AST."""
@@ -1042,12 +1042,20 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     def __init__(self, defaults=True, debug=False):
         super(WhatamiTreeVisitor, self).__init__(defaults, debug)
 
-    def visit_number(self, node, children):
+    def visit_a_number(self, node, children):
         try:
             return int(node.value)
-        except:
+        except ValueError:
             return float(node.value)
 
+    def visit_a_string(self, node, children):
+        return children[0][1:-1]
+
+    def visit_a_true(self, node, children):
+        return True
+
+    def visit_a_false(self, node, children):
+        return False
 
 def configuration_as_string(obj):
     """Returns the configuration of obj as a string.
@@ -1075,6 +1083,11 @@ def configuration_as_string(obj):
 if __name__ == '__main__':
 
     parser = WhatamiParser(debug=False)
+
+    tree = parser.parse('rfc(n_jobs=4, n_trees=\'100\')')
+    print(visit_parse_tree(tree, WhatamiTreeVisitor()))
+    # print(tree[0].an_id[0])
+    exit(11)
 
     print(parser.parse('rfc(n_jobs=4, n_trees=100, seed=\'rng\', deep=True)'))
 
