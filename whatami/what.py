@@ -65,7 +65,6 @@ buy(currency='euro',price=4294967296)
 # Licence: BSD 3 clause
 
 from __future__ import print_function, unicode_literals, absolute_import
-import future
 from future.builtins import str
 from future.utils import PY3
 from past.builtins import basestring as basestring23
@@ -791,10 +790,11 @@ def whatable(obj=None,
     # At the moment we just monkey-patch the object
     if hasattr(obj, 'what') and not is_whatable(obj):
         if force_flag_as_whatami:
+            # mark this method as a whatami method
             # http://legacy.python.org/dev/peps/pep-0232/
             # http://stackoverflow.com/questions/23345005/does-pep-232-also-works-for-instance-methods
             if not PY3:
-                obj.what.__func__.whatami = True  # mark this method as a whatami method
+                obj.what.__func__.whatami = True
             else:
                 obj.what.whatami = True
             return obj
