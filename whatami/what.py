@@ -366,7 +366,7 @@ class What(object):
             configuration = configuration() if callable(configuration) else configuration
             if isinstance(configuration, What):
                 return configuration.id()
-            raise Exception('object has a "configuration" attribute, but it is not of Configuration class')
+            raise Exception('object has a "what" attribute, but it is not of What class')
         if inspect.isbuiltin(v):  # Special message if we try to pass something like sorted or np.array
             raise Exception('Cannot determine the argspec of a non-python function (%s). '
                             'Please wrap it in a whatable' % v.__name__)
