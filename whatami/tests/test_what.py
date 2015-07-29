@@ -4,15 +4,14 @@
 # Licence: BSD 3 clause
 
 from __future__ import unicode_literals, absolute_import
-from datetime import datetime
 from functools import partial
 import hashlib
-from future.utils import PY3
 
+from future.utils import PY3
 import pytest
 
 from whatami import whatable, whatareyou, What, \
-    configuration_as_string, parse_id_string, config_dict_for_object, is_whatable
+    whatid, config_dict_for_object, is_whatable
 
 
 # ---- Fixtures and teardown
@@ -67,88 +66,6 @@ def c3(c1, c2, quote_string_values=True):
     return C3()
 
 
-# ---- Let the testing begin...
-
-
-# --- Parsing id strings (these are deprecated)
-
-@pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
-def test_parse_id_simple():
-    # Proper splitting
-    name, parameters = parse_id_string('rfc#n_jobs=4#n_trees=100##', infer_numbers=False)
-    assert name == 'rfc'
-    assert parameters.get('n_jobs', None) == '4'
-    assert parameters.get('n_trees', None) == '100'
-    assert len(parameters) == 2
-    # Number inference
-    name, parameters = parse_id_string('rfc#n_jobs=4#n_trees=100##')
-    assert name == 'rfc'
-    assert parameters.get('n_jobs', None) == 4
-    assert parameters.get('n_trees', None) == 100
-    assert len(parameters) == 2
-    # No parameters
-    name, parameters = parse_id_string('rfc', infer_numbers=False)
-    assert name == 'rfc'
-    assert len(parameters) == 0
-    # No name
-    with pytest.raises(Exception) as excinfo:
-        parse_id_string('#param=55')
-    assert str(excinfo.value) == '#param=55 has no name, and it should (it starts already by #)'
-
-
-@pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
-def test_parse_id_nested():
-    name, parameters = parse_id_string('rfc#n_jobs="multiple#here=100"', infer_numbers=False, parse_nested=False)
-    assert name == 'rfc'
-    assert len(parameters) == 1
-    assert parameters['n_jobs'] == 'multiple#here=100'
-    # Do not remove quotes...
-    name, parameters = parse_id_string('rfc#n_jobs="multiple#here=100"',
-                                       infer_numbers=True, remove_quotes=False, parse_nested=False)
-    assert name == 'rfc'
-    assert len(parameters) == 1
-    assert parameters['n_jobs'] == '"multiple#here=100"'
-    # Parse nested
-    name, parameters = parse_id_string('rfc#n_jobs="multiple#here=100"',
-                                       infer_numbers=True, remove_quotes=False, parse_nested=True)
-    assert name == 'rfc'
-    assert len(parameters) == 1
-    nested_name, nested_parameters = parameters['n_jobs']
-    assert nested_name == 'multiple'
-    assert len(nested_parameters) == 1
-    assert nested_parameters['here'] == 100
-
-
-@pytest.mark.xfail(reason='deprecated and changing to more principled parsing')
-def test_parse_id_invalid():
-
-    # Configurations should not be empty
-    with pytest.raises(Exception) as excinfo:
-        parse_id_string('')
-    assert str(excinfo.value) == 'Cannot parse empty configuration strings'
-
-    # Configurations should have a name
-    with pytest.raises(Exception) as excinfo:
-        parse_id_string('#noname=invalid')
-    assert str(excinfo.value) == '#noname=invalid has no name, and it should (it starts already by #)'
-
-    # Keys should exist
-    with pytest.raises(Exception) as excinfo:
-        parse_id_string('useless#=no_key_is_invalid')
-    assert str(excinfo.value) == 'Splitting has not worked. Missing at least one key or a value.'
-
-    # Values should exist
-    with pytest.raises(Exception) as excinfo:
-        parse_id_string('useless#no_value_is_invalid=')
-    assert str(excinfo.value) == 'Splitting has not worked. Missing at least one key or a value.'
-
-    # The only non-word character should be "="
-    with pytest.raises(Exception) as excinfo:
-        parse_id_string('useless#at@is_invalid')
-    assert str(excinfo.value) == 'Splitting has not worked. ' \
-                                 'There is something that is not a = where there should be.'
-
-
 # --- Generating id strings
 
 def test_configuration_nonids_prefix_postfix():
@@ -194,15 +111,15 @@ def test_configuration_nonids_prefix_postfix():
     assert str(excinfo.value) == expected
 
 
-def test_configuration_as_string():
+def test_whatid():
 
-    assert configuration_as_string(None) is None
+    assert whatid(None) is None
 
-    assert configuration_as_string('Myself') == 'Myself'
+    assert whatid('Myself') == 'Myself'
 
-    with pytest.raises(Exception) as excinfo:
-        configuration_as_string(datetime)
-    assert str(excinfo.value) == 'the object must be None, a string, have a what() method or have an id() method'
+    # with pytest.raises(Exception) as excinfo:
+    #     what_string(int)
+    # assert str(excinfo.value) == 'the object must be None, a string, have a what() method or have an id() method'
 
 
 def test_non_nested_configurations(c1):

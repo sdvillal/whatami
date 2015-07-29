@@ -849,7 +849,7 @@ def extract_decorated_function_from_closure(c):
     return c
 
 
-def what_string(obj):
+def whatid(obj):
     """Returns the configuration of obj as a string.
 
     Returns
