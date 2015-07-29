@@ -788,10 +788,8 @@ def whatable(obj=None,
             # mark this method as a whatami method
             # http://legacy.python.org/dev/peps/pep-0232/
             # http://stackoverflow.com/questions/23345005/does-pep-232-also-works-for-instance-methods
-            if not PY3:
-                obj.what.__func__.whatami = True
-            else:
-                obj.what.whatami = True
+            to_annotate = obj.what.__func__ if not PY3 else obj.what
+            to_annotate.whatami = True
             return obj
         else:
             raise Exception('object already has an attribute what, and is not a whatami what, if you know what I mean')
