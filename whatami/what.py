@@ -855,7 +855,6 @@ def whatid(obj):
         try:
             return obj.id()
         except:
-            try:
-                return whatareyou(obj).id()
-            except:
-                raise TypeError('the object must be None, a string, have a what() method or have an id() method')
+            return whatareyou(obj).id()
+            # raise TypeError('the object must be None, a string, have a what() method, '
+            #                 'have an id() method or respond well to whatareyou')

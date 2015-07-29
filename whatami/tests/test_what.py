@@ -112,14 +112,9 @@ def test_configuration_nonids_prefix_postfix():
 
 
 def test_whatid():
-
     assert whatid(None) is None
-
     assert whatid('Myself') == 'Myself'
-
-    # with pytest.raises(Exception) as excinfo:
-    #     what_string(int)
-    # assert str(excinfo.value) == 'the object must be None, a string, have a what() method or have an id() method'
+    assert whatid(int) == 'int()'  # correct behavior?
 
 
 def test_non_nested_configurations(c1):
