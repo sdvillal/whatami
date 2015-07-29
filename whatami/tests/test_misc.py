@@ -30,6 +30,13 @@ def test_callable2call_partials():
     assert callable2call(partial(map, function=str)) == ('map', {'function': str})
     assert callable2call(partial(partial(map, function=str), iterable1=())) == ('map', {'function': str,
                                                                                         'iterable1': ()})
+    with pytest.raises(Exception) as excinfo:
+        assert callable2call(partial(test_callable2call_partials, function=str, f2=2, f3=3))
+    assert 'keywords are not parameters of the function' in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        assert callable2call(partial(test_callable2call_partials, 2, 3))
+    assert 'There are too many positional arguments indicated ' in str(excinfo.value)
 
 
 def test_callable2call_functions():
