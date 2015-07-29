@@ -92,7 +92,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return value, dictkv_sep, value
 
     def dict_elements():
-        return dictkv, Optional(list_sep, dictkv)
+        return dictkv, ZeroOrMore(list_sep, dictkv)
 
     def a_dict():
         return StrMatch('{'), Optional(dict_elements), StrMatch('}')
@@ -192,7 +192,7 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_a_dict(_, children):
-        return dict(children[0])
+        return dict(list(children[0]))
 
     # Key-values
 
