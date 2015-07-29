@@ -242,7 +242,7 @@ def parse_whatid(id_string, parser=build_whatami_parser(), visitor=WhatamiTreeVi
     rfc
     >>> print(len(config))
     1
-    >>> print(config['n_jobs'])
-    ('multiple', {'here': 100})
+    >>> print(config['n_jobs'][1]['here'])
+    100
     """
     return visit_parse_tree(parser.parse(id_string), visitor=visitor)
