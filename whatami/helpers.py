@@ -9,7 +9,7 @@ import datetime
 import inspect
 from collections import OrderedDict
 from socket import gethostname
-from whatami import configuration_as_string
+from whatami import what_string
 
 from whatami.misc import internet_time
 
@@ -41,9 +41,9 @@ def mlexp_info_helper(title,
     """
     info = OrderedDict((
         ('title', title),
-        ('data_setup', configuration_as_string(data_setup)),
-        ('model_setup', configuration_as_string(model_setup)),
-        ('eval_setup', configuration_as_string(eval_setup)),
+        ('data_setup', what_string(data_setup)),
+        ('model_setup', what_string(model_setup)),
+        ('eval_setup', what_string(eval_setup)),
         ('fsource', inspect.getsourcelines(exp_function) if exp_function else None),
         ('date', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
         ('idate', None if not itime else internet_time()),

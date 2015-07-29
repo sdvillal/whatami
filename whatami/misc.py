@@ -11,6 +11,10 @@ from functools import partial
 from itertools import chain
 
 
+# http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
+MAX_EXT4_FN_LENGTH = 255
+
+
 def callable2call(c, closure_extractor=lambda c: c):
     """
     Extracts the (actual) function name and set parameters from a callable.

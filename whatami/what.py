@@ -65,22 +65,17 @@ buy(currency='euro',price=4294967296)
 # Licence: BSD 3 clause
 
 from __future__ import print_function, unicode_literals, absolute_import
-from future.builtins import str
-from future.utils import PY3
-from past.builtins import basestring as basestring23
 import hashlib
 import inspect
-import shlex
 from copy import copy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
-from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
+
+from future.builtins import str
+from future.utils import PY3
+from past.builtins import basestring as basestring23
 
 from whatami.misc import callable2call, is_iterable
-
-
-# http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
-MAX_EXT4_FN_LENGTH = 255
 
 
 class What(object):
@@ -854,210 +849,7 @@ def extract_decorated_function_from_closure(c):
     return c
 
 
-# DELETEME
-def parse_id_string(id_string, sep='#', parse_nested=True, infer_numbers=True, remove_quotes=True):
-    """
-    Parses configuration string into a pair (name, configuration).
-
-    Parameters
-    ----------
-    id_string : string
-        The id string to parse back. Something like "name#k1=v1#k2="name#k22=v22"#k3=v3".
-
-    sep : string, default '#'
-        The string that separates 'key=value' pairs (see 'sep' in Configuration)
-
-    parse_nested : bool, default True
-        If true, a value that is a nested configuration string (enclosed in single or double quotes)
-        is parsed into a pair (name, configuration) by calling recursivelly this function.
-
-    infer_numbers : bool, default True
-        If True, parse floats and ints to be numbers; if False, strings are returned instead.
-
-    remove_quotes : bool, default True
-        If True (and parse_nested is False), quotes are removed from values; otherwise quotes are kept.
-
-    Returns
-    -------
-    A tuple (name, configuration). Name is a string and configuration is a dictionary.
-
-    Examples
-    --------
-    >>> (name, config) = parse_id_string('rfc#n_jobs="multiple#here=100"')
-    >>> print(name)
-    rfc
-    >>> print(len(config))
-    1
-    >>> print(config['n_jobs'])
-    ('multiple', {'here': 100})
-    """
-    # Auxiliary functions
-    def is_quoted(string):
-        return string[0] == '"' and string[-1] == '"' or string[0] == '\'' and string[-1] == '\''
-
-    def val_postproc(string):
-        if parse_nested and is_quoted(string):
-            return parse_id_string(string[1:-1],
-                                   parse_nested=parse_nested,
-                                   infer_numbers=infer_numbers,
-                                   remove_quotes=remove_quotes)
-        if remove_quotes:
-            if is_quoted(string):
-                string = string[1:-1]
-        # a number?
-        if infer_numbers:
-            try:
-                return int(string)
-            except:
-                try:
-                    return float(string)
-                except:
-                    pass
-        # quoted string?
-        if string.startswith('\'') and string.endswith('\''):
-            return string[1:-1]
-        return string
-
-    # Sanity checks
-    if id_string.startswith(sep):
-        raise Exception('%s has no name, and it should (it starts already by #)' % id_string)
-
-    if not id_string:
-        raise Exception('Cannot parse empty configuration strings')
-
-    # Parse
-    splitter = shlex.shlex(instream=id_string)  # shlex works with our simple syntax
-    splitter.wordchars += '.'                   # so numbers are not splitted...
-    splitter.whitespace = sep
-    splitter.whitespace_split = False
-    parameters = list(splitter)
-    name = parameters[0]
-    if not len(parameters[1::3]) == len(parameters[3::3]):
-        raise Exception('Splitting has not worked. Missing at least one key or a value.')
-    if not all(val == '=' for val in parameters[2::3]):
-        raise Exception('Splitting has not worked. There is something that is not a = where there should be.')
-    return name, dict(zip(parameters[1::3], (map(val_postproc, parameters[3::3]))))
-
-
-def _build_whatami_parser(reduce_tree=False, debug=False):
-
-    # Syntactic noise
-
-    def list_sep():
-        return StrMatch(',')
-
-    def kv_sep():
-        return StrMatch('=')
-
-    def string_quote():
-        return StrMatch('\'')
-
-    def anything_but_quotes():
-        return RegExMatch('[^\']*')  # FIXME: how is escaping handled here?
-
-    # Basic types
-
-    def an_id():
-        # These account for valid python 2 identifiers. Python 3 allow unicode in identifiers.
-        # See:
-        #   http://stackoverflow.com/questions/5474008/regular-expression-to-confirm-whether-a-string-is-a-valid-identifier-in-python
-        # When/if adapting to py3, that should be handled.
-        # Note also that arpeggio does not allow unicode in regexps;
-        # it should be easy to implement by just allowing arbitrary re flags in RegExMatch
-        return RegExMatch(r'[_A-Za-z][_a-zA-Z0-9]*')
-
-    def a_number():
-        return RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
-
-    def a_string():
-        return string_quote, anything_but_quotes, string_quote
-
-    def a_true():
-        return StrMatch('True')
-
-    def a_false():
-        return StrMatch('False')
-
-    def a_bool():
-        return [a_true, a_false]
-
-    def a_none():
-        return StrMatch('None')
-
-    # Collection types: lists, tuples, dictionaries
-
-    def list_elements():
-        return value, ZeroOrMore(list_sep, value)
-
-    def a_list():
-        return StrMatch('['), Optional(list_elements), StrMatch(']')
-
-    def a_tuple():
-        return StrMatch('('), Optional(list_elements), StrMatch(')')
-
-    def dictkv():
-        return an_id, kv_sep, value
-
-    def dict_elements():
-        return dictkv, Optional(list_sep, dictkv)
-
-    def a_dict():
-        return StrMatch('{'), ZeroOrMore(dict_elements), StrMatch('}')
-
-    # Key-values
-
-    def value():
-        return [whatami_id, a_number, a_string, a_none, a_bool, a_tuple, a_list, a_dict]
-
-    def kv():
-        return an_id, kv_sep, value
-
-    def kvs():
-        return kv, ZeroOrMore(list_sep, kv)
-
-    # Top level
-
-    def whatami_id():
-        return an_id, StrMatch('('), Optional(kvs), StrMatch(')')
-
-    def whatami_id_top():
-        return whatami_id, EOF
-
-    return ParserPython(whatami_id_top, reduce_tree=reduce_tree, debug=debug)
-
-
-class WhatamiParser(object):
-
-    def __init__(self, reduce_tree=False, debug=False):
-        super(WhatamiParser, self).__init__()
-        self._parser = _build_whatami_parser(reduce_tree=reduce_tree, debug=debug)
-
-    def parse(self, id_string):
-        """Parses a whatami id string and returns the AST."""
-        return self._parser.parse(id_string)
-
-
-class WhatamiTreeVisitor(PTNodeVisitor):
-
-    def __init__(self, defaults=True, debug=False):
-        super(WhatamiTreeVisitor, self).__init__(defaults, debug)
-
-    def visit_a_number(self, node, children):
-        try:
-            return int(node.value)
-        except ValueError:
-            return float(node.value)
-
-    def visit_a_string(self, node, children):
-        return children[0][1:-1]
-
-    def visit_a_true(self, node, children):
-        return True
-
-    def visit_a_false(self, node, children):
-        return False
-
-def configuration_as_string(obj):
+def what_string(obj):
     """Returns the configuration of obj as a string.
 
     Returns
@@ -1066,6 +858,7 @@ def configuration_as_string(obj):
       obj is obj is a string
       obj.what().id() if obj has a what() method returning a whatable
       obj.id() if obj has an id() method
+      whatareyou(obj).id() otherwise
     """
     if obj is None:
         return None
@@ -1077,46 +870,7 @@ def configuration_as_string(obj):
         try:
             return obj.id()
         except:
-            raise TypeError('the object must be None, a string, have a what() method or have an id() method')
-
-
-if __name__ == '__main__':
-
-    parser = WhatamiParser(debug=False)
-
-    tree = parser.parse('rfc(n_jobs=4, n_trees=\'100\')')
-    print(visit_parse_tree(tree, WhatamiTreeVisitor()))
-    # print(tree[0].an_id[0])
-    exit(11)
-
-    print(parser.parse('rfc(n_jobs=4, n_trees=100, seed=\'rng\', deep=True)'))
-
-    print(parser.parse('rfc(n_jobs=4, n_trees=100)'))
-
-    print(parser.parse('rfc(n_jobs=multiple())'))
-
-    print(parser.parse('rfc(n_jobs=multiple(here=100))'))
-
-    print(parser.parse('C2(c1=C1(length=1,p1=\'blah\',p2=\'bleh\'), name=\'roxanne\')'))
-
-    print(parser.parse('C2(c1=C1(length=1, p1=\'blah\', p2=\'bleh\'), name=\'roxanne\')'))
-
-    print(parser.parse('rfc(n_jobs=4, n_trees=100, seed=2, name=\'mola\')'))
-
-    print(parser.parse("KMeans(init='k-means++', max_iter=300, n_clusters=12, n_init=10,"
-                       "precompute_distances=True, random_state=None, tol=0.0001, verbose=0)"))
-
-    print(parser.parse('test(mola=[1, 2,         3, True, False])'))
-
-    norm_id = 'Normalizer(norm=\'l1\')'
-    kmeans_id = "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10," \
-                "precompute_distances=True,random_state=None,tol=0.0001,verbose=0)"
-    pipeline_id = "Pipeline(steps=[('norm', %s), ('kmeans', %s)])" % (norm_id, kmeans_id)
-    print(parser.parse(pipeline_id))
-
-#
-# TODO: simple nested_string for numpy arrays, pandas dataframes and the like
-#       we could go for hashes for big ones and other custom reprs depending on their nature
-#       since we do not want to depend on these libes, we need to branch code for when they are
-#       not present, or just add a pligin mechanism
-#
+            try:
+                return whatareyou(obj).id()
+            except:
+                raise TypeError('the object must be None, a string, have a what() method or have an id() method')

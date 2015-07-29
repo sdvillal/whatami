@@ -24,6 +24,13 @@ It works this way:
    whose names start or end by '\_'.
 
 
+The id strings
+--------------
+
+They aim to look like they would be generated if __repr__ in python was always implemented
+taking into account recursion and exposing only result-changing parameters.
+
+
 Versioning
 ----------
 
