@@ -221,7 +221,7 @@ class WhatamiTreeVisitor(PTNodeVisitor):
         return children[0]
 
 
-def parse_id_string(id_string, parser=build_whatami_parser(), visitor=WhatamiTreeVisitor()):
+def parse_whatid(id_string, parser=build_whatami_parser(), visitor=WhatamiTreeVisitor()):
     """
     Parses whatami id string into a pair (name, configuration).
     Makes a best effort to reconstruct python objects.
@@ -237,7 +237,7 @@ def parse_id_string(id_string, parser=build_whatami_parser(), visitor=WhatamiTre
 
     Examples
     --------
-    >>> (name, config) = parse_id_string('rfc(n_jobs=multiple(here=100))')
+    >>> (name, config) = parse_whatid('rfc(n_jobs=multiple(here=100))')
     >>> print(name)
     rfc
     >>> print(len(config))
