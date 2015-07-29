@@ -551,3 +551,19 @@ def test_set_parameters(c1):
     # whatables must have no memory of configuration
     w.set = set()
     assert w.what().id() == "WhatableWithSet(set={})"
+
+
+def test_whatable_faker():
+
+    class Faker(object):
+        def what(self):
+            return 'fool you: %r' % self
+
+    @whatable
+    class Fool(object):
+        def __init__(self):
+            self.faker = Faker()
+
+    with pytest.raises(Exception) as excinfo:
+        whatareyou(Fool()).id()
+    assert 'object has a "what" attribute, but it is not of What class' in str(excinfo.value)
