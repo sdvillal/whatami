@@ -122,13 +122,13 @@ def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
     # Maybe also parse from, e.g., the webpage of the time service of the U.S. army:
     #  http://tycho.usno.navy.mil/what.html
     #  http://tycho.usno.navy.mil/timer.html (still)
-    try:
+    try:  # pragma: no cover
         import ntplib
         for server in ntpservers:
             response = ntplib.NTPClient().request(server, version=3)
             dt = datetime.datetime.utcfromtimestamp(response.tx_time)
             return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
-    except ImportError:
+    except ImportError:  # pragma: no cover
         try:
             from future.moves.urllib.request import urlopen
             for line in urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
