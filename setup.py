@@ -15,7 +15,7 @@ setup(
     name='whatami',
     license='BSD 3 clause',
     description='Easily provide python objects with self-identification',
-    long_description=open('README.rst').read().replace('|Build Status| |Coverage Status|', ''),
+    long_description=open('README.rst').read().replace('|Build Status| |Coverage Status| |Scrutinizer Status|', ''),
     version=whatami.__version__,
     url='https://github.com/sdvillal/whatami',
     author='Santi Villalba',

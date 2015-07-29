@@ -1,7 +1,7 @@
 whatami: unobtrusive object self-identification for python
 ==========================================================
 
-|Pypi Version| |Build Status| |Coverage Status|
+|Pypi Version| |Build Status| |Coverage Status| |Scrutinizer Status|
 
 About
 -----
@@ -108,3 +108,5 @@ Example
 .. _scikit-learn: http://scikit-learn.org
 .. _arch: https://github.com/bashtage/arch
 .. _pyopy: https://github.com/sdvillal/pyopy
+.. |Scrutinizer Status| image:: https://scrutinizer-ci.com/g/sdvillal/whatami/badges/quality-score.png?b=master
+   :target: https://scrutinizer-ci.com/g/whatami/jagged/?branch=master
