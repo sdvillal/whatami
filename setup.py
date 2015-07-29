@@ -30,7 +30,9 @@ setup(
         'Topic :: Software Development',
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Operating System :: Unix',
     ],
@@ -38,7 +40,6 @@ setup(
     tests_require=['pytest'],
     extras_require={
         'sklearn': ('scikit-learn',),
-        'ubermonkey': ('forbiddenfruit',),
     },
     platforms=['Any'],
 )
