@@ -508,6 +508,12 @@ def test_whatable_decorator():
     assert normalize6(3) == 3
 
 
+def test_watable_builtin():
+    with pytest.raises(TypeError) as excinfo:
+        whatable(all)
+    assert 'builtins cannot be whatamised' in str(excinfo.value)
+
+
 def test_list_parameters(c1):
     @whatable
     class WhatableWithList(object):
