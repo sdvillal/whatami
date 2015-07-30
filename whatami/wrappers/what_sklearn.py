@@ -184,9 +184,9 @@ def _what_for_sklearn(x):
     pinfo = _SKLRegistry.get(name, None)
     if pinfo is not None:
         return What(pinfo.short_name,
-                    configuration_dict=configuration_dict,
+                    conf=configuration_dict,
                     non_id_keys=pinfo.non_id_params)
-    return What(name, configuration_dict=configuration_dict)
+    return What(name, conf=configuration_dict)
 
 
 def whatamise_sklearn(check=False, log=False):

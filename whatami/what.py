@@ -3,7 +3,7 @@
 
 *whatami* strives to abstract configurability and experiment identifiability in a convenient way,
 by allowing each object/computation to provide a string uniquelly and consistently self-identifying
-blah...
+itself.
 
 It works this way:
 
@@ -91,7 +91,7 @@ class What(object):
     name : string
         The name of this configuration (e.g. "RandomForest").
 
-    configuration_dict : dictionary
+    conf : dictionary
         The {key:value} property dictionary for this configuration.
 
     non_id_keys : iterable (usually of strings), default None
@@ -102,11 +102,11 @@ class What(object):
 
     def __init__(self,
                  name,
-                 configuration_dict,
+                 conf,
                  non_id_keys=None):
         super(What, self).__init__()
         self.name = name
-        self.configdict = configuration_dict
+        self.conf = conf
         if non_id_keys is None:
             self._non_ids = set()
         elif is_iterable(non_id_keys):
@@ -115,14 +115,14 @@ class What(object):
             raise Exception('non_ids must be None or an iterable')
 
     def valuefor(self, key):
-        return self.configdict[key]
+        return self.conf[key]
 
     # ---- Magics
 
     def __eq__(self, other):
         """Two configurations are equal if they have the same name and parameters."""
         return hasattr(other, 'name') and self.name == other.name and \
-            hasattr(other, 'configdict') and self.configdict == other.configdict
+            hasattr(other, 'conf') and self.conf == other.conf
 
     def __str__(self):
         """The default representation is the configuration string including non_ids keys."""
@@ -132,7 +132,7 @@ class What(object):
 
     def keys(self):
         """Returns the configuration keys."""
-        return self.configdict.keys()
+        return self.conf.keys()
 
     # ---- ID string generation
 
@@ -162,7 +162,7 @@ class What(object):
           "min_split=10" is another property
         """
         return ','.join('%s=%s' % (k, self._build_string(v))
-                        for k, v in sorted(self.configdict.items())
+                        for k, v in sorted(self.conf.items())
                         if nonids_too or k not in self._non_ids)
 
     def id(self, nonids_too=False, maxlength=0):
@@ -274,7 +274,7 @@ def whatareyou(obj,
                                     exclude_postfix=exclude_postfix,
                                     excludes=excludes)
     return What(name=obj.__class__.__name__ if name is None else name,
-                configuration_dict=cd,
+                conf=cd,
                 non_id_keys=non_id_keys)
 
 

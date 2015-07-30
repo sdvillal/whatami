@@ -6,6 +6,7 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
+from whatami import What
 
 
 def build_whatami_parser(reduce_tree=False, debug=False):
@@ -214,7 +215,7 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     def visit_whatami_id(_, children):
         an_id = children[0]
         kvs = list(children[1]) if len(children) > 1 else []
-        return an_id, dict(kvs)
+        return What(an_id, dict(kvs))
 
     @staticmethod
     def visit_whatami_id_top(_, children):
@@ -233,16 +234,16 @@ def parse_whatid(id_string, parser=build_whatami_parser(), visitor=WhatamiTreeVi
 
     Returns
     -------
-    A tuple (name, configuration). Name is a string and configuration is a dictionary.
+    A `whatami.What` object, containing name and conf (name is a string and configuration is a dictionary).
 
     Examples
     --------
-    >>> (name, config) = parse_whatid('rfc(n_jobs=multiple(here=100))')
-    >>> print(name)
+    >>> what = parse_whatid('rfc(n_jobs=multiple(here=100))')
+    >>> print(what.name)
     rfc
-    >>> print(len(config))
+    >>> print(len(what.conf))
     1
-    >>> print(config['n_jobs'][1]['here'])
+    >>> print(what.conf['n_jobs'].conf['here'])
     100
     """
     return visit_parse_tree(parser.parse(id_string), visitor=visitor)
