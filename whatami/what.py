@@ -99,19 +99,6 @@ class What(object):
     non_id_keys : iterable (usually of strings), default None
         A list of keys that should not be considered when generating ids.
         For example: "num_threads" or "verbose" should not change results when fitting a model.
-
-    synonyms : dictionary, default None
-        We allow to use up to one synonyms for each property name, the mapping is this dictionary.
-        Use with caution, as it can make hard or impossible configuration reconstruction or identification
-        if badly implemented.
-
-    prefix_keys : list of keys, default None
-        These keys will appear first in the configuration string.
-        Their order is not affected by "sorted_by_key" flag.
-
-    postfix_keys : list of keys, default None
-        These keys will appear last in the configuration string.
-        Their order is not affected by "sorted_by_key" flag.
     """
 
     def __init__(self,
@@ -119,22 +106,12 @@ class What(object):
                  configuration_dict,
                  nickname=None,
                  # ID string building options
-                 non_id_keys=None,
-                 synonyms=None,
-                 prefix_keys=None,
-                 postfix_keys=None):
+                 non_id_keys=None):
         super(What, self).__init__()
         self.name = name
         self.configdict = configuration_dict
         self._nickname = None
         self.nickname = nickname
-        self._prefix_keys = prefix_keys if prefix_keys else []
-        self._postfix_keys = postfix_keys if postfix_keys else []
-        # Synonyms to allow more concise representations
-        self._synonyms = {}
-        if synonyms is not None:
-            for longname, shortname in synonyms.items():
-                self.set_key_synonym(longname, shortname)
         # Keys here won't make it to the configuration string unless explicitly asked for
         if not non_id_keys:
             self._non_ids = set()
@@ -268,14 +245,6 @@ class What(object):
 
     # ---- Keys (property names)
 
-    def set_key_synonym(self, name, synonym):
-        """Configures the synonym for the property name."""
-        self._synonyms[name] = synonym
-
-    def key_synonym(self, name):
-        """Returns the global synonym for the property name, if it is registered, otherwise the name itself."""
-        return self._synonyms.get(name, name)
-
     def keys(self):
         """Returns the configuration keys."""
         return self.configdict.keys()
@@ -307,26 +276,9 @@ class What(object):
                "verbose=True" is a parameter of the nested configuration
           "min_split=10" is another property
         """
-
-        # Key-value list
-        def sort_kvs_fl():
-            kvs = self.configdict.items()
-            kvs = sorted(kvs)
-            first_set = set(self._prefix_keys)
-            last_set = set(self._postfix_keys)
-            if len(first_set & last_set) > 0:
-                raise Exception('Some identifiers (%r) appear in both first and last, they should not' %
-                                (first_set & last_set))
-            kvs_dict = dict(kvs)
-            return [(f, kvs_dict[f]) for f in self._prefix_keys] + \
-                   [kv for kv in kvs if not kv[0] in (first_set | last_set)] + \
-                   [(f, kvs_dict[f]) for f in self._postfix_keys]
-
-        kvs = sort_kvs_fl()
-        return ','.join(
-            '%s=%s' % (self.key_synonym(k), self._build_string(v))
-            for k, v in kvs
-            if nonids_too or k not in self._non_ids)
+        return ','.join('%s=%s' % (k, self._build_string(v))
+                        for k, v in sorted(self.configdict.items())
+                        if nonids_too or k not in self._non_ids)
 
     def id(self, nonids_too=False, maxlength=0):
         """Returns the id string (unicode) of this configuration.
@@ -341,7 +293,7 @@ class What(object):
           If <= 0, it is ignored and the full id string will be returned.
         """
 
-        my_id = '%s(%s)' % (self.key_synonym(self.name), self._as_string(nonids_too=nonids_too))
+        my_id = '%s(%s)' % (self.name, self._as_string(nonids_too=nonids_too))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
@@ -406,9 +358,6 @@ def whatareyou(obj,
                nickname=None,
                # ID string building options
                non_id_keys=None,
-               synonyms=None,
-               prefix_keys=None,
-               postfix_keys=None,
                # Config-dict building options
                add_dict=True,
                add_slots=True,
@@ -444,10 +393,7 @@ def whatareyou(obj,
     return What(name=obj.__class__.__name__ if name is None else name,
                 configuration_dict=cd,
                 nickname=nickname,
-                non_id_keys=non_id_keys,
-                synonyms=synonyms,
-                prefix_keys=prefix_keys,
-                postfix_keys=postfix_keys)
+                non_id_keys=non_id_keys)
 
 
 def _dict(obj):
@@ -653,10 +599,6 @@ def whatable(obj=None,
              nickname=None,
              # ID string building options
              non_id_keys=None,
-             synonyms=None,
-             sort_by_key=True,
-             prefix_keys=None,
-             postfix_keys=None,
              # Config-dict building options
              add_dict=True,
              add_slots=True,
@@ -732,10 +674,6 @@ def whatable(obj=None,
                        nickname=nickname,
                        # ID string building options
                        non_id_keys=non_id_keys,
-                       synonyms=synonyms,
-                       sort_by_key=sort_by_key,
-                       prefix_keys=prefix_keys,
-                       postfix_keys=postfix_keys,
                        # Config-dict building options
                        add_dict=add_dict,
                        add_slots=add_slots,
@@ -789,9 +727,6 @@ def whatable(obj=None,
             return whatareyou(self,
                               nickname=nickname,
                               non_id_keys=non_id_keys,
-                              synonyms=synonyms,
-                              prefix_keys=prefix_keys,
-                              postfix_keys=postfix_keys,
                               add_dict=add_dict,
                               add_slots=add_slots,
                               add_properties=add_properties,

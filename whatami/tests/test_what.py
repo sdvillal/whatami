@@ -49,16 +49,15 @@ def c2(c1):
 
 
 @pytest.fixture
-def c3(c1, c2, quote_string_values=True):
+def c3(c1, c2):
     """A whatable object with nested whatables and irrelevant members."""
 
     class C3(object):
-        def __init__(self, c1=c1, c2=c2, irrelevant=True, quote_string_values=quote_string_values):
+        def __init__(self, c1=c1, c2=c2, irrelevant=True):
             super(C3, self).__init__()
             self.c1 = c1
             self.c2 = c2
             self.irrelevant = irrelevant
-            self._quote_string_values = quote_string_values
 
         @whatable(force_flag_as_whatami=True)
         def what(self):
@@ -82,33 +81,6 @@ def test_configuration_nonids_prefix_postfix():
              {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
              non_id_keys=str)
     assert str(excinfo.value) == 'non_ids must be None or an iterable'
-
-    # Synonyms
-    c1 = What('tc',
-              {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
-              non_id_keys=('verbose', 'n_jobs'),
-              synonyms={'verbose': 'v'})
-    assert c1.id(nonids_too=True) == 'tc(n_jobs=None,p1=1,p2=2,p3=3,v=True)'
-
-    # Prefix and postfix keys
-    c1 = What('tc',
-              {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
-              non_id_keys=('verbose', 'n_jobs'),
-              prefix_keys=('p3', 'p2'),
-              postfix_keys=('p1',))
-    assert c1.id(nonids_too=True) == 'tc(p3=3,p2=2,n_jobs=None,verbose=True,p1=1)'
-
-    with pytest.raises(Exception) as excinfo:
-        What('tc',
-             {'p1': 1, 'p2': 2, 'p3': 3, 'verbose': True, 'n_jobs': None},
-             non_id_keys=('verbose', 'n_jobs'),
-             prefix_keys=('p3', 'p2'),
-             postfix_keys=('p1', 'p2')).id()
-    if PY3:  # pragma: no cover
-        expected = 'Some identifiers ({\'p2\'}) appear in both first and last, they should not'
-    else:  # pragma: no cover
-        expected = 'Some identifiers (set([u\'p2\'])) appear in both first and last, they should not'
-    assert str(excinfo.value) == expected
 
 
 def test_whatid():
@@ -159,10 +131,6 @@ def test_non_id_keys(c3):
     assert config_c3.id(nonids_too=False) == c3id
     sha2 = hashlib.sha256(c3id.encode('utf-8')).hexdigest()
     assert config_c3.id(maxlength=1) == sha2
-    config_c3.set_key_synonym('c1', 'C1Syn')
-    assert config_c3.key_synonym('c1') == 'C1Syn'
-    assert config_c3.id() == "C3(C1Syn=C1(length=1,p1='blah',p2='bleh')," \
-                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
 
 
 def test_whatable_magics(c1):
