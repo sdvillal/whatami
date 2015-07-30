@@ -5,15 +5,19 @@
 # Licence: BSD 3 clause
 
 from __future__ import unicode_literals, absolute_import
-import datetime
-import inspect
 from functools import partial
 from itertools import chain
+import datetime
+import inspect
+from collections import OrderedDict
+from socket import gethostname
 
 
 # http://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
 MAX_EXT4_FN_LENGTH = 255
 
+
+# --- Introspection tools
 
 def callable2call(c, closure_extractor=lambda c: c):
     """
@@ -311,24 +315,44 @@ def is_iterable(v):
     return True
 
 
-def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
-    """Makes a best effort to retrieve current UTC time from reliable internet sources.
-    Returns a string like "Thu, 13 Mar 2014 11:35:41 UTC"
+# --- Tools to make aggregation of information from functions and whatables easier
+
+def mlexp_info_helper(title,
+                      data_setup=None,
+                      model_setup=None,
+                      eval_setup=None,
+                      exp_function=None,
+                      comments=None,
+                      idate=None):
+    """Creates a dictionary describing machine learning experiments.
+
+    Parameters:
+      - title: the title for the experiment
+      - data_setup: a "what" for the data used in the experiment
+      - model_setup: a "what" for the model used in the experiment
+      - eval_setup: a "what" for the evaluation method used in the experiment
+      - exp_function: the function in which the experiment is defined;
+                      its source text lines will be stored
+      - comments: a string with whatever else we need to say
+      - idate: a callable that will provide the date from a reliable internet source
+               (e.g. an NTP server or http://tycho.usno.navy.mil/cgi-bin/timer.pl)
+
+    (Here "what" means None, a string, an object providing a "what method" or an object providing an "id" method.)
+
+    Return:
+      An ordered dict mapping strings to strings with all or part of:
+      title, data_setup, model_setup, eval_setup, fsource, date, idate (internet datetime), host, comments
     """
-    try:  # pragma: no cover
-        import ntplib
-        for server in ntpservers:
-            response = ntplib.NTPClient().request(server, version=3)
-            dt = datetime.datetime.utcfromtimestamp(response.tx_time)
-            return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
-    except ImportError:  # pragma: no cover
-        # Parse from, e.g., the webpage of the time service of the U.S. army:
-        #  http://tycho.usno.navy.mil/what.html
-        #  http://tycho.usno.navy.mil/timer.html (still)
-        try:
-            from future.moves.urllib.request import urlopen
-            for line in urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
-                if 'UTC' in line:
-                    return line.strip()[4:]
-        except:
-            return None
+    from whatami import whatid
+    info = OrderedDict((
+        ('title', title),
+        ('data_setup', whatid(data_setup)),
+        ('model_setup', whatid(model_setup)),
+        ('eval_setup', whatid(eval_setup)),
+        ('fsource', inspect.getsourcelines(exp_function) if exp_function else None),
+        ('date', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+        ('idate', None if idate is None else idate()),
+        ('host', gethostname()),
+        ('comments', comments),
+    ))
+    return info
