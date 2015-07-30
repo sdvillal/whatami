@@ -1,5 +1,9 @@
 # coding=utf-8
 """Tests that id strings generated using introspection are valid."""
+
+# Authors: Santi Villalba <sdvillal@gmail.com>
+# Licence: BSD 3 clause
+
 from __future__ import unicode_literals, absolute_import
 from whatami import whatable, What
 from whatami.parsers import parse_whatid
