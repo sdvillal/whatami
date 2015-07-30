@@ -109,4 +109,4 @@ Example
 .. _arch: https://github.com/bashtage/arch
 .. _pyopy: https://github.com/sdvillal/pyopy
 .. |Scrutinizer Status| image:: https://scrutinizer-ci.com/g/sdvillal/whatami/badges/quality-score.png?b=master
-   :target: https://scrutinizer-ci.com/g/whatami/jagged/?branch=master
+   :target: https://scrutinizer-ci.com/g/sdvillal/whatami/?branch=master
