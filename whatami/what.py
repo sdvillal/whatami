@@ -105,9 +105,6 @@ class What(object):
         Use with caution, as it can make hard or impossible configuration reconstruction or identification
         if badly implemented.
 
-    sort_by_key : bool
-        Sort parameters by key (in lexicographic order if keys are strings) when building the id string.
-
     prefix_keys : list of keys, default None
         These keys will appear first in the configuration string.
         Their order is not affected by "sorted_by_key" flag.
@@ -124,7 +121,6 @@ class What(object):
                  # ID string building options
                  non_id_keys=None,
                  synonyms=None,
-                 sort_by_key=True,
                  prefix_keys=None,
                  postfix_keys=None):
         super(What, self).__init__()
@@ -134,7 +130,6 @@ class What(object):
         self.nickname = nickname
         self._prefix_keys = prefix_keys if prefix_keys else []
         self._postfix_keys = postfix_keys if postfix_keys else []
-        self._sort_by_key = sort_by_key
         # Synonyms to allow more concise representations
         self._synonyms = {}
         if synonyms is not None:
@@ -316,8 +311,7 @@ class What(object):
         # Key-value list
         def sort_kvs_fl():
             kvs = self.configdict.items()
-            if self._sort_by_key:
-                kvs = sorted(kvs)
+            kvs = sorted(kvs)
             first_set = set(self._prefix_keys)
             last_set = set(self._postfix_keys)
             if len(first_set & last_set) > 0:
@@ -413,7 +407,6 @@ def whatareyou(obj,
                # ID string building options
                non_id_keys=None,
                synonyms=None,
-               sort_by_key=True,
                prefix_keys=None,
                postfix_keys=None,
                # Config-dict building options
@@ -453,7 +446,6 @@ def whatareyou(obj,
                 nickname=nickname,
                 non_id_keys=non_id_keys,
                 synonyms=synonyms,
-                sort_by_key=sort_by_key,
                 prefix_keys=prefix_keys,
                 postfix_keys=postfix_keys)
 
@@ -798,7 +790,6 @@ def whatable(obj=None,
                               nickname=nickname,
                               non_id_keys=non_id_keys,
                               synonyms=synonyms,
-                              sort_by_key=sort_by_key,
                               prefix_keys=prefix_keys,
                               postfix_keys=postfix_keys,
                               add_dict=add_dict,
