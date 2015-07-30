@@ -379,7 +379,7 @@ class What(object):
             config.configdict = keywords
             return config.id()
         if isinstance(v, dict):
-            kvs = sorted('%s=%s' % (self._build_string(k), self._build_string(v)) for k, v in v.items())
+            kvs = sorted('%s:%s' % (self._build_string(k), self._build_string(v)) for k, v in v.items())
             return '{%s}' % ','.join(kvs)
         if isinstance(v, set):
             return '{%s}' % ','.join(sorted(map(self._build_string, v)))
