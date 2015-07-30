@@ -8,62 +8,62 @@ import arpeggio
 
 import pytest
 
-from whatami import parse_whatid
+from whatami import parse_whatid, What
 
 
 # --- Parsing id strings
 
 @pytest.mark.xfail(reason='known limitation, to fix or to document as permanent limitation')
 def test_parse_whatid_within_string():  # pragma: no cover
-    name, conf = parse_whatid("rfc(name=''banyan'')")
-    assert name == 'rfc'
-    assert conf == {'name': "'banyan'"}
+    what = parse_whatid("rfc(name=''banyan'')")
+    assert what.name == 'rfc'
+    assert what.conf == {'name': "'banyan'"}
 
 
 def test_parse_id_simple():
     # no parameters
-    name, conf = parse_whatid('rfc()')
-    assert name == 'rfc'
-    assert conf == {}
+    what = parse_whatid('rfc()')
+    assert what.name == 'rfc'
+    assert what.conf == {}
 
     # one parameter
-    name, conf = parse_whatid("rfc(n_jobs=4)")
-    assert name == 'rfc'
-    assert conf == {'n_jobs': 4}
+    what = parse_whatid("rfc(n_jobs=4)")
+    assert what.name == 'rfc'
+    assert what.conf == {'n_jobs': 4}
 
     # multiple parameters
-    name, conf = parse_whatid("rfc(deep=True,gini=False,n_jobs=3.4,n_trees=100,seed='rng',splitter=None)")
-    assert name == 'rfc'
-    assert conf == {'n_jobs': 3.4, 'n_trees': 100, 'seed': 'rng', 'deep': True, 'splitter': None, 'gini': False}
+    what = parse_whatid("rfc(deep=True,gini=False,n_jobs=3.4,n_trees=100,seed='rng',splitter=None)")
+    assert what.name == 'rfc'
+    assert what.conf == {'n_jobs': 3.4, 'n_trees': 100, 'seed': 'rng', 'deep': True, 'splitter': None, 'gini': False}
 
 
 def test_parse_id_lists():
     # lists become lists
-    name, conf = parse_whatid("rfc(splits=[1,7,'end'])")
-    assert name == 'rfc'
-    assert conf == {'splits': [1, 7, 'end']}
+    what = parse_whatid("rfc(splits=[1,7,'end'])")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': [1, 7, 'end']}
     # also with tuples
-    name, conf = parse_whatid("rfc(splits=(1,7,'end'))")
-    assert name == 'rfc'
-    assert conf == {'splits': (1, 7, 'end')}
+    what = parse_whatid("rfc(splits=(1,7,'end'))")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': (1, 7, 'end')}
 
 
 def test_parse_id_dicts():
-    name, conf = parse_whatid("rfc(splits={1:7, None:'end', 'end':None, 'lst': [7, 'b', 1], 'd': {'nest': 2}})")
-    assert name == 'rfc'
-    assert conf == {'splits': {1: 7, None: 'end', 'end': None, 'lst': [7, 'b', 1], 'd': {'nest': 2}}}
+    what = parse_whatid("rfc(splits={1:7, None:'end', 'end':None, 'lst': [7, 'b', 1], 'd': {'nest': 2}})")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': {1: 7, None: 'end', 'end': None, 'lst': [7, 'b', 1], 'd': {'nest': 2}}}
 
 
 def test_parse_id_spaces():
-    name, conf = parse_whatid("rfc(splits={  1:7,  None: 'end','end':None, 'lst': [7,'b', 1], 'd':  {'nest': 2}})")
-    assert name == 'rfc'
-    assert conf == {'splits': {1: 7, None: 'end', 'end': None, 'lst': [7, 'b', 1], 'd': {'nest': 2}}}
+    what = parse_whatid("rfc(splits={  1:7,  None: 'end','end':None, 'lst': [7,'b', 1], 'd':  {'nest': 2}})")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': {1: 7, None: 'end', 'end': None, 'lst': [7, 'b', 1], 'd': {'nest': 2}}}
 
 
 def test_parse_id_nested():
-    name, conf = parse_whatid('rfc(n_jobs=multiple(here=100))')
-    assert name == 'rfc'
-    assert conf == {'n_jobs': ('multiple', {'here': 100})}
+    what = parse_whatid('rfc(n_jobs=multiple(here=100))')
+    assert what.name == 'rfc'
+    assert what.conf == {'n_jobs': What('multiple', {'here': 100})}
 
     # machine learning inspired nasty nestness
 
@@ -71,11 +71,11 @@ def test_parse_id_nested():
     kmeans_id = "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10," \
                 "precompute_distances=True,random_state=None,tol=0.0001,verbose=0)"
     pipeline_id = "Pipeline(steps=[('norm', %s), ('clusterer', %s)])" % (norm_id, kmeans_id)
-    name, conf = parse_whatid(pipeline_id)
-    assert name == 'Pipeline'
-    assert conf == {
-        'steps': [('norm', ('Normalizer', {'norm': 'l1'})),
-                  ('clusterer', ('KMeans', {
+    what = parse_whatid(pipeline_id)
+    assert what.name == 'Pipeline'
+    assert what.conf == {
+        'steps': [('norm', What('Normalizer', {'norm': 'l1'})),
+                  ('clusterer', What('KMeans', {
                       'init': 'k-means++',
                       'max_iter': 300,
                       'n_clusters': 12,
