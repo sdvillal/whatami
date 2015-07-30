@@ -541,7 +541,7 @@ def test_dict_parameters(c1):
         def __init__(self):
             self.dict = {'c1': c1, 'two': 2}
     w = WhatableWithDict()
-    assert w.what().id() == "WhatableWithDict(dict={c1=C1(length=1,p1='blah',p2='bleh'),two=2})"
+    assert w.what().id() == "WhatableWithDict(dict={'c1'=C1(length=1,p1='blah',p2='bleh'),'two'=2})"
     w.dict = {}
     assert w.what().id() == "WhatableWithDict(dict={})"
 

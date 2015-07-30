@@ -330,7 +330,7 @@ class What(object):
 
         kvs = sort_kvs_fl()
         return ','.join(
-            '%s=%s' % (self.key_synonym(k), self._nested_string(v))
+            '%s=%s' % (self.key_synonym(k), self._build_string(v))
             for k, v in kvs
             if nonids_too or k not in self._non_ids)
 
@@ -356,7 +356,7 @@ class What(object):
             return hashlib.sha256(string.encode('utf-8')).hexdigest()
         return string
 
-    def _nested_string(self, v):
+    def _build_string(self, v):
         """Returns the nested configuration string for a variety of value types."""
 
         if isinstance(v, What):
@@ -379,16 +379,14 @@ class What(object):
             config.configdict = keywords
             return config.id()
         if isinstance(v, dict):
-            my_copy = copy(self)
-            my_copy.name = ''
-            my_copy.configdict = v
-            return '{%s}' % self._nested_string(my_copy)[1:-1]
+            kvs = sorted('%s=%s' % (self._build_string(k), self._build_string(v)) for k, v in v.items())
+            return '{%s}' % ','.join(kvs)
         if isinstance(v, set):
-            return '{%s}' % ','.join(sorted(map(self._nested_string, v)))
+            return '{%s}' % ','.join(sorted(map(self._build_string, v)))
         if isinstance(v, list):
-            return '[%s]' % ','.join(map(self._nested_string, v))
+            return '[%s]' % ','.join(map(self._build_string, v))
         if isinstance(v, tuple):
-            return '(%s)' % ','.join(map(self._nested_string, v))
+            return '(%s)' % ','.join(map(self._build_string, v))
         if inspect.isfunction(v):
             args, _, _, defaults = inspect.getargspec(v)
             defaults = [] if not defaults else defaults
