@@ -198,7 +198,7 @@ class What(object):
             name, keywords = callable2call(v)
             config = copy(self)
             config.name = name
-            config.configdict = keywords
+            config.conf = keywords
             return config.id()
         if isinstance(v, dict):
             kvs = sorted('%s:%s' % (self._build_string(k), self._build_string(v)) for k, v in v.items())
@@ -216,12 +216,12 @@ class What(object):
             params_with_defaults = dict(zip(args[-len(defaults):], defaults))
             config = copy(self)
             config.name = v.__name__
-            config.configdict = params_with_defaults
+            config.conf = params_with_defaults
             return config.id()
         if ' at 0x' in str(v):  # An object without proper representation, try a best effort
             config = copy(self)  # Careful
             config.name = v.__class__.__name__
-            config.configdict = config_dict_for_object(v)
+            config.conf = config_dict_for_object(v)
             return config.id()
         if isinstance(v, basestring23):
             return '\'%s\'' % v

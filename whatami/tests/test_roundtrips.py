@@ -6,7 +6,7 @@ from whatami.parsers import parse_whatid
 import pytest
 
 
-TEST_CASES = ['nested']  # 'simple', 'collections',
+TEST_CASES = ['simple', 'collections', 'nested']
 
 
 @pytest.fixture(params=TEST_CASES, ids=TEST_CASES)
@@ -56,8 +56,7 @@ def whatable2spectations(request):
             return nested
         expected_id = "nests(nested=rfc(t=(33,['l',None,3.2],{'a':2,None:'c'})))"
         expected_what = What(name='nests',
-                             conf={'nested':
-                                       What(name='rfc', conf={'t': (33, ['l', None, 3.2], {None: 'c', 'a': 2})})})
+                             conf={'nested': What(name='rfc', conf={'t': (33, ['l', None, 3.2], {None: 'c', 'a': 2})})})
         return nests, expected_id, expected_what
 
     raise ValueError('Cannot find test case %s' % request.param)
