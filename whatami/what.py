@@ -114,9 +114,6 @@ class What(object):
         else:
             raise Exception('non_ids must be None or an iterable')
 
-    def valuefor(self, key):
-        return self.conf[key]
-
     # ---- Magics
 
     def __eq__(self, other):
@@ -127,12 +124,6 @@ class What(object):
     def __str__(self):
         """The default representation is the configuration string including non_ids keys."""
         return self.id(nonids_too=True)
-
-    # ---- Keys (property names)
-
-    def keys(self):
-        """Returns the configuration keys."""
-        return self.conf.keys()
 
     # ---- ID string generation
 

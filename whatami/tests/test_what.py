@@ -88,12 +88,11 @@ def test_whatable_simple(c1):
     config_c1 = c1.what()
     assert config_c1.name == 'C1'
     assert len(config_c1.configdict) == 3
-    assert config_c1.valuefor('p1') == 'blah'
-    assert config_c1.valuefor('p2') == 'bleh'
-    assert config_c1.valuefor('length') == 1
+    assert config_c1.conf['p1'] == 'blah'
+    assert config_c1.conf['p2'] == 'bleh'
+    assert config_c1.conf['length'] == 1
     assert config_c1 == config_c1
     assert config_c1.id() == "C1(length=1,p1='blah',p2='bleh')"
-    assert len(set(config_c1.keys()) | {'p1', 'p2', 'length'}) == 3
 
 
 def test_nested_whatables(c1, c2):
@@ -101,8 +100,8 @@ def test_nested_whatables(c1, c2):
     config_c2 = c2.what()
     assert config_c2.name == 'C2'
     assert len(config_c2.configdict) == 2
-    assert config_c2.valuefor('name') == 'roxanne'
-    assert config_c2.valuefor('c1').what() == c1.what()
+    assert config_c2.conf['name'] == 'roxanne'
+    assert config_c2.conf['c1'].what() == c1.what()
     assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
     c2.c1 = c1.what()
     config_c2 = c2.what()
