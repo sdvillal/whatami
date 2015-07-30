@@ -323,7 +323,7 @@ def mlexp_info_helper(title,
                       eval_setup=None,
                       exp_function=None,
                       comments=None,
-                      idate=None):
+                      itime=None):
     """Creates a dictionary describing machine learning experiments.
 
     Parameters:
@@ -334,7 +334,7 @@ def mlexp_info_helper(title,
       - exp_function: the function in which the experiment is defined;
                       its source text lines will be stored
       - comments: a string with whatever else we need to say
-      - idate: a callable that will provide the date from a reliable internet source
+      - itime: a callable that will provide the date from a reliable internet source
                (e.g. an NTP server or http://tycho.usno.navy.mil/cgi-bin/timer.pl)
 
     (Here "what" means None, a string, an object providing a "what method" or an object providing an "id" method.)
@@ -351,7 +351,7 @@ def mlexp_info_helper(title,
         ('eval_setup', whatid(eval_setup)),
         ('fsource', inspect.getsourcelines(exp_function) if exp_function else None),
         ('date', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
-        ('idate', None if idate is None else idate()),
+        ('idate', None if itime is None else itime()),
         ('host', gethostname()),
         ('comments', comments),
     ))
