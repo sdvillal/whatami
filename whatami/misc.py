@@ -101,43 +101,6 @@ def callable2call(c, closure_extractor=lambda c: c):
     return callable2call_recursive(c)
 
 
-def is_iterable(v):
-    """Checks whether an object is iterable or not."""
-    try:
-        iter(v)
-    except:
-        return False
-    return True
-
-
-def is_closure(c):
-    """Checks whether an object is a python closure."""
-    return inspect.isfunction(c) and c.__closure__ is not None
-
-
-def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
-    """Makes a best effort to retrieve current UTC time from reliable internet sources.
-    Returns a string like "Thu, 13 Mar 2014 11:35:41 UTC"
-    """
-    # Maybe also parse from, e.g., the webpage of the time service of the U.S. army:
-    #  http://tycho.usno.navy.mil/what.html
-    #  http://tycho.usno.navy.mil/timer.html (still)
-    try:  # pragma: no cover
-        import ntplib
-        for server in ntpservers:
-            response = ntplib.NTPClient().request(server, version=3)
-            dt = datetime.datetime.utcfromtimestamp(response.tx_time)
-            return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
-    except ImportError:  # pragma: no cover
-        try:
-            from future.moves.urllib.request import urlopen
-            for line in urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
-                if 'UTC' in line:
-                    return line.strip()[4:]
-        except:
-            return None
-
-
 def all_subclasses(cls):
     """Returns a list with all the subclasses of cls in the current python session.
 
@@ -156,3 +119,216 @@ def all_subclasses(cls):
     True
     """
     return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in all_subclasses(s)]
+
+
+def _dict(obj):
+    """Returns a copy of obj.__dict___ (or {} if obj has not __dict__).
+
+    Examples
+    --------
+    >>> from future.moves.collections import UserDict
+    >>> _dict(UserDict())
+    {'data': {}}
+    >>> class NoSlots(object):
+    ...     def __init__(self):
+    ...         self.prop = 3
+    >>> ns = NoSlots()
+    >>> _dict(ns)
+    {'prop': 3}
+    >>> _dict(ns) is not ns.__dict__
+    True
+    >>> class Slots(object):
+    ...     __slots__ = ['prop']
+    ...     def __init__(self):
+    ...         self.prop = 3
+    >>> _dict(Slots())
+    {}
+    """
+    try:
+        return obj.__dict__.copy()
+    except:
+        return {}
+
+
+def _slotsdict(obj):
+    """Returns a dictionary with all attributes in obj.__slots___ (or {} if obj has not __slots__).
+
+    Examples
+    --------
+    >>> from future.moves.collections import UserDict
+    >>> _slotsdict(UserDict())
+    {}
+    >>> class Slots(object):
+    ...     __slots__ = 'prop'
+    ...     def __init__(self):
+    ...         self.prop = 3
+    ...     @property
+    ...     def prop2(self):
+    ...         return 5
+    >>> _slotsdict(Slots())
+    {'prop': 3}
+    """
+    descriptors = inspect.getmembers(obj.__class__, inspect.isdatadescriptor)
+    return {dname: value.__get__(obj) for dname, value in descriptors if
+            '__weakref__' != dname if inspect.ismemberdescriptor(value)}
+
+
+def _propsdict(obj):
+    """Returns the @properties in an object.
+    Example:
+    >>> class PropertyCarrier(object):
+    ...     __slots__ = 'prop2'
+    ...     def __init__(self):
+    ...         self.prop2 = 3
+    ...     @property
+    ...     def prop(self):
+    ...         return self.prop2
+    ...     @prop.setter
+    ...     def prop(self, prop):
+    ...         self.prop2 = prop
+    >>> _propsdict(PropertyCarrier())
+    {'prop': 3}
+    """
+    descriptors = inspect.getmembers(obj.__class__, inspect.isdatadescriptor)
+    # All data descriptors except slots and __weakref__
+    # See: http://docs.python.org/2/reference/datamodel.html
+    return {dname: value.__get__(obj) for dname, value in descriptors if
+            '__weakref__' != dname and not inspect.ismemberdescriptor(value)}
+
+
+def config_dict_for_object(obj,
+                           add_dict=True,
+                           add_slots=True,
+                           add_properties=True,
+                           exclude_prefix='_',
+                           exclude_postfix='_',
+                           excludes=('what',)):
+    """Returns a dictionary with obj attributes defined in __dict__, __slots__ or as @properties.
+    Does not fail in case any of these are not defined.
+
+    Parameters
+    ----------
+    obj: anything
+        The object to introspect
+
+    add_dict: boolean, default True
+        Add all the attributes defined in obj.__dict__
+
+    add_slots: boolean, default True
+        Add all the attributes defined in obj.__slots__
+
+    add_properties: boolean, default True
+        Add all the attributes defined as obj @properties
+
+    exclude_prefix: string, default '_'
+        Exclude all attributes whose name starts with this string
+
+    exclude_postix: string, default '_'
+        Exclude all attributes whose name ends with this string
+
+    excludes: string iterable, default ('what',)
+        Exclude all attributes whose name appears in this collection
+
+    Returns
+    -------
+    A dictionary {atribute: value}
+
+    Examples
+    --------
+    >>> class NoSlots(object):
+    ...     def __init__(self):
+    ...         self.prop = 3
+    ...         self._hidden = 5
+    ...         self.hidden_ = 5
+    >>> class Slots(NoSlots):
+    ...     __slots__ = 'sprop'
+    ...     def __init__(self):
+    ...         super(Slots, self).__init__()
+    ...         self.sprop = 4
+    >>> class Props(Slots):
+    ...     def __init__(self):
+    ...         super(Props, self).__init__()
+    ...     @property
+    ...     def pprop(self):
+    ...         return 5
+    >>> obj = Props()
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=False).items())
+    []
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=False).items())
+    [('prop', 3)]
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=False).items())
+    [('prop', 3), ('sprop', 4)]
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=True).items())
+    [('pprop', 5), ('prop', 3)]
+    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=True).items())
+    [('pprop', 5), ('prop', 3), ('sprop', 4)]
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=False).items())
+    [('sprop', 4)]
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=True).items())
+    [('pprop', 5)]
+    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=True).items())
+    [('pprop', 5), ('sprop', 4)]
+    """
+    # see also dir
+    cd = {}
+    if add_dict:
+        cd.update(_dict(obj))
+    if add_slots:
+        cd.update(_slotsdict(obj))
+    if add_properties:
+        cd.update(_propsdict(obj))
+    return {k: v for k, v in cd.items() if
+            (exclude_prefix and not k.startswith(exclude_prefix)) and
+            (exclude_postfix and not k.endswith(exclude_postfix)) and
+            k not in set(excludes)}
+
+
+def is_closure(c):
+    """Checks whether an object is a python closure."""
+    return inspect.isfunction(c) and c.__closure__ is not None
+
+
+def extract_decorated_function_from_closure(c):
+    """
+    Extracts a function from closure c iff the closure only have one cell mapping to a function
+    and also has a method 'what'.
+    (this ad-hoc behavior could help to play well with the whatable decorator)
+    """
+    closure = c.__closure__
+    if closure is not None and len(closure) == 1 and hasattr(c, 'what'):
+        func = closure[0].cell_contents
+        if inspect.isfunction(func):
+            return extract_decorated_function_from_closure(func)
+    return c
+
+
+def is_iterable(v):
+    """Checks whether an object is iterable or not."""
+    try:
+        iter(v)
+    except:
+        return False
+    return True
+
+
+def internet_time(ntpservers=('europe.pool.ntp.org', 'ntp-0.imp.univie.ac.at')):
+    """Makes a best effort to retrieve current UTC time from reliable internet sources.
+    Returns a string like "Thu, 13 Mar 2014 11:35:41 UTC"
+    """
+    try:  # pragma: no cover
+        import ntplib
+        for server in ntpservers:
+            response = ntplib.NTPClient().request(server, version=3)
+            dt = datetime.datetime.utcfromtimestamp(response.tx_time)
+            return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
+    except ImportError:  # pragma: no cover
+        # Parse from, e.g., the webpage of the time service of the U.S. army:
+        #  http://tycho.usno.navy.mil/what.html
+        #  http://tycho.usno.navy.mil/timer.html (still)
+        try:
+            from future.moves.urllib.request import urlopen
+            for line in urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl'):
+                if 'UTC' in line:
+                    return line.strip()[4:]
+        except:
+            return None

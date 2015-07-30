@@ -11,7 +11,8 @@ from future.utils import PY3
 import pytest
 
 from whatami import whatable, whatareyou, What, \
-    whatid, config_dict_for_object, is_whatable
+    whatid, is_whatable
+from whatami.misc import config_dict_for_object
 
 
 # ---- Fixtures and teardown
@@ -67,7 +68,7 @@ def c3(c1, c2):
 
 # --- Generating id strings
 
-def test_configuration_nonids_prefix_postfix():
+def test_configuration_nonids():
 
     # Non-ids
     c1 = What('tc',
@@ -89,7 +90,7 @@ def test_whatid():
     assert whatid(int) == 'int()'  # correct behavior?
 
 
-def test_non_nested_configurations(c1):
+def test_whatable_simple(c1):
     # Non-nested configurations
     config_c1 = c1.what()
     assert config_c1.name == 'C1'
@@ -110,10 +111,6 @@ def test_nested_whatables(c1, c2):
     assert config_c2.valuefor('name') == 'roxanne'
     assert config_c2.valuefor('c1').what() == c1.what()
     assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
-
-
-def test_nested_configurations(c1, c2):
-    # Nested
     c2.c1 = c1.what()
     config_c2 = c2.what()
     assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
