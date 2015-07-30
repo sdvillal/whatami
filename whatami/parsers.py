@@ -121,12 +121,16 @@ def build_whatami_parser(reduce_tree=False, debug=False):
 
 
 class WhatamiTreeVisitor(PTNodeVisitor):
-    """A tree visitor for whatami id ASTs that returns tuples (name, conf), where conf is a dictionary.
+    """A tree visitor for whatami id ASTs that returns a `whatami.What` object.
 
     Parameters
     ----------
     debug : boolean, default False
       Use debug output when visiting a tree
+
+    Returns
+    -------
+    A `whatami.What` object inferred from the id string.
     """
 
     def __init__(self, debug=False):
