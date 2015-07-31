@@ -86,11 +86,11 @@ def callable2call(c, closure_extractor=lambda c: c):
             keywords = dict(chain(zip(args[-len(defaults):], defaults), keywords.items()))  # N.B. order matters
             keywords_set = set(keywords.keys())
             if len(keywords_set - args_set) > 0:
-                raise Exception('Some partial %r keywords are not parameters of the function %s' %
-                                (keywords_set - args_set, c.__name__))
+                raise ValueError('Some partial %r keywords are not parameters of the function %s' %
+                                 (keywords_set - args_set, c.__name__))
             if len(args_set) - len(keywords_set) < len(positional):
-                raise Exception('There are too many positional arguments indicated '
-                                'for the number of unbound positional parameters left.')
+                raise ValueError('There are too many positional arguments indicated '
+                                 'for the number of unbound positional parameters left.')
             return c.__name__, keywords
         if isinstance(c, partial):
             pkeywords = c.keywords if c.keywords is not None else {}
@@ -101,7 +101,7 @@ def callable2call(c, closure_extractor=lambda c: c):
         if hasattr(c, '__call__'):
             # No way to get the argspec from anything arriving here (builtins and the like...)
             return c.__name__, keywords
-        raise Exception('Only callables (partials, functions, builtins...) are allowed, %r is none of them' % c)
+        raise ValueError('Only callables (partials, functions, builtins...) are allowed, %r is none of them' % c)
     return callable2call_recursive(c)
 
 
