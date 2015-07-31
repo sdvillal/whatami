@@ -37,15 +37,6 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     def list_sep():
         return StrMatch(',')
 
-    def kv_sep():
-        return StrMatch('=')
-
-    def dictkv_sep():
-        return StrMatch(':')
-
-    def string_quote():
-        return StrMatch('\'')
-
     def anything_but_quotes():
         return RegExMatch('[^\']*')
 
@@ -64,7 +55,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
 
     def a_string():
-        return string_quote, anything_but_quotes, string_quote
+        return StrMatch('\''), anything_but_quotes, StrMatch('\'')
 
     def a_true():
         return StrMatch('True')
@@ -90,7 +81,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return StrMatch('('), Optional(list_elements), StrMatch(')')
 
     def dictkv():
-        return value, dictkv_sep, value
+        return value, StrMatch(':'), value
 
     def dict_elements():
         return dictkv, ZeroOrMore(list_sep, dictkv)
@@ -98,13 +89,22 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     def a_dict():
         return StrMatch('{'), Optional(dict_elements), StrMatch('}')
 
+    def an_empty_set():
+        return StrMatch('set()')
+
+    def a_non_empty_set():
+        return StrMatch('{'), Optional(list_elements), StrMatch('}')
+
+    def a_set():
+        return [an_empty_set, a_non_empty_set]
+
     # Key-values
 
     def value():
-        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_dict, whatami_id]
+        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_set, a_dict, whatami_id]
 
     def kv():
-        return an_id, kv_sep, value
+        return an_id, StrMatch('='), value
 
     def kvs():
         return kv, ZeroOrMore(list_sep, kv)
@@ -198,6 +198,14 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     @staticmethod
     def visit_a_dict(_, children):
         return dict(list(children[0]))
+
+    @staticmethod
+    def visit_an_empty_set(*_):
+        return set()
+
+    @staticmethod
+    def visit_a_non_empty_set(_, children):
+        return set(list(children[0]))
 
     # Key-values
 
