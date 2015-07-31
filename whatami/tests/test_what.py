@@ -59,8 +59,6 @@ def c3(c1, c2):
     return C3()
 
 
-# --- Generating id strings
-
 def test_configuration_nonids():
 
     # Non-ids
@@ -122,9 +120,35 @@ def test_non_id_keys(c3):
     assert config_c3.id(maxlength=1) == sha2
 
 
-def test_whatable_magics(c1):
-    # configuration magics
+def test_what_str_magic(c1, c2, c3):
     assert str(c1.what()) == "C1(length=1,p1='blah',p2='bleh')"
+    assert str(c2.what()) == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
+    assert str(c3.what()) == "C3(c1=C1(length=1,p1='blah',p2='bleh')," \
+                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'),irrelevant=True)"
+
+
+def test_what_repr_magic(c1):
+    assert ('%r' % c1.what()).replace("u'", "'") == "What('C1', {'p2': 'bleh', 'length': 1, 'p1': 'blah'}, set([]))"
+    # tests with c2 and c3 will fail because of pytest magic, rewrite without fixtures
+
+
+def test_what_getitem_magic(c1, c2, c3):
+    assert c1.what()['length'] == 1
+    assert c1.what()['p1'] == 'blah'
+    assert c2.what()['c1', 'p1'] == 'blah'
+    assert c3.what()['c2', 'c1', 'p1'] == 'blah'
+
+
+def test_what_eq_magic(c1, c2, c3):
+    assert c1.what() == c1.what()
+    assert c1.what() != c2.what()
+    assert c1.what() != c3.what()
+    assert c2.what() == c2.what()
+    assert c2.what() != c1.what()
+    assert c2.what() != c3.what()
+    assert c3.what() == c3.what()
+    assert c3.what() != c1.what()
+    assert c3.what() != c2.what()
 
 
 def test_whatable_functions(c1):
