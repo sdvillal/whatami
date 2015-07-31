@@ -246,6 +246,31 @@ def test_is_whatable(c1):
     assert not is_whatable(str)
 
 
+def test_whatable_custom_func():
+
+    def whatfunc(obj):  # pragma: no cover
+        return What('custom', conf={'n_trees': None, 'original': obj.__name__})
+
+    def rfc(n_trees=30):  # pragma: no cover
+        return n_trees
+
+    assert whatable(rfc).what().id() == 'rfc(n_trees=30)'
+    assert whatable(rfc, whatfunc=whatfunc).what().id() == 'custom(n_trees=None,original=\'rfc\')'
+
+
+@pytest.mark.xfail(reason='fix infinite recursion')
+def test_whatable_custom_func_recursive():
+
+    def whatfunc(obj):  # pragma: no cover
+        return What('custom', conf={'n_trees': None, 'original': obj})
+
+    def rfc(n_trees=30):  # pragma: no cover
+        return n_trees
+
+    assert whatable(rfc).what().id() == 'rfc(n_trees=30)'
+    assert whatable(rfc, whatfunc=whatfunc).what().id() == 'custom(n_trees=None,original=rfc(n_trees=30))'
+
+
 def test_whatable_slots():
 
     # N.B. Slots are implemented as descriptors

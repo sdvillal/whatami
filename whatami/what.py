@@ -236,12 +236,14 @@ def whatareyou(obj,
                add_dict=True,
                add_slots=True,
                add_properties=True,
+               # Keys ignoring options
                exclude_prefix='_',
                exclude_postfix='_',
                excludes=('what',)):
-    """Returns a What configuration following the specified behavior.
+    """Returns a What configuration following the specified behavior for inferring the configuration and ignoring keys.
 
-    The meaning of all the parameters can be found in either *What* or *config_dict_for_object*.
+    The meaning of all the parameters can be found in `What`, `config_dict_for_object`
+    and `trim_dict`, to which this function delegates.
 
     Examples
     --------
@@ -299,6 +301,7 @@ def is_whatable(obj):
 
 
 def whatable(obj=None,
+             whatfunc=None,
              force_flag_as_whatami=False,
              # ID string building options
              non_id_keys=None,
@@ -312,18 +315,22 @@ def whatable(obj=None,
     """Decorates an object (also classes) to add a "what()" method.
 
     When decorating a callable (function, partial...), a brand new, equivalent callable will be
-    retourned (thus leaving the original intact). In this case, "what" provides safe ids
+    returned (thus leaving the original intact). In this case, "what" provides safe ids
     only for results obtained when the function is called with its default parameters.
     This is useful in limited cases, for example, if we have a partial to fix all parameters
     but the data.
 
     When decorating non-callable objects or classes, this function adds a method "what"
     that respects all the {add_dict, add_slots, add_properties, exclude_prefix, exclude_postfix
-    and excludes} as per "config_dict_for_object".
+    and excludes} as per `config_dict_for_object` and `trim_dict`.
+
+    All the parameters are ignored if `whatfunc` is provided. It must be a function returning
+    `whatfunc` should be a function accepting one object and must return another function
+    that should return the relevant `What` object when called.
 
     Returns
     -------
-    obj with a "what" method.
+    obj with a "what" method (or a wrapper function in case obj is originally a function)
 
     Examples
     --------
@@ -372,6 +379,7 @@ def whatable(obj=None,
     # class decorator
     if obj is None:
         return partial(whatable,
+                       whatfunc=whatfunc,
                        force_flag_as_whatami=force_flag_as_whatami,
                        # ID string building options
                        non_id_keys=non_id_keys,
@@ -379,6 +387,7 @@ def whatable(obj=None,
                        add_dict=add_dict,
                        add_slots=add_slots,
                        add_properties=add_properties,
+                       # Keys ignoring options
                        exclude_prefix=exclude_prefix,
                        exclude_postfix=exclude_postfix,
                        excludes=excludes)
@@ -402,8 +411,11 @@ def whatable(obj=None,
                                           assigned=update_in_wrapper)
 
         # Adds what method
-        name, config_dict = callable2call(obj, closure_extractor=extract_decorated_function_from_closure)
-        whatablefunc.what = lambda: What(name, config_dict)
+        if whatfunc is None:
+            name, config_dict = callable2call(obj, closure_extractor=extract_decorated_function_from_closure)
+            whatablefunc.what = lambda: What(name, config_dict)
+        else:
+            whatablefunc.what = partial(whatfunc, whatablefunc)
         whatablefunc.what.whatami = True
 
         return whatablefunc
@@ -433,12 +445,12 @@ def whatable(obj=None,
                               exclude_prefix=exclude_prefix,
                               exclude_postfix=exclude_postfix,
                               excludes=excludes)
+        whatablefunc = whatfunc if whatfunc is not None else whatablefunc
         whatablefunc.whatami = True
         if inspect.isclass(obj):
             obj.what = whatablefunc
         else:
             obj.what = types.MethodType(whatablefunc, obj)
-            # This will anyway fail for extension types (can we make forbiddenfruit work with instances?)
         return obj
     except:
         raise Exception('cannot whatamise %s' % type(obj))
@@ -471,9 +483,7 @@ def what2id(obj):
 
 
 def flatten_keys(what):
-    """Return a list of tuples, each tuple being able to address a parameter of what.
-
-    Makes a best effort.
+    """Returns a list of tuples, each tuple being able to address a parameter of what.
 
     Examples
     --------
