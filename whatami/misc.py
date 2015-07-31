@@ -200,13 +200,37 @@ def _propsdict(obj):
             '__weakref__' != dname and not inspect.ismemberdescriptor(value)}
 
 
+def trim_dict(cd, exclude_prefix='_', exclude_postfix='_', excludes=('what',)):
+    """Removes keys from a dictionary if they are (pre/post)fixed or fully match forbidden strings.
+
+    Parameters
+    ----------
+    cd: dictionary
+        The dictionary to trim
+
+    exclude_prefix: string, default '_'
+        Exclude all attributes whose name starts with this string
+
+    exclude_postix: string, default '_'
+        Exclude all attributes whose name ends with this string
+
+    excludes: string iterable, default ('what',)
+        Exclude all attributes whose name appears in this collection
+
+    Returns
+    -------
+    A copy of cd with only the allowed keys.
+    """
+    return {k: v for k, v in cd.items() if
+            (exclude_prefix and not k.startswith(exclude_prefix)) and
+            (exclude_postfix and not k.endswith(exclude_postfix)) and
+            k not in set(excludes)}
+
+
 def config_dict_for_object(obj,
                            add_dict=True,
                            add_slots=True,
-                           add_properties=True,
-                           exclude_prefix='_',
-                           exclude_postfix='_',
-                           excludes=('what',)):
+                           add_properties=True):
     """Returns a dictionary with obj attributes defined in __dict__, __slots__ or as @properties.
     Does not fail in case any of these are not defined.
 
@@ -223,15 +247,6 @@ def config_dict_for_object(obj,
 
     add_properties: boolean, default True
         Add all the attributes defined as obj @properties
-
-    exclude_prefix: string, default '_'
-        Exclude all attributes whose name starts with this string
-
-    exclude_postix: string, default '_'
-        Exclude all attributes whose name ends with this string
-
-    excludes: string iterable, default ('what',)
-        Exclude all attributes whose name appears in this collection
 
     Returns
     -------
@@ -256,21 +271,21 @@ def config_dict_for_object(obj,
     ...     def pprop(self):
     ...         return 5
     >>> obj = Props()
-    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=False).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=False)).items())
     []
-    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=False).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=False)).items())
     [('prop', 3)]
-    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=False).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=False)).items())
     [('prop', 3), ('sprop', 4)]
-    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=True).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=True, add_slots=False, add_properties=True)).items())
     [('pprop', 5), ('prop', 3)]
-    >>> sorted(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=True).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=True, add_slots=True, add_properties=True)).items())
     [('pprop', 5), ('prop', 3), ('sprop', 4)]
-    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=False).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=False)).items())
     [('sprop', 4)]
-    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=True).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=False, add_slots=False, add_properties=True)).items())
     [('pprop', 5)]
-    >>> sorted(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=True).items())
+    >>> sorted(trim_dict(config_dict_for_object(obj, add_dict=False, add_slots=True, add_properties=True)).items())
     [('pprop', 5), ('sprop', 4)]
     """
     # see also dir
@@ -281,10 +296,7 @@ def config_dict_for_object(obj,
         cd.update(_slotsdict(obj))
     if add_properties:
         cd.update(_propsdict(obj))
-    return {k: v for k, v in cd.items() if
-            (exclude_prefix and not k.startswith(exclude_prefix)) and
-            (exclude_postfix and not k.endswith(exclude_postfix)) and
-            k not in set(excludes)}
+    return cd
 
 
 def is_closure(c):
