@@ -54,6 +54,17 @@ def test_parse_id_dicts():
     assert what.conf == {'splits': {1: 7, None: 'end', 'end': None, 'lst': [7, 'b', 1], 'd': {'nest': 2}}}
 
 
+def test_parse_id_sets():
+    # with elements
+    what = parse_whatid("rfc(splits={1, None, 'end'})")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': {1, None, 'end'}}
+    # empty
+    what = parse_whatid("rfc(splits=set())")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': set()}
+
+
 def test_parse_id_spaces():
     what = parse_whatid("rfc(splits={  1:7,  None: 'end','end':None, 'lst': [7,'b', 1], 'd':  {'nest': 2}})")
     assert what.name == 'rfc'

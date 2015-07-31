@@ -35,12 +35,14 @@ def whatable2spectations(request):
 
         a_dict = {'a': 2, None: 'c'}
         a_list = ['l', None, 3.2]
-        a_tuple = (33, a_list, a_dict)
+        an_empty_set = set()
+        a_set = {'a', 3}
+        a_tuple = (33, a_list, a_dict, an_empty_set, a_set)
 
         @whatable
         def rfc(X, y, t=a_tuple):    # pragma: no cover
             return X, y, t
-        expected_id = "rfc(t=(33,['l',None,3.2],{'a':2,None:'c'}))"
+        expected_id = "rfc(t=(33,['l',None,3.2],{'a':2,None:'c'},set(),{'a',3}))"
         expected_what = What(name='rfc', conf={'t': a_tuple})
         return rfc, expected_id, expected_what
 
