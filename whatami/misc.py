@@ -355,12 +355,12 @@ def mlexp_info_helper(title,
       An ordered dict mapping strings to strings with all or part of:
       title, data_setup, model_setup, eval_setup, fsource, date, idate (internet datetime), host, comments
     """
-    from whatami import whatid
+    from whatami import what2id
     info = OrderedDict((
         ('title', title),
-        ('data_setup', whatid(data_setup)),
-        ('model_setup', whatid(model_setup)),
-        ('eval_setup', whatid(eval_setup)),
+        ('data_setup', what2id(data_setup)),
+        ('model_setup', what2id(model_setup)),
+        ('eval_setup', what2id(eval_setup)),
         ('fsource', inspect.getsourcelines(exp_function) if exp_function else None),
         ('date', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
         ('idate', None if itime is None else itime()),
