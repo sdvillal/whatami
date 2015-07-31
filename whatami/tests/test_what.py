@@ -6,6 +6,7 @@
 from __future__ import unicode_literals, absolute_import
 from functools import partial
 import hashlib
+from future.utils import PY3
 
 import pytest
 
@@ -128,7 +129,11 @@ def test_what_str_magic(c1, c2, c3):
 
 
 def test_what_repr_magic(c1):
-    assert ('%r' % c1.what()).replace("u'", "'") == "What('C1', {'p2': 'bleh', 'length': 1, 'p1': 'blah'}, set([]))"
+    if PY3:
+        expected = "What('C1', {'p2': 'bleh', 'length': 1, 'p1': 'blah'}, set())"
+    else:
+        expected = "What('C1', {'p2': 'bleh', 'length': 1, 'p1': 'blah'}, set([]))"
+    assert expected == ('%r' % c1.what()).replace("u'", "'")
     # tests with c2 and c3 will fail because of pytest magic, rewrite without fixtures
 
 
