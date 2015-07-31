@@ -129,9 +129,9 @@ def test_what_str_magic(c1, c2, c3):
 
 
 def test_what_repr_magic(c1):
-    if PY3:
+    if PY3:  # pragma: no cover
         expected = "What('C1', {'p2': 'bleh', 'length': 1, 'p1': 'blah'}, set())"
-    else:
+    else:  # pragma: no cover
         expected = "What('C1', {'p2': 'bleh', 'length': 1, 'p1': 'blah'}, set([]))"
     assert expected == ('%r' % c1.what()).replace("u'", "'")
     # tests with c2 and c3 will fail because of pytest magic, rewrite without fixtures
