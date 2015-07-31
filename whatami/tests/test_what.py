@@ -10,8 +10,8 @@ from future.utils import PY3
 
 import pytest
 
-from whatami import whatable, whatareyou, What, whatid, is_whatable
-from whatami.misc import config_dict_for_object
+from whatami import whatable, whatareyou, What, what2id, is_whatable
+from whatami.misc import config_dict_for_object, trim_dict
 
 
 # --- Fixtures
@@ -77,9 +77,9 @@ def test_configuration_nonids():
 
 
 def test_whatid():
-    assert whatid(None) is None
-    assert whatid('Myself') == 'Myself'
-    assert whatid(int) == 'int()'  # correct behavior?
+    assert what2id(None) is None
+    assert what2id('Myself') == 'Myself'
+    assert what2id(int) == 'int()'  # correct behavior?
 
 
 def test_whatable_simple(c1):
@@ -229,7 +229,7 @@ def test_whatable_data_descriptors():
 
         def what(self):
             return What(self.__class__.__name__,
-                        config_dict_for_object(self, add_properties=True))
+                        trim_dict(config_dict_for_object(self, add_properties=True)))
 
     cp = ClassWithProps()
     assert cp.what().id() == 'ClassWithProps(prop=3)'
