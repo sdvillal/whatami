@@ -458,3 +458,9 @@ def test_whatable_faker():
     with pytest.raises(Exception) as excinfo:
         whatareyou(Fool()).id()
     assert 'object has a "what" attribute, but it is not of What class' in str(excinfo.value)
+
+
+def test_what_copy(c1, c2, c3):
+    for c in (c1, c2, c3):
+        what = c.what()
+        assert what == what.copy()
