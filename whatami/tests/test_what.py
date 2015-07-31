@@ -412,7 +412,7 @@ def test_set_parameters(c1):
     assert w.what().id() == "WhatableWithSet(set={2,C1(length=1,p1='blah',p2='bleh')})"
     # whatables must have no memory of configuration
     w.set = set()
-    assert w.what().id() == "WhatableWithSet(set={})"
+    assert w.what().id() == "WhatableWithSet(set=set())"
 
 
 def test_whatable_faker():

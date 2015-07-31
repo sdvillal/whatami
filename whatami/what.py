@@ -204,7 +204,8 @@ class What(object):
             kvs = sorted('%s:%s' % (self._build_string(k), self._build_string(v)) for k, v in v.items())
             return '{%s}' % ','.join(kvs)
         if isinstance(v, set):
-            return '{%s}' % ','.join(sorted(map(self._build_string, v)))
+            elements = sorted(map(self._build_string, v))
+            return '{%s}' % ','.join(elements) if len(elements) > 0 else 'set()'
         if isinstance(v, list):
             return '[%s]' % ','.join(map(self._build_string, v))
         if isinstance(v, tuple):
