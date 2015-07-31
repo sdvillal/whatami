@@ -76,7 +76,8 @@ from future.builtins import str
 from future.utils import PY3
 from past.builtins import basestring as basestring23
 
-from whatami.misc import callable2call, is_iterable, config_dict_for_object, extract_decorated_function_from_closure
+from whatami.misc import callable2call, is_iterable, config_dict_for_object, extract_decorated_function_from_closure, \
+    trim_dict
 
 
 class What(object):
@@ -116,8 +117,9 @@ class What(object):
 
     def copy(self):
         """Returns a copy of this whatable object.
-        N.B. The configuration dictionary is shallow copied,
-         so side-effects might cripple in if changes are made to mutable values.
+
+        N.B. The configuration dictionary is copy is shallow;
+        side-effects might happen if changes are made to mutable values.
         """
         return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
 
@@ -150,38 +152,7 @@ class What(object):
                 return w
             raise
 
-        # return self.conf[item]
-
     # ---- ID string generation
-
-    def _as_string(self, nonids_too=False):
-        """Makes a best effort to represent this configuration as a string.
-
-        Parameters
-        ----------
-        nonids_too : bool, default False
-          if False, non-ids keys are ignored.
-
-        Returns
-        -------
-        a string representing this configuration.
-
-        Examples
-        --------
-        The strings look like follows:
-          "rfc(n_trees=10,verbose=True,splitter="gini,verbose=True",min_split=10)"
-        where
-          "rfc" is the name of the configuration
-          "n_trees=10" is one of the properties
-          "verbose=True" is another property that should show up only if nonids_too is True
-          "splitter=xxx" is another property with a nested configuration:
-               "gini" is the name of the nested configuration
-               "verbose=True" is a parameter of the nested configuration
-          "min_split=10" is another property
-        """
-        return ','.join('%s=%s' % (k, self._build_string(v))
-                        for k, v in sorted(self.conf.items())
-                        if nonids_too or k not in self.non_id_keys)
 
     def id(self, nonids_too=False, maxlength=0):
         """Returns the id string (unicode) of this configuration.
@@ -195,19 +166,21 @@ class What(object):
           If the id length goes over maxlength, the parameters part get replaced by its sha256.
           If <= 0, it is ignored and the full id string will be returned.
         """
-
-        my_id = '%s(%s)' % (self.name, self._as_string(nonids_too=nonids_too))
+        kvs = ','.join('%s=%s' % (k, self._build_string(v))
+                       for k, v in sorted(self.conf.items())
+                       if nonids_too or k not in self.non_id_keys)
+        my_id = '%s(%s)' % (self.name, kvs)
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod
     def _trim_too_long(string, maxlength=0):
+        """Returns the string or its sha256 if the string length is larger than maxlength."""
         if 0 < maxlength < len(string):
             return hashlib.sha256(string.encode('utf-8')).hexdigest()
         return string
 
     def _build_string(self, v):
         """Returns the nested configuration string for a variety of value types."""
-
         if isinstance(v, What):
             return v.id()
         if hasattr(v, 'what'):
@@ -257,7 +230,6 @@ class What(object):
 
 
 def whatareyou(obj,
-               name=None,
                # ID string building options
                non_id_keys=None,
                # Config-dict building options
@@ -282,18 +254,12 @@ def whatareyou(obj,
     mola(n=7)
     """
     try:
-        c_name, cd = callable2call(obj)
-        name = c_name if name is None else name
-    except:
-        cd = config_dict_for_object(obj,
-                                    add_dict=add_dict,
-                                    add_slots=add_slots,
-                                    add_properties=add_properties,
-                                    exclude_prefix=exclude_prefix,
-                                    exclude_postfix=exclude_postfix,
-                                    excludes=excludes)
-    return What(name=obj.__class__.__name__ if name is None else name,
-                conf=cd,
+        name, cd = callable2call(obj)
+    except ValueError:
+        name = obj.__class__.__name__
+        cd = config_dict_for_object(obj, add_dict=add_dict, add_slots=add_slots, add_properties=add_properties)
+    return What(name=name,
+                conf=trim_dict(cd, exclude_prefix=exclude_prefix, exclude_postfix=exclude_postfix, excludes=excludes),
                 non_id_keys=non_id_keys)
 
 
@@ -478,7 +444,7 @@ def whatable(obj=None,
         raise Exception('cannot whatamise %s' % type(obj))
 
 
-def whatid(obj):
+def what2id(obj):
     """Returns the configuration of obj as a string.
 
     Returns
