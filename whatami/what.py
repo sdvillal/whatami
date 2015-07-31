@@ -125,6 +125,26 @@ class What(object):
         """The default representation is the configuration string including non_ids keys."""
         return self.id(nonids_too=True)
 
+    def __repr__(self):
+        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self._non_ids)
+
+    def __getitem__(self, item):
+        """Allow to retrieve configuration values using [] notations, recursively, whatami aware."""
+        try:
+            return self.conf[item]
+        except KeyError:
+            if isinstance(item, tuple):
+                w = self.conf
+                for key in item:
+                    try:
+                        w = w[key]
+                    except TypeError:
+                        w = w.what()[key]
+                return w
+            raise
+
+        # return self.conf[item]
+
     # ---- ID string generation
 
     def _as_string(self, nonids_too=False):
