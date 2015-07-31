@@ -108,11 +108,18 @@ class What(object):
         self.name = name
         self.conf = conf
         if non_id_keys is None:
-            self._non_ids = set()
+            self.non_id_keys = set()
         elif is_iterable(non_id_keys):
-            self._non_ids = set(non_id_keys)
+            self.non_id_keys = set(non_id_keys)
         else:
             raise Exception('non_ids must be None or an iterable')
+
+    def copy(self):
+        """Returns a copy of this whatable object.
+        N.B. The configuration dictionary is shallow copied,
+         so side-effects might cripple in if changes are made to mutable values.
+        """
+        return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
 
     # ---- Magics
 
@@ -126,7 +133,7 @@ class What(object):
         return self.id(nonids_too=True)
 
     def __repr__(self):
-        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self._non_ids)
+        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self.non_id_keys)
 
     def __getitem__(self, item):
         """Allow to retrieve configuration values using [] notations, recursively, whatami aware."""
@@ -174,7 +181,7 @@ class What(object):
         """
         return ','.join('%s=%s' % (k, self._build_string(v))
                         for k, v in sorted(self.conf.items())
-                        if nonids_too or k not in self._non_ids)
+                        if nonids_too or k not in self.non_id_keys)
 
     def id(self, nonids_too=False, maxlength=0):
         """Returns the id string (unicode) of this configuration.
@@ -495,3 +502,37 @@ def whatid(obj):
             return whatareyou(obj).id()
             # raise TypeError('the object must be None, a string, have a what() method, '
             #                 'have an id() method or respond well to whatareyou')
+
+
+def flatten_keys(what):
+    """Return a list of tuples, each tuple being able to address a parameter of what.
+
+    Makes a best effort.
+
+    Examples
+    --------
+    >>> what = whatareyou(lambda x=1, y=(1,2,{None: 3}): None)
+    >>> keys = flatten_keys(what)
+    >>> keys
+    [('x',), ('y',), ('y', 0), ('y', 1), ('y', 2), ('y', 2, None)]
+    >>> what[keys[0]]
+    1
+    >>> what[keys[-1]]
+    3
+    """
+    def flatten(what, flattened, partial_k):
+        if isinstance(what, What):
+            kvs = sorted(what.conf.items())
+        elif isinstance(what, (list, tuple)):
+            kvs = enumerate(what)
+        elif isinstance(what, dict):
+            kvs = sorted(what.items())
+        else:
+            kvs = ()
+        for k, v in kvs:
+            k = partial_k + (k,)
+            flattened.append(k)
+            flatten(v, flattened, k)
+        return flattened
+    # pity that python recursion is terribly inefficient
+    return flatten(what, [], ())
