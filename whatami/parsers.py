@@ -6,7 +6,6 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
-from whatami import What
 
 
 def build_whatami_parser(reduce_tree=False, debug=False):
@@ -225,6 +224,7 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_whatami_id(_, children):
+        from whatami import What
         an_id = children[0]
         kvs = list(children[1]) if len(children) > 1 else []
         return What(an_id, dict(kvs))
@@ -234,7 +234,11 @@ class WhatamiTreeVisitor(PTNodeVisitor):
         return children[0]
 
 
-def parse_whatid(id_string, parser=build_whatami_parser(), visitor=WhatamiTreeVisitor()):
+DEFAULT_WHATAMI_PARSER = build_whatami_parser()
+DEFAULT_WHATAMI_VISITOR = WhatamiTreeVisitor()
+
+
+def parse_whatid(id_string, parser=DEFAULT_WHATAMI_PARSER, visitor=DEFAULT_WHATAMI_VISITOR):
     """
     Parses whatami id string into a pair (name, configuration).
     Makes a best effort to reconstruct python objects.
