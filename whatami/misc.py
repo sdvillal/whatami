@@ -355,7 +355,7 @@ def mlexp_info_helper(title,
       An ordered dict mapping strings to strings with all or part of:
       title, data_setup, model_setup, eval_setup, fsource, date, idate (internet datetime), host, comments
     """
-    from whatami import what2id
+    from whatami.whatutils import what2id
     info = OrderedDict((
         ('title', title),
         ('data_setup', what2id(data_setup)),
