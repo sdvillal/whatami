@@ -12,6 +12,8 @@ from whatami import parse_whatid, What
 
 
 # --- Parsing id strings
+from whatami.whatutils import sort_whatids, id2what
+
 
 @pytest.mark.xfail(reason='known limitation, to fix or to document as permanent limitation')
 def test_parse_whatid_within_string():  # pragma: no cover
@@ -125,3 +127,11 @@ def test_parse_id_wrong():
         parse_whatid('rfc(5')
     with pytest.raises(arpeggio.NoMatch):
         parse_whatid('rfc5)')
+
+
+def test_arpeggio_resilience():
+    with pytest.raises(TypeError):
+        parse_whatid(map)
+    what = parse_whatid("rfc(splits = {1, None, 'end'})")
+    assert what.name == 'rfc'
+    assert what.conf == {'splits': {1, None, 'end'}}
