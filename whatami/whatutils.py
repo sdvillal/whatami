@@ -138,4 +138,4 @@ def sort_whatids(whatids, *keys):
     """
     whats = map(id2what, whatids)  # if this is bottleneck, allow to pass what themselves
     values = [whatvalues(what, keys) for what in whats]
-    return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whats), key=itemgetter(0))]))
+    return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whatids), key=itemgetter(0))]))
