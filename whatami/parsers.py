@@ -36,9 +36,6 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     def list_sep():
         return StrMatch(',')
 
-    def anything_but_quotes():
-        return RegExMatch('[^\']*')
-
     # Basic types
 
     def an_id():
@@ -54,7 +51,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
 
     def a_string():
-        return StrMatch('\''), anything_but_quotes, StrMatch('\'')
+        return StrMatch("'"), RegExMatch("[^']*"), StrMatch("'")
 
     def a_true():
         return StrMatch('True')
