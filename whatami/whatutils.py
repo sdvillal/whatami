@@ -139,7 +139,7 @@ def sort_whats(whats, *keys):
     --------
     >>> ids = ["Lagged(fex=distcorr(), lag=%d, response='acceleration', stimulus='force')" % lag
     ...        for lag in range(-2, 3)][::-1]
-    >>> whats = map(id2what, ids)
+    >>> whats = list(map(id2what, ids))
     >>> whats_sorted, values = sort_whats(whats, 'lag')
     >>> [what['lag'] for what in whats]
     [2, 1, 0, -1, -2]
