@@ -10,7 +10,8 @@ from future.utils import PY3
 
 import pytest
 
-from whatami import whatable, whatareyou, What, what2id, is_whatable
+from whatami import whatable, whatareyou, What, is_whatable
+from whatami.whatutils import what2id
 from whatami.misc import config_dict_for_object, trim_dict
 
 
