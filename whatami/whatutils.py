@@ -9,6 +9,7 @@ from operator import itemgetter
 from past.builtins import basestring as basestring23
 
 from whatami import parse_whatid, whatareyou, What
+from whatami import whatable
 from whatami.what import is_whatable
 
 
@@ -54,6 +55,15 @@ def obj2what(obj,
     """Returns returns a best-guess for a suitable `What` for the obj:
      - `obj.what()` if obj is a `whatable`
      - otherwise invokes `whatareyou` on the object with the provided options.
+
+    Examples
+    --------
+    >>> print(obj2what(whatable(id2what)).id())
+    parse_whatid(parser=None,visitor=None)
+    >>> print(obj2what(id2what).id())
+    parse_whatid(parser=None,visitor=None)
+    >>> print(obj2what(id2what, excludes=('parser',)).id())
+    parse_whatid(visitor=None)
     """
     if is_whatable(obj):  # do not move this to whatareyou, or we face infinite recursion
         return obj.what()
@@ -109,13 +119,35 @@ def flatten_what(what):
 
 
 def whatvalues(what, keys=()):
-    """Returns a tuple with the values assigned to keys in the what What object."""
+    """Returns a tuple with the values assigned to keys in the the what.what() What object.
+    Examples
+    --------
+    >>> whatvalues(obj2what(id2what), ('parser', 'visitor'))
+    (None, None)
+    >>> whatvalues(obj2what(id2what), 'parser')
+    (None,)
+    """
     if not isinstance(keys, tuple):
         keys = (keys,)
     return tuple(what[key] for key in keys)
 
 
 def sort_whats(whats, *keys):
+    """
+    Sorts a list of What objects according to the value of some parameters.
+    Examples
+    --------
+    >>> ids = ["Lagged(fex=distcorr(), lag=%d, response='acceleration', stimulus='force')" % lag
+    ...        for lag in range(-2, 3)][::-1]
+    >>> whats = map(id2what, ids)
+    >>> whats_sorted, values = sort_whats(whats, 'lag')
+    >>> [what['lag'] for what in whats]
+    [2, 1, 0, -1, -2]
+    >>> list(val for (val,) in values)
+    [-2, -1, 0, 1, 2]
+    >>> [what['lag'] for what in whats_sorted]
+    [-2, -1, 0, 1, 2]
+    """
     values = [whatvalues(what, keys) for what in whats]
     return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whats), key=itemgetter(0))]))
 
