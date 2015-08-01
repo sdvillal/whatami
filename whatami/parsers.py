@@ -235,7 +235,7 @@ DEFAULT_WHATAMI_PARSER = build_whatami_parser()
 DEFAULT_WHATAMI_VISITOR = WhatamiTreeVisitor()
 
 
-def parse_whatid(id_string, parser=DEFAULT_WHATAMI_PARSER, visitor=DEFAULT_WHATAMI_VISITOR):
+def parse_whatid(id_string, parser=None, visitor=None):
     """
     Parses whatami id string into a pair (name, configuration).
     Makes a best effort to reconstruct python objects.
@@ -259,4 +259,15 @@ def parse_whatid(id_string, parser=DEFAULT_WHATAMI_PARSER, visitor=DEFAULT_WHATA
     >>> print(what.conf['n_jobs'].conf['here'])
     100
     """
-    return visit_parse_tree(parser.parse(id_string), visitor=visitor)
+    global DEFAULT_WHATAMI_PARSER
+    if parser is None:
+        parser = DEFAULT_WHATAMI_PARSER
+    if visitor is None:
+        visitor = DEFAULT_WHATAMI_VISITOR
+    try:
+        return visit_parse_tree(parser.parse(id_string), visitor=visitor)
+    except TypeError:
+        # Remove this once arpeggio is released with this fix:
+        # https://github.com/igordejanovic/Arpeggio/pull/21
+        DEFAULT_WHATAMI_PARSER = build_whatami_parser()
+        raise
