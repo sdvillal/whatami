@@ -81,6 +81,9 @@ from whatami.misc import callable2call, is_iterable, config_dict_for_object, ext
 
 
 class What(object):
+
+    __slots__ = ('name', 'conf', 'non_id_keys')
+
     """Stores and manipulates object configuration.
 
     Configurations are just dictionaries {key: value} that can nest and have a name.
