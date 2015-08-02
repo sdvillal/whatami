@@ -17,7 +17,7 @@ before_install:
  - conda info -a
  - travis_retry conda create -n test python=$TRAVIS_PYTHON_VERSION pip pytest numpy scipy scikit-learn pandas future
  - source activate test
- - travis_retry pip install arpeggio pytest-cov pytest-pep8 coveralls scrutinizer-ocular
+ - travis_retry pip install arpeggio pytest-cov pytest-pep8 codecov scrutinizer-ocular
 
 script:
   py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
