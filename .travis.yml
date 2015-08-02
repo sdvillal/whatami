@@ -15,7 +15,7 @@ before_install:
  - conda install future
  - conda install pytest
  - conda info -a
- - travis_retry conda create -n test python=$TRAVIS_PYTHON_VERSION pip pytest numpy scipy scikit-learn pandas future
+ - travis_retry conda create -n test python=$TRAVIS_PYTHON_VERSION pip pytest numpy scipy scikit-learn pandas future joblib
  - source activate test
  - travis_retry pip install arpeggio pytest-cov pytest-pep8 codecov scrutinizer-ocular
 
