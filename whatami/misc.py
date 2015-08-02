@@ -95,14 +95,18 @@ def callable2call(c, closure_extractor=lambda c: c):
             args_set = set(args)
             # Check that everything is fine...
             keywords = dict(chain(zip(args[-len(defaults):], defaults), keywords.items()))  # N.B. order matters
+            pos2keyword = dict(zip(args[:len(positional)], positional))  # N.B. order matters
             keywords_set = set(keywords.keys())
             if len(keywords_set - args_set) > 0:
                 raise ValueError('Some partial %r keywords are not parameters of the function %s' %
                                  (keywords_set - args_set, c.__name__))
+            if len(set(pos2keyword.keys()) & set(keywords.keys())) > 0:
+                raise ValueError('Some arguments are indicated both by position and name (%r)' %
+                                 sorted(set(pos2keyword.keys()) & set(keywords.keys())))
             if len(args_set) - len(keywords_set) < len(positional):
                 raise ValueError('There are too many positional arguments indicated '
                                  'for the number of unbound positional parameters left.')
-            return c.__name__, keywords
+            return c.__name__, dict(list(keywords.items()) + list(pos2keyword.items()))
         if isinstance(c, partial):
             pkeywords = c.keywords if c.keywords is not None else {}
             return callable2call_recursive(
