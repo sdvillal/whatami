@@ -173,50 +173,110 @@ def anyobject_plugin(_, v):
     return str(v)
 
 
-_PLUGINS = (what_plugin,
-            whatable_plugin,
-            builtin_plugin,
-            property_plugin,
-            string_plugin,
-            tuple_plugin,
-            list_plugin,
-            dict_plugin,
-            set_plugin,
-            partial_plugin,
-            function_plugin,
-            anyobject0x_plugin,
-            anyobject_plugin)
-
-
-def insert_plugin(plugin, before=None):
-    """Inserts a new plugin in the list of plugins used to generate strings for values in What configurations.
-
-    Parameters
-    ----------
-    plugin : function (what, value) -> string
-      A function that checks for value type and if it applies generates a string representing it,
-      optionally using the information on What instance what.
-
-    before : function
-      A plugin already registered in the list.
-
-    Raises
-    ------
-    ValueError if plugin is already in the list of registered plugins of if before is not in the list.
+class WhatamiPluginManager(object):
     """
-    global _PLUGINS
-    if plugin in _PLUGINS:
-        raise ValueError('Cannot insert plugin %s, already in plugins list' % plugin.__name__)
-    plugins = list(_PLUGINS)
-    if before is None:
-        plugins.append(plugin)
-    else:
+    Examples
+    --------
+    >>> function_plugin in WhatamiPluginManager.plugins()
+    True
+    >>> map in WhatamiPluginManager.plugins()
+    False
+    >>> WhatamiPluginManager.insert(map)
+    >>> map in WhatamiPluginManager.plugins()
+    True
+    >>> map == WhatamiPluginManager.plugins()[-1]
+    True
+    >>> WhatamiPluginManager.drop(map)
+    >>> map in WhatamiPluginManager.plugins()
+    False
+    >>> WhatamiPluginManager.insert(map)
+    >>> WhatamiPluginManager.reset()
+    >>> map in WhatamiPluginManager.plugins()
+    False
+    >>> WhatamiPluginManager.drop(map)
+    Traceback (most recent call last):
+    ...
+    ValueError: cannot drop plugin map, not in plugins list
+    >>> WhatamiPluginManager.insert(string_plugin)
+    Traceback (most recent call last):
+    ...
+    ValueError: cannot insert plugin string_plugin, already in plugins list
+    >>> WhatamiPluginManager.insert(map, before=string_plugin)
+    >>> map in WhatamiPluginManager.plugins()
+    True
+    >>> WhatamiPluginManager.drop(map)
+    >>> WhatamiPluginManager.insert(map, before=reduce)
+    Traceback (most recent call last):
+    ...
+    ValueError: plugin to insert before (reduce) not in plugins list
+    >>> WhatamiPluginManager.reset()
+    """
+
+    DEFAULT_PLUGINS = (what_plugin,
+                       whatable_plugin,
+                       builtin_plugin,
+                       property_plugin,
+                       string_plugin,
+                       tuple_plugin,
+                       list_plugin,
+                       dict_plugin,
+                       set_plugin,
+                       partial_plugin,
+                       function_plugin,
+                       anyobject0x_plugin,
+                       anyobject_plugin)
+
+    PLUGINS = DEFAULT_PLUGINS
+
+    @classmethod
+    def plugins(cls):
+        """Returns a tuple with the currently considered plugins."""
+        return cls.PLUGINS
+
+    @classmethod
+    def reset(cls):
+        """Makes the plugin list the default list."""
+        cls.PLUGINS = cls.DEFAULT_PLUGINS
+
+    @classmethod
+    def drop(cls, plugin):
+        """Removes a plugin from the list of plugins."""
+        plugins = list(cls.PLUGINS)
         try:
-            index = plugins.index(before)
-            plugins.insert(index, plugin)
+            plugins.remove(plugin)
+            cls.PLUGINS = tuple(plugins)
         except ValueError:
-            raise ValueError('Plugin to insert before (%s) not in plugins list' % before.__name__)
-    _PLUGINS = tuple(plugins)
+            raise ValueError('cannot drop plugin %s, not in plugins list' % plugin.__name__)
+
+    @classmethod
+    def insert(cls, plugin, before=None):
+        """Inserts a new plugin in the list of plugins used to generate strings for values in What configurations.
+
+        Parameters
+        ----------
+        plugin : function (what, value) -> string
+          A function that checks for value type and if it applies generates a string representing it,
+          optionally using the information on What instance what.
+
+        before : function
+          A plugin already registered in the list.
+
+        Raises
+        ------
+        ValueError if plugin is already in the list of registered plugins of if before is not in the list.
+        """
+        if plugin in cls.PLUGINS:
+            raise ValueError('cannot insert plugin %s, already in plugins list' % plugin.__name__)
+        plugins = list(cls.PLUGINS)
+        if before is None:
+            plugins.append(plugin)
+        else:
+            try:
+                index = plugins.index(before)
+                plugins.insert(index, plugin)
+            except ValueError:
+                raise ValueError('plugin to insert before (%s) not in plugins list' % before.__name__)
+        cls.PLUGINS = tuple(plugins)
 
 
 # Preferred hasher for whatami plugins
@@ -319,7 +379,7 @@ class What(object):
 
     def build_string(self, v):
         """Returns the nested configuration string for a variety of value types."""
-        for plugin in _PLUGINS:
+        for plugin in WhatamiPluginManager.plugins():
             string = plugin(self, v)
             if string is not None:
                 return string
