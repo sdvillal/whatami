@@ -23,7 +23,7 @@ script:
   py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
 
 after_success:
- - coveralls
+ - codecov
  - ocular --data-file ".coverage" --config-file ".coveragerc"
 
 notifications:

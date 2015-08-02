@@ -100,8 +100,8 @@ Example
 
 .. |Build Status| image:: https://travis-ci.org/sdvillal/whatami.svg?branch=master
    :target: https://travis-ci.org/sdvillal/whatami
-.. |Coverage Status| image:: https://img.shields.io/coveralls/sdvillal/whatami.svg
-   :target: https://coveralls.io/r/sdvillal/whatami
+.. |Coverage Status| image:: http://codecov.io/github/sdvillal/whatami/coverage.svg?branch=master
+   :target: http://codecov.io/github/sdvillal/whatami?branch=master
 .. |Pypi Version| image:: https://badge.fury.io/py/whatami.svg
    :target: http://badge.fury.io/py/whatami
 .. _semantic versioning: http://semver.org/
