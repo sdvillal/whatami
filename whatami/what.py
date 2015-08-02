@@ -177,38 +177,45 @@ class WhatamiPluginManager(object):
     """
     Examples
     --------
+    >>> def float_plugin(_, v):
+    ...     if isinstance(v, float):
+    ...         return "'float=%g'" % v
+    ...     return None
     >>> function_plugin in WhatamiPluginManager.plugins()
     True
-    >>> map in WhatamiPluginManager.plugins()
+    >>> float_plugin in WhatamiPluginManager.plugins()
     False
-    >>> WhatamiPluginManager.insert(map)
-    >>> map in WhatamiPluginManager.plugins()
+    >>> WhatamiPluginManager.insert(float_plugin)
+    >>> float_plugin in WhatamiPluginManager.plugins()
     True
-    >>> map == WhatamiPluginManager.plugins()[-1]
+    >>> float_plugin == WhatamiPluginManager.plugins()[-3]
     True
-    >>> WhatamiPluginManager.drop(map)
-    >>> map in WhatamiPluginManager.plugins()
+    >>> WhatamiPluginManager.drop(float_plugin)
+    >>> float_plugin in WhatamiPluginManager.plugins()
     False
-    >>> WhatamiPluginManager.insert(map)
+    >>> WhatamiPluginManager.insert(float_plugin)
     >>> WhatamiPluginManager.reset()
-    >>> map in WhatamiPluginManager.plugins()
+    >>> float_plugin in WhatamiPluginManager.plugins()
     False
-    >>> WhatamiPluginManager.drop(map)
+    >>> WhatamiPluginManager.drop(float_plugin)
     Traceback (most recent call last):
     ...
-    ValueError: cannot drop plugin map, not in plugins list
+    ValueError: cannot drop plugin float_plugin, not in plugins list
     >>> WhatamiPluginManager.insert(string_plugin)
     Traceback (most recent call last):
     ...
     ValueError: cannot insert plugin string_plugin, already in plugins list
-    >>> WhatamiPluginManager.insert(map, before=string_plugin)
-    >>> map in WhatamiPluginManager.plugins()
+    >>> WhatamiPluginManager.insert(float_plugin, before=string_plugin)
+    >>> float_plugin in WhatamiPluginManager.plugins()
     True
-    >>> WhatamiPluginManager.drop(map)
-    >>> WhatamiPluginManager.insert(map, before=reduce)
+    >>> WhatamiPluginManager.drop(float_plugin)
+    >>> WhatamiPluginManager.insert(float_plugin, before=float_plugin)
     Traceback (most recent call last):
     ...
-    ValueError: plugin to insert before (reduce) not in plugins list
+    ValueError: plugin to insert before (float_plugin) not in plugins list
+    >>> WhatamiPluginManager.insert(float_plugin)
+    >>> print(whatareyou(lambda x=0.7: x))
+    <lambda>(x='float=0.7')
     >>> WhatamiPluginManager.reset()
     """
 
@@ -249,7 +256,7 @@ class WhatamiPluginManager(object):
             raise ValueError('cannot drop plugin %s, not in plugins list' % plugin.__name__)
 
     @classmethod
-    def insert(cls, plugin, before=None):
+    def insert(cls, plugin, before=anyobject0x_plugin):
         """Inserts a new plugin in the list of plugins used to generate strings for values in What configurations.
 
         Parameters
@@ -258,8 +265,10 @@ class WhatamiPluginManager(object):
           A function that checks for value type and if it applies generates a string representing it,
           optionally using the information on What instance what.
 
-        before : function
-          A plugin already registered in the list.
+        before : function, default anyobject0x_plugin
+          A plugin already registered in the list. Note that the last two plugins capture most objects,
+          so usually plugins need to be inserted at least before them.
+          If None, the plugin is inserted at the end of the list.
 
         Raises
         ------
