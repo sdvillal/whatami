@@ -478,16 +478,15 @@ def test_whatable_faker():
 
     class Faker(object):
         def what(self):
-            return 'fool you: %r' % self
+            return 'Fool you; %s' % self.__class__.__name__
 
     @whatable
     class Fool(object):
         def __init__(self):
             self.faker = Faker()
 
-    with pytest.raises(Exception) as excinfo:
-        whatareyou(Fool()).id()
-    assert 'object has a "what" attribute, but it is not of What class' in str(excinfo.value)
+    assert whatareyou(Fool()).id() != "Fool(faker='Fool you; Faker')"
+    assert whatareyou(Fool()).id() == 'Fool(faker=Faker())'
 
 
 def test_what_copy(c1, c2, c3):
