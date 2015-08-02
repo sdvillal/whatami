@@ -19,6 +19,14 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
+def curry2partial(obj):
+    """Transforms toolz/cytoolz curry sugar into standard partials."""
+    try:
+        return partial(obj.func, *obj.args, **obj.keywords)
+    except AttributeError:
+        return obj
+
+
 def callable2call(c, closure_extractor=lambda c: c):
     """
     Extracts the (actual) function name and set parameters from a callable.
