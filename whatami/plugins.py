@@ -14,10 +14,6 @@ from whatami.what import What, whatareyou
 from whatami.misc import callable2call, config_dict_for_object
 
 
-# Preferred hasher for whatami plugins
-WHATAMI_HASHER = 'md5'
-
-
 # --- Basic plugins
 
 def what_plugin(_, v):
@@ -118,13 +114,15 @@ def anyobject_plugin(_, v):
 # --- Optional plugins
 
 try:
-    import joblib
+    from joblib.hashing import hash as hasher
+    hasher = partial(hash, hash_name='md5')
 except ImportError:
-    joblib = None
+    hasher = None
 
 
 def has_joblib():
-    return joblib is not None
+    """Returns True iff joblib can be imported."""
+    return hasher is not None
 
 
 try:
@@ -134,6 +132,7 @@ except ImportError:
 
 
 def has_numpy():
+    """Returns True iff numpy can be imported."""
     return np is not None
 
 
@@ -144,29 +143,26 @@ except ImportError:
 
 
 def has_pandas():
+    """Returns True iff pandas can be imported."""
     return pd is not None
 
 
 def numpy_plugin(_, v):
-    if np is not None and joblib is not None:
+    """Represents numpy arrays as strings "ndarray(hash='xxx')"."""
+    if np is not None and hasher is not None:
         if isinstance(v, np.ndarray):
-            return "ndarray(data='%s')" % joblib.hashing.hash(v, hash_name=WHATAMI_HASHER)
+            return "ndarray(hash='%s')" % hasher(v)
     return None
-    # Test that this includes not only data but all from dtype, to shape passing
-    # by stride / contiguity (should as joblib hash is based on pickle)
 
 
 def pandas_plugin(_, v):
-    if pd is not None and joblib is not None:
+    """Represents pandas objects as any of "DataFrame(hash='xxx')" or "Series(hash='xxx')"."""
+    if pd is not None and hasher is not None:
         if isinstance(v, pd.DataFrame):
-            return "DataFrame(hash='%s')" % joblib.hashing.hash(v, hash_name=WHATAMI_HASHER)
+            return "DataFrame(hash='%s')" % hasher(v)
         elif isinstance(v, pd.Series):
-            return "Series(hash='%s')" % joblib.hashing.hash(v, hash_name=WHATAMI_HASHER)
+            return "Series(hash='%s')" % hasher(v)
     return None
-    # Test that this includes not only data but all from dtype, to shape to categoricals
-    # passing by stride / contiguity (should as joblib hash is based on pickle)
-    # Actually perhaps some of the members should not be included
-    # We might want to manually mix hashes for values, indices, dtypes and shapes
 
 
 # --- Plugin management
@@ -228,8 +224,8 @@ class WhatamiPluginManager(object):
                        set_plugin,
                        partial_plugin,
                        function_plugin,
-                       numpy_plugin,
                        pandas_plugin,
+                       numpy_plugin,
                        anyobject0x_plugin,
                        anyobject_plugin)
 
