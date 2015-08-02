@@ -10,7 +10,7 @@ from functools import partial
 from future.builtins import str
 from past.builtins import basestring as basestring23
 
-from whatami.what import What
+from whatami.what import What, whatareyou
 from whatami.misc import callable2call, config_dict_for_object
 
 
