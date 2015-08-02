@@ -68,7 +68,6 @@ buy(currency='euro',price=4294967296)
 from __future__ import print_function, unicode_literals, absolute_import
 import hashlib
 import inspect
-from copy import copy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
 
@@ -80,10 +79,93 @@ from whatami.misc import callable2call, is_iterable, config_dict_for_object, ext
     trim_dict
 
 
+def what_plugin(_, v):
+    if isinstance(v, What):
+        return v.id()
+    return None
+
+
+def whatable_plugin(_, v):
+    if hasattr(v, 'what'):
+        what = v.what
+        what = what() if callable(what) else what
+        return what_plugin(None, what)
+
+
+def builtin_plugin(_, v):
+    """Special message if we try to pass something like sorted or np.array"""
+    if inspect.isbuiltin(v):
+        raise Exception('Cannot determine the argspec of a non-python function (%s). '
+                        'Please wrap it in a whatable' % v.__name__)
+
+
+def property_plugin(_, v):
+    if isinstance(v, property):
+        raise Exception('Dynamic properties are not suppported.')
+
+
+def dict_plugin(what, v):
+    if isinstance(v, dict):
+        kvs = sorted('%s:%s' % (what.build_string(k), what.build_string(v)) for k, v in v.items())
+        return '{%s}' % ','.join(kvs)
+    return None
+
+
+def set_plugin(what, v):
+    if isinstance(v, set):
+        elements = sorted(map(what.build_string, v))
+        return '{%s}' % ','.join(elements) if len(elements) > 0 else 'set()'
+    return None
+
+
+def list_plugin(what, v):
+    if isinstance(v, list):
+        return '[%s]' % ','.join(map(what.build_string, v))
+    return None
+
+
+def tuple_plugin(what, v):
+    if isinstance(v, tuple):
+        return '(%s)' % ','.join(map(what.build_string, v))
+    return None
+
+
+def string_plugin(_, v):
+    if isinstance(v, basestring23):
+        return '\'%s\'' % v
+    return None
+
+
+def partial_plugin(what, v):
+    if isinstance(v, partial):
+        name, keywords = callable2call(v)
+        return What(name, keywords, what.non_id_keys).id()
+    return None
+
+
+def function_plugin(what, v):
+    if inspect.isfunction(v):
+        args, _, _, defaults = inspect.getargspec(v)
+        defaults = [] if not defaults else defaults
+        args = [] if not args else args
+        params_with_defaults = dict(zip(args[-len(defaults):], defaults))
+        what = What(v.__name__, params_with_defaults, what.non_id_keys)
+        return what.id()
+
+
+def anyobject0x_plugin(what, v):
+    """An object without proper representation, try a best effort."""
+    if ' at 0x' in str(v):
+        what = What(v.__class__.__name__, config_dict_for_object(v), what.non_id_keys)
+        return what.id()
+    return None
+
+
+def anyobject_plugin(_, v):
+    return str(v)
+
+
 class What(object):
-
-    __slots__ = ('name', 'conf', 'non_id_keys')
-
     """Stores and manipulates object configuration.
 
     Configurations are just dictionaries {key: value} that can nest and have a name.
@@ -103,6 +185,22 @@ class What(object):
         For example: "num_threads" or "verbose" should not change results when fitting a model.
         Keys here won't make it to the configuration string unless explicitly asked for
     """
+
+    __slots__ = ('name', 'conf', 'non_id_keys')
+
+    _PLUGINS = (what_plugin,
+                whatable_plugin,
+                builtin_plugin,
+                property_plugin,
+                string_plugin,
+                tuple_plugin,
+                list_plugin,
+                dict_plugin,
+                set_plugin,
+                partial_plugin,
+                function_plugin,
+                anyobject0x_plugin,
+                anyobject_plugin)
 
     def __init__(self,
                  name,
@@ -169,11 +267,18 @@ class What(object):
           If the id length goes over maxlength, the parameters part get replaced by its sha256.
           If <= 0, it is ignored and the full id string will be returned.
         """
-        kvs = ','.join('%s=%s' % (k, self._build_string(v))
+        kvs = ','.join('%s=%s' % (k, self.build_string(v))
                        for k, v in sorted(self.conf.items())
                        if nonids_too or k not in self.non_id_keys)
         my_id = '%s(%s)' % (self.name, kvs)
         return self._trim_too_long(my_id, maxlength=maxlength)
+
+    def build_string(self, v):
+        """Returns the nested configuration string for a variety of value types."""
+        for plugin in self._PLUGINS:
+            string = plugin(self, v)
+            if string is not None:
+                return string
 
     @staticmethod
     def _trim_too_long(string, maxlength=0):
@@ -181,55 +286,6 @@ class What(object):
         if 0 < maxlength < len(string):
             return hashlib.sha256(string.encode('utf-8')).hexdigest()
         return string
-
-    def _build_string(self, v):
-        """Returns the nested configuration string for a variety of value types."""
-        if isinstance(v, What):
-            return v.id()
-        if hasattr(v, 'what'):
-            configuration = getattr(v, 'what')
-            configuration = configuration() if callable(configuration) else configuration
-            if isinstance(configuration, What):
-                return configuration.id()
-            raise Exception('object has a "what" attribute, but it is not of What class')
-        if inspect.isbuiltin(v):  # Special message if we try to pass something like sorted or np.array
-            raise Exception('Cannot determine the argspec of a non-python function (%s). '
-                            'Please wrap it in a whatable' % v.__name__)
-        if isinstance(v, property):
-            raise Exception('Dynamic properties are not suppported.')
-        if isinstance(v, partial):
-            name, keywords = callable2call(v)
-            config = copy(self)
-            config.name = name
-            config.conf = keywords
-            return config.id()
-        if isinstance(v, dict):
-            kvs = sorted('%s:%s' % (self._build_string(k), self._build_string(v)) for k, v in v.items())
-            return '{%s}' % ','.join(kvs)
-        if isinstance(v, set):
-            elements = sorted(map(self._build_string, v))
-            return '{%s}' % ','.join(elements) if len(elements) > 0 else 'set()'
-        if isinstance(v, list):
-            return '[%s]' % ','.join(map(self._build_string, v))
-        if isinstance(v, tuple):
-            return '(%s)' % ','.join(map(self._build_string, v))
-        if inspect.isfunction(v):
-            args, _, _, defaults = inspect.getargspec(v)
-            defaults = [] if not defaults else defaults
-            args = [] if not args else args
-            params_with_defaults = dict(zip(args[-len(defaults):], defaults))
-            config = copy(self)
-            config.name = v.__name__
-            config.conf = params_with_defaults
-            return config.id()
-        if ' at 0x' in str(v):  # An object without proper representation, try a best effort
-            config = copy(self)  # Careful
-            config.name = v.__class__.__name__
-            config.conf = config_dict_for_object(v)
-            return config.id()
-        if isinstance(v, basestring23):
-            return '\'%s\'' % v
-        return str(v)
 
 
 def whatareyou(obj,
