@@ -503,43 +503,42 @@ def numpy_skip(test):  # pragma: no cover
     return test
 
 
-@pytest.fixture(params=map(numpy_skip, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']),
-                ids=['a1', 'a2', 'a3', 'a4', 'a5', 'a6'])
+@pytest.fixture(params=map(numpy_skip, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']),
+                ids=['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'])
 def array(request):
     """Hardcodes hashes, so we can detect hashing changes in joblib."""
     from whatami.plugins import np
     arrays = {
         # base array
         'a1': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]),
-               'a6bb4681650ec50fce0123412a78753e'),
+               'a6bb4681650ec50fce0123412a78753e', 'cbded866f66a0fa6767b4e286c3552df'),
         # hash changes with dtype
         'a2': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.bool),
-               '82fe62950379505b6581df73d5a5bf2d'),
+               '82fe62950379505b6581df73d5a5bf2d', '5118dfbd9491eab8ce757c49b6fd06df'),
         'a3': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.float),
-               '1b5b918e0bae98539bb7aa886c791548'),
+               '1b5b918e0bae98539bb7aa886c791548', '7149c69cf4a5f85bd49e92496d5d2cb8'),
         # hash changes with shape and ndim
         'a4': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]).reshape((1, 9)),
-               'bc2afdb8b2d4ac89b5718105c554921b'),
+               'bc2afdb8b2d4ac89b5718105c554921b', '37c27fea094cf3eddf4b11e602955c2a'),
         'a5': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], ndmin=3),
-               '657a4d5a3a3e2190e21d1a06772b90fc'),
+               '657a4d5a3a3e2190e21d1a06772b90fc', '33d23b13c6a0d41d9b6273ff4962f6c9'),
         # hash changes with stride/order/contiguity
         'a6': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], order='F'),
-               'fddb29315104f69723750835086584bf'),
+               'fddb29315104f69723750835086584bf', '6465c08894edcc3d0d122b2fd0acb68f'),
         'a7': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]).T,
-               'fddb29315104f69723750835086584bf'),
+               'fddb29315104f69723750835086584bf', '6465c08894edcc3d0d122b2fd0acb68f'),
     }
     return arrays[request.param]
 
 
-@pytest.mark.skipif(not (has_numpy() and has_joblib()),
-                    reason='the numpy plugin requires both numpy and joblib')
 def test_numpy_plugin(array):
 
-    array, array_hash = array
+    array, array_hash2, array_hash3 = array
+    array_hash = array_hash2 if not PY3 else array_hash3
 
     # joblib hash has changed?
     from whatami.plugins import hasher
-    assert hasher(array) == array_hash
+    assert array_hash == hasher(array)
 
     @whatable
     def lpp(adjacency=array):  # pragma: no cover
@@ -551,7 +550,7 @@ def test_numpy_plugin(array):
 def pandas_skip(test):  # pragma: no cover
     """Skips a test if the pandas plugin is not available."""
     if not (has_pandas() and has_joblib()):
-        return pytest.mark.skipif(test, reason='pandas plugin requires both pandas and joblib, some is not importable')
+        return pytest.mark.skipif(test, reason='the pandas plugin requires both pandas and joblib')
     return test
 
 
@@ -563,24 +562,25 @@ def df(request):
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
     dfs = {
         'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
-                'd6ac6db11e51f8991b8ad741bdee6edb'),
+                'd6ac6db11e51f8991b8ad741bdee6edb', '62171fe1114d5d961742dd95e6af37d7'),
         'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
-                'ef6fc324c5d710f14ef15be4733223df'),
+                'ef6fc324c5d710f14ef15be4733223df', '139261e54b3ac2f2e39da6d497f6d0fd'),
         'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
-                '0ea43fc0b4e99c9e3477d0c82ade7260'),
+                '0ea43fc0b4e99c9e3477d0c82ade7260', 'fcd984c10ea9379faee471eedafee77b'),
         'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
-                'bb144c7abab7e2323c8882f0b6f129b7'),
+                'bb144c7abab7e2323c8882f0b6f129b7', 'c5234b1a362ef13c9c12b7b7444b8c85'),
         's1': (pd.Series(data=adjacency.ravel()),
-               'e37122dc5f6320e9f12b413631056443'),
+               'e37122dc5f6320e9f12b413631056443', 'ee9729300f29a6917f30aa9e612ec67c'),
         's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
-               'c0f4565b063599c6075ec6108cbca344'),
+               'c0f4565b063599c6075ec6108cbca344', '74e14992d8587454d561b3194d11a984'),
     }
     return dfs[request.param]
 
 
 def test_pandas_plugin(df):
 
-    df, df_hash = df
+    df, df_hash2, df_hash3 = df
+    df_hash = df_hash2 if not PY3 else df_hash3
     name = df.__class__.__name__
 
     # check for changes in joblib hashing
