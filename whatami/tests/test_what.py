@@ -11,6 +11,7 @@ from future.utils import PY3
 import pytest
 
 from whatami import whatable, whatareyou, What, is_whatable
+from whatami.plugins import has_joblib, has_numpy, has_pandas
 from whatami.whatutils import what2id
 from whatami.misc import config_dict_for_object, trim_dict
 
@@ -493,3 +494,101 @@ def test_what_copy(c1, c2, c3):
     for c in (c1, c2, c3):
         what = c.what()
         assert what == what.copy()
+
+
+@pytest.mark.skipif(not (has_numpy() and has_joblib()),
+                    reason='numpy plugin requires both numpy and joblib, some is not importable')
+def test_joblib_nphashes():
+    """Tests for hardcoded hashes, so we can detect hashing changes in joblib."""
+    from whatami.plugins import np, hasher
+
+    # base array
+    adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
+    adjacency_hash = 'a6bb4681650ec50fce0123412a78753e'
+    assert hasher(adjacency) == adjacency_hash
+
+    # hash changes with dtype
+    adjacency_bool = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.bool)
+    bool_hash = '82fe62950379505b6581df73d5a5bf2d'
+    assert hasher(adjacency_bool) == bool_hash
+
+    adjacency_float = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.float)
+    float_hash = '1b5b918e0bae98539bb7aa886c791548'
+    assert hasher(adjacency_float) == float_hash
+
+    # hash changes with shape and ndim
+    ravelled_hash = 'eab57e78163625fe406310e0a2f9dab8'
+    assert hasher(adjacency.ravel()) == ravelled_hash
+
+    reshaped_hash = 'bc2afdb8b2d4ac89b5718105c554921b'
+    assert hasher(adjacency.reshape((1, 9))) == reshaped_hash
+
+    adjacency3d = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], ndmin=3)
+    ndim_hash = '657a4d5a3a3e2190e21d1a06772b90fc'
+    assert hasher(adjacency3d) == ndim_hash
+
+    # hash changes with stride/order/contiguity
+    adjacency_f = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], order='F')
+    f_hash = 'fddb29315104f69723750835086584bf'
+    assert hasher(adjacency_f) == f_hash
+
+    transposed_hash = 'fddb29315104f69723750835086584bf'
+    assert hasher(adjacency.T) == transposed_hash
+
+
+@pytest.mark.skipif(not (has_numpy() and has_joblib()),
+                    reason='numpy plugin requires both numpy and joblib, some is not importable')
+def test_numpy_plugin():
+    from whatami.plugins import np
+    adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
+    adjacency_hash = 'a6bb4681650ec50fce0123412a78753e'
+
+    @whatable
+    def lpp(adjacency=adjacency):  # pragma: no cover
+        return adjacency
+
+    assert lpp.what().id() == "lpp(adjacency=ndarray(hash='%s'))" % adjacency_hash
+
+
+def pandas_skip(test):
+    if not (has_pandas() and has_joblib()):
+        return pytest.mark.skipif(test, reason='pandas plugin requires both pandas and joblib, some is not importable')
+    return test
+
+
+@pytest.fixture(params=map(pandas_skip, ['df1', 'df2', 'df3', 'df4', 's1', 's2']))
+def df(request):
+    from whatami.plugins import pd, np
+    adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
+    dfs = {
+        'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
+                'd6ac6db11e51f8991b8ad741bdee6edb'),
+        'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
+                'ef6fc324c5d710f14ef15be4733223df'),
+        'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
+                '0ea43fc0b4e99c9e3477d0c82ade7260'),
+        'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
+                'bb144c7abab7e2323c8882f0b6f129b7'),
+        's1': (pd.Series(data=adjacency.ravel()),
+               'e37122dc5f6320e9f12b413631056443'),
+        's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
+               'c0f4565b063599c6075ec6108cbca344'),
+    }
+    return dfs[request.param]
+
+
+def test_pandas_plugin(df):
+
+    df, df_hash = df
+    name = df.__class__.__name__
+
+    # check for changes in joblib hashing
+    from whatami.plugins import hasher
+    assert df_hash == hasher(df)
+
+    # check for proper string generation
+    @whatable
+    def lpp(adjacency=df):  # pragma: no cover
+        return adjacency
+
+    assert lpp.what().id() == "lpp(adjacency=%s(hash='%s'))" % (name, df_hash)
