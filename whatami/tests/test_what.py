@@ -6,8 +6,8 @@
 from __future__ import unicode_literals, absolute_import
 from functools import partial
 import hashlib
-from future.utils import PY3
 
+from future.utils import PY3
 import pytest
 
 from whatami import whatable, whatareyou, What, is_whatable
@@ -496,68 +496,69 @@ def test_what_copy(c1, c2, c3):
         assert what == what.copy()
 
 
-@pytest.mark.skipif(not (has_numpy() and has_joblib()),
-                    reason='numpy plugin requires both numpy and joblib, some is not importable')
-def test_joblib_nphashes():
-    """Tests for hardcoded hashes, so we can detect hashing changes in joblib."""
-    from whatami.plugins import np, hasher
-
-    # base array
-    adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
-    adjacency_hash = 'a6bb4681650ec50fce0123412a78753e'
-    assert hasher(adjacency) == adjacency_hash
-
-    # hash changes with dtype
-    adjacency_bool = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.bool)
-    bool_hash = '82fe62950379505b6581df73d5a5bf2d'
-    assert hasher(adjacency_bool) == bool_hash
-
-    adjacency_float = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.float)
-    float_hash = '1b5b918e0bae98539bb7aa886c791548'
-    assert hasher(adjacency_float) == float_hash
-
-    # hash changes with shape and ndim
-    ravelled_hash = 'eab57e78163625fe406310e0a2f9dab8'
-    assert hasher(adjacency.ravel()) == ravelled_hash
-
-    reshaped_hash = 'bc2afdb8b2d4ac89b5718105c554921b'
-    assert hasher(adjacency.reshape((1, 9))) == reshaped_hash
-
-    adjacency3d = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], ndmin=3)
-    ndim_hash = '657a4d5a3a3e2190e21d1a06772b90fc'
-    assert hasher(adjacency3d) == ndim_hash
-
-    # hash changes with stride/order/contiguity
-    adjacency_f = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], order='F')
-    f_hash = 'fddb29315104f69723750835086584bf'
-    assert hasher(adjacency_f) == f_hash
-
-    transposed_hash = 'fddb29315104f69723750835086584bf'
-    assert hasher(adjacency.T) == transposed_hash
+def numpy_skip(test):  # pragma: no cover
+    """Skips a test if the numpy plugin is not available."""
+    if not (has_numpy() and has_joblib()):
+        return pytest.mark.skipif(test, reason='the numpy plugin requires both pandas and joblib')
+    return test
 
 
-@pytest.mark.skipif(not (has_numpy() and has_joblib()),
-                    reason='numpy plugin requires both numpy and joblib, some is not importable')
-def test_numpy_plugin():
+@pytest.fixture(params=map(numpy_skip, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']),
+                ids=['a1', 'a2', 'a3', 'a4', 'a5', 'a6'])
+def array(request):
+    """Hardcodes hashes, so we can detect hashing changes in joblib."""
     from whatami.plugins import np
-    adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
-    adjacency_hash = 'a6bb4681650ec50fce0123412a78753e'
+    arrays = {
+        # base array
+        'a1': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]),
+               'a6bb4681650ec50fce0123412a78753e'),
+        # hash changes with dtype
+        'a2': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.bool),
+               '82fe62950379505b6581df73d5a5bf2d'),
+        'a3': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.float),
+               '1b5b918e0bae98539bb7aa886c791548'),
+        # hash changes with shape and ndim
+        'a4': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]).reshape((1, 9)),
+               'bc2afdb8b2d4ac89b5718105c554921b'),
+        'a5': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], ndmin=3),
+               '657a4d5a3a3e2190e21d1a06772b90fc'),
+        # hash changes with stride/order/contiguity
+        'a6': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], order='F'),
+               'fddb29315104f69723750835086584bf'),
+        'a7': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]).T,
+               'fddb29315104f69723750835086584bf'),
+    }
+    return arrays[request.param]
+
+
+@pytest.mark.skipif(not (has_numpy() and has_joblib()),
+                    reason='the numpy plugin requires both numpy and joblib')
+def test_numpy_plugin(array):
+
+    array, array_hash = array
+
+    # joblib hash has changed?
+    from whatami.plugins import hasher
+    assert hasher(array) == array_hash
 
     @whatable
-    def lpp(adjacency=adjacency):  # pragma: no cover
+    def lpp(adjacency=array):  # pragma: no cover
         return adjacency
 
-    assert lpp.what().id() == "lpp(adjacency=ndarray(hash='%s'))" % adjacency_hash
+    assert lpp.what().id() == "lpp(adjacency=ndarray(hash='%s'))" % array_hash
 
 
-def pandas_skip(test):
+def pandas_skip(test):  # pragma: no cover
+    """Skips a test if the pandas plugin is not available."""
     if not (has_pandas() and has_joblib()):
         return pytest.mark.skipif(test, reason='pandas plugin requires both pandas and joblib, some is not importable')
     return test
 
 
-@pytest.fixture(params=map(pandas_skip, ['df1', 'df2', 'df3', 'df4', 's1', 's2']))
+@pytest.fixture(params=map(pandas_skip, ['df1', 'df2', 'df3', 'df4', 's1', 's2']),
+                ids=['df1', 'df2', 'df3', 'df4', 's1', 's2'])
 def df(request):
+    """Hardcodes hashes, so we can detect hashing changes in joblib."""
     from whatami.plugins import pd, np
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
     dfs = {
