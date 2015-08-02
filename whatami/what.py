@@ -79,13 +79,17 @@ from whatami.misc import callable2call, is_iterable, config_dict_for_object, ext
     trim_dict
 
 
+# --- Plugins
+
 def what_plugin(_, v):
+    """Deals with What objects."""
     if isinstance(v, What):
         return v.id()
     return None
 
 
 def whatable_plugin(_, v):
+    """Deals with whatable objects."""
     if hasattr(v, 'what'):
         what = v.what
         what = what() if callable(what) else what
@@ -100,6 +104,7 @@ def builtin_plugin(_, v):
 
 
 def property_plugin(_, v):
+    """Deals with dynamic properties."""
     if isinstance(v, property):
         raise Exception('Dynamic properties are not suppported.')
 
@@ -137,6 +142,7 @@ def string_plugin(_, v):
 
 
 def partial_plugin(what, v):
+    """Deals with partials, configuration are the set properties."""
     if isinstance(v, partial):
         name, keywords = callable2call(v)
         return What(name, keywords, what.non_id_keys).id()
@@ -144,6 +150,7 @@ def partial_plugin(what, v):
 
 
 def function_plugin(what, v):
+    """Deals with functions, configuration are the keyword args."""
     if inspect.isfunction(v):
         args, _, _, defaults = inspect.getargspec(v)
         defaults = [] if not defaults else defaults
@@ -162,7 +169,58 @@ def anyobject0x_plugin(what, v):
 
 
 def anyobject_plugin(_, v):
+    """Delegate to str, this should be the last plugin in the chain."""
     return str(v)
+
+
+_PLUGINS = (what_plugin,
+            whatable_plugin,
+            builtin_plugin,
+            property_plugin,
+            string_plugin,
+            tuple_plugin,
+            list_plugin,
+            dict_plugin,
+            set_plugin,
+            partial_plugin,
+            function_plugin,
+            anyobject0x_plugin,
+            anyobject_plugin)
+
+
+def insert_plugin(plugin, before=None):
+    """Inserts a new plugin in the list of plugins used to generate strings for values in What configurations.
+
+    Parameters
+    ----------
+    plugin : function (what, value) -> string
+      A function that checks for value type and if it applies generates a string representing it,
+      optionally using the information on What instance what.
+
+    before : function
+      A plugin already registered in the list.
+
+    Raises
+    ------
+    ValueError if plugin is already in the list of registered plugins of if before is not in the list.
+    """
+    global _PLUGINS
+    if plugin in _PLUGINS:
+        raise ValueError('Cannot insert plugin %s, already in plugins list' % plugin.__name__)
+    plugins = list(_PLUGINS)
+    if before is None:
+        plugins.append(plugin)
+    else:
+        try:
+            index = plugins.index(before)
+            plugins.insert(index, plugin)
+        except ValueError:
+            raise ValueError('Plugin to insert before (%s) not in plugins list' % before.__name__)
+    _PLUGINS = tuple(plugins)
+
+
+# Preferred hasher for whatami plugins
+WHATAMI_HASHER = 'md5'
 
 
 class What(object):
@@ -187,20 +245,6 @@ class What(object):
     """
 
     __slots__ = ('name', 'conf', 'non_id_keys')
-
-    _PLUGINS = (what_plugin,
-                whatable_plugin,
-                builtin_plugin,
-                property_plugin,
-                string_plugin,
-                tuple_plugin,
-                list_plugin,
-                dict_plugin,
-                set_plugin,
-                partial_plugin,
-                function_plugin,
-                anyobject0x_plugin,
-                anyobject_plugin)
 
     def __init__(self,
                  name,
@@ -275,7 +319,7 @@ class What(object):
 
     def build_string(self, v):
         """Returns the nested configuration string for a variety of value types."""
-        for plugin in self._PLUGINS:
+        for plugin in _PLUGINS:
             string = plugin(self, v)
             if string is not None:
                 return string
