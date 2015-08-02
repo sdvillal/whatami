@@ -485,7 +485,7 @@ def test_whatable_faker():
         def __init__(self):
             self.faker = Faker()
 
-    assert whatareyou(Fool()).id() != "Fool(faker='Fool you; Faker')"
+    assert 'Fool you; Faker' not in whatareyou(Fool()).id()
     assert whatareyou(Fool()).id() == 'Fool(faker=Faker())'
 
 
