@@ -48,7 +48,10 @@ def callable2call(c, closure_extractor=lambda c: c):
     -------
     a pair (function_name, parameter_dict), where the parameter_dict is a
     (possibly empty) dictionary {parameter_name: default_value} with the parameter
-    values that are fixed by either default values or the partial application of the function.
+    values that are known by either default values or the partial application of the function.
+
+    *N.B. these parameters are fixed iff they are set by a partial application, otherwise,
+    for default parameters, it is up to the caller not to redefine them.*
 
     Examples
     --------
