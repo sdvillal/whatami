@@ -187,6 +187,10 @@ class WhatamiPluginManager(object):
     >>> WhatamiPluginManager.drop(float_plugin)
     >>> float_plugin in WhatamiPluginManager.plugins()
     False
+    >>> WhatamiPluginManager.insert(float_plugin, before=None)
+    >>> float_plugin == WhatamiPluginManager.plugins()[-1]
+    True
+    >>> WhatamiPluginManager.reset()
     >>> WhatamiPluginManager.insert(float_plugin)
     >>> WhatamiPluginManager.reset()
     >>> float_plugin in WhatamiPluginManager.plugins()
