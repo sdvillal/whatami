@@ -113,10 +113,10 @@ def anyobject_plugin(_, v):
 
 # --- Optional plugins
 
-try:
+try:  # pragma: no cover
     from joblib.hashing import hash as hasher
-    hasher = partial(hash, hash_name='md5')
-except ImportError:
+    hasher = partial(hasher, hash_name='md5')
+except ImportError:  # pragma: no cover
     hasher = None
 
 
@@ -125,9 +125,9 @@ def has_joblib():
     return hasher is not None
 
 
-try:
+try:  # pragma: no cover
     import numpy as np
-except ImportError:
+except ImportError:  # pragma: no cover
     np = None
 
 
@@ -136,9 +136,9 @@ def has_numpy():
     return np is not None
 
 
-try:
+try:  # pragma: no cover
     import pandas as pd
-except ImportError:
+except ImportError:  # pragma: no cover
     pd = None
 
 
