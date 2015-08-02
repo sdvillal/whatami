@@ -11,7 +11,7 @@ from future.builtins import str
 from past.builtins import basestring as basestring23
 
 from whatami.what import What, whatareyou
-from whatami.misc import callable2call, config_dict_for_object
+from whatami.misc import callable2call, config_dict_for_object, curry2partial
 
 
 # --- Basic plugins
@@ -78,8 +78,12 @@ def string_plugin(_, v):
 
 # --- Function plugins
 
+
 def partial_plugin(what, v):
-    """Deals with partials, configuration are the set properties."""
+    """Deals with partials and toolz curried functions.
+    Configuration are the set parameters ("compulsory") and default parameters ("weak").
+    """
+    v = curry2partial(v)
     if isinstance(v, partial):
         name, keywords = callable2call(v)
         return What(name, keywords, what.non_id_keys).id()
@@ -97,7 +101,7 @@ def function_plugin(what, v):
         return what.id()
 
 
-# --- Capture all plugins
+# --- "Capture all" plugins
 
 def anyobject0x_plugin(what, v):
     """An object without proper representation, try a best effort."""
@@ -111,7 +115,7 @@ def anyobject_plugin(_, v):
     """Delegate to str, this should be the last plugin in the chain."""
     return str(v)
 
-# --- Optional plugins
+# --- Numpy and pandas
 
 try:  # pragma: no cover
     from joblib.hashing import hash as hasher
