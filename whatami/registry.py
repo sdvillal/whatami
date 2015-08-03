@@ -1,93 +1,71 @@
 # coding=utf-8
 """Simple implementations of central registries for whatami ids, nicknames, synonyms and contexts."""
+from whatami import what2id
 
 
 class WhatamiRegistry(object):
+    """Bidirectional mapping, one-to-one, no persistence ATM (all should be in code), string to string (no thunks)."""
 
-    # Bidirectional mapping
-    _id2nickname = {}  # id -> (nickname, what)
-    _nickname2id = {}  # nickname -> id
+    def __init__(self, name='master'):
+        super(WhatamiRegistry, self).__init__()
+        self.name = name
+        self._id2nick = {}
+        self._nick2id = {}
 
-    @staticmethod
-    def nickname_or_id(whatid):
-        """Returns the nickname if it exists, otherwise it returns the id.
-        In either case nonids_too and maxlength are honored.
-        """
-        return WhatamiRegistry._nickname2id.get(whatid, whatid)
+    def register(self, what, nickname, overwrite=False):
+        """Registers the nickname for the id of what."""
 
-    @staticmethod
-    def register_nickname(nickname, what, save_what=False, overwrite=False):
-        """Registers a new map nickname <-> what_id, optionally saving the object "what".
+        whatid = what2id(what)
 
-        Parameters
-        ----------
-        nickname: string
-            The new nickname for what
+        i2n, n2i = self._id2nick, self._nick2id
 
-        what: string or whatable
-
-        save_what: boolean, default False
-
-        """
-
-        if hasattr(what, 'what') and hasattr(what.what(), 'id'):
-            new_id = what.what().id()
-            new_what = what if save_what else None
-        elif isinstance(what, basestring23):
-            new_id = what
-            new_what = None
-        else:
-            raise TypeError('"what" must be a whatable or a string, but is a %r' % type(what))
-
-        i2n, n2i = What._id2nickname, What._nickname2id
-
-        # Ensure a one-to-one relationship
-        if nickname in n2i and not n2i[nickname] == new_id:
-            raise Exception('nickname "%s" is already associated with id "%s", delete it before updating' %
-                            (nickname, n2i[nickname]))
-        if new_id in i2n and not i2n[new_id][0] == nickname:
-            raise Exception('id "%s" is already associated with nickname "%s", delete it before updating' %
-                            (new_id, i2n[new_id][0]))
+        if not overwrite:
+            # Ensure a one-to-one relationship; probably a nickname pointing to more than one id would be more useful
+            if nickname in n2i and not n2i[nickname] == whatid:
+                raise Exception('nickname "%s" is already associated with id "%s", delete it before updating' %
+                                (nickname, n2i[nickname]))
+            if whatid in i2n and not i2n[whatid] == nickname:
+                raise Exception('id "%s" is already associated with nickname "%s", delete it before updating' %
+                                (whatid, i2n[whatid][0]))
 
         # Add binding
-        i2n[new_id] = (nickname, new_what)
-        n2i[nickname] = new_id
+        i2n[whatid] = nickname
+        n2i[nickname] = whatid
 
-    @staticmethod
-    def remove_nickname(nickname):
-        what_id = What.nickname2id(nickname)
-        if what_id is not None:
-            del What._nickname2id[nickname]
-            del What._id2nickname[what_id]
+    def list(self):
+        """Returns a sorted list of tuples (nick, id)."""
+        return sorted(self._nick2id.items())
 
-    @staticmethod
-    def remove_id(what_id):
-        What.remove_nickname(What.id2nickname(what_id))
+    def remove(self, nickname=None, whatid=None):
+        """Removes the entry corresponding to nickname or whatid.
+        If both are provided, they must correspond to a single entry.
+        """
+        if nickname is None and whatid is None:
+            return
+        elif nickname is None:
+            nickname = self.id2nick(whatid)
+        elif whatid is None:
+            whatid = self.nick2id(nickname)
+        else:
+            assert self.id2nick(whatid) == nickname
+            assert self.nick2id(nickname) == whatid
+        del self._nick2id[nickname]
+        del self._id2nick[whatid]
 
-    @staticmethod
-    def nickname2id(nickname):
-        return What._nickname2id.get(nickname)
+    def nick2id(self, nickname):
+        """Maps a nickname to the corrensponding id, returning None if the pair is not in the registry."""
+        return self._nick2id.get(nickname, None)
 
-    @staticmethod
-    def id2nickname(what_id):
-        return What._id2nickname.get(what_id, (None,))[0]
+    def id2nick(self, whatid):
+        """Maps an id to the corrensponding nickname, returning None if the pair is not in the registry."""
+        return self._id2nick.get(whatid, None)
 
-    @staticmethod
-    def nickname2what(nickname):
-        what_id = What.nickname2id(nickname)
-        if what_id is not None:
-            return What.id2what(what_id)
-        return None
+    def nick_or_id(self, what):
+        """Returns the nickname if it exists, otherwise it returns the id."""
+        whatid = what2id(what)
+        return self._nick2id.get(whatid, whatid)
 
-    @staticmethod
-    def id2what(what_id):
-        return What._id2nickname.get(what_id, (None, None))[1]
-
-    @staticmethod
-    def reset_nicknames():
-        What._id2nickname = {}
-        What._nickname2id = {}
-
-    @staticmethod
-    def all_nicknames():
-        return sorted(What._nickname2id.items())
+    def reset(self):
+        """Removes all entries in the registry."""
+        self._id2nick = {}
+        self._nick2id = {}
