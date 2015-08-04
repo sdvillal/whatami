@@ -10,7 +10,7 @@ import hashlib
 from future.utils import PY3
 import pytest
 
-from whatami import whatable, whatareyou, What, is_whatable
+from whatami import whatable, whatareyou, What, is_whatable, id2what
 from whatami.plugins import has_joblib, has_numpy, has_pandas
 from whatami.whatutils import what2id
 from whatami.misc import config_dict_for_object, trim_dict
@@ -474,6 +474,14 @@ def test_set_parameters(c1):
     w.set = set()
     assert w.what().id() == "WhatableWithSet(set=set())"
 
+
+def test_lamda_id():
+
+    def norm(x, y=3, normal=lambda x, ly=33: x+y):  # pragma: no cover
+        return normal(x) * x + y
+
+    assert what2id(norm) == 'norm(normal=lambda(ly=33),y=3)'
+    assert id2what(what2id(norm)) == What('norm', {'normal': What('lambda', {'ly': 33}), 'y': 3})
 
 def test_whatable_faker():
 
