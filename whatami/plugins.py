@@ -97,7 +97,8 @@ def function_plugin(what, v):
         defaults = [] if not defaults else defaults
         args = [] if not args else args
         params_with_defaults = dict(zip(args[-len(defaults):], defaults))
-        what = What(v.__name__, params_with_defaults, what.non_id_keys)
+        name = v.__name__ if v.__name__ != '<lambda>' else 'lambda'
+        what = What(name, params_with_defaults, what.non_id_keys)
         return what.id()
 
 
