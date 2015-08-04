@@ -477,11 +477,12 @@ def test_set_parameters(c1):
 
 def test_lamda_id():
 
-    def norm(x, y=3, normal=lambda x, ly=33: x+y):  # pragma: no cover
+    def norm(x, y=3, normal=lambda x, ly=33: x + ly):  # pragma: no cover
         return normal(x) * x + y
 
     assert what2id(norm) == 'norm(normal=lambda(ly=33),y=3)'
     assert id2what(what2id(norm)) == What('norm', {'normal': What('lambda', {'ly': 33}), 'y': 3})
+
 
 def test_whatable_faker():
 
