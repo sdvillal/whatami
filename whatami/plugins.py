@@ -218,7 +218,7 @@ class WhatamiPluginManager(object):
     ValueError: plugin to insert before (float_plugin) not in plugins list
     >>> WhatamiPluginManager.insert(float_plugin)
     >>> print(whatareyou(lambda x=0.7: x))
-    <lambda>(x='float=0.7')
+    lambda(x='float=0.7')
     >>> WhatamiPluginManager.reset()
     """
 

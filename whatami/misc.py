@@ -75,11 +75,17 @@ def callable2call(c, closure_extractor=lambda c: c):
     >>> () == params['iterable1']
     True
 
-    >>> callable2call(lambda x: x)
-    ('<lambda>', {})
+    >>> name, params = callable2call(lambda x: x)
+    >>> print(name)
+    lambda
+    >>> params
+    {}
 
-    >>> callable2call(lambda x=5: x)
-    ('<lambda>', {'x': 5})
+    >>> name, params = callable2call(lambda x=5: x)
+    >>> print(name)
+    lambda
+    >>> params
+    {'x': 5}
     """
     def callable2call_recursive(c, positional=None, keywords=None):
         if keywords is None:
@@ -106,7 +112,8 @@ def callable2call(c, closure_extractor=lambda c: c):
             if len(args_set) - len(keywords_set) < len(positional):
                 raise ValueError('There are too many positional arguments indicated '
                                  'for the number of unbound positional parameters left.')
-            return c.__name__, dict(list(keywords.items()) + list(pos2keyword.items()))
+            return c.__name__.replace('<', '').replace('>', ''), \
+                dict(list(keywords.items()) + list(pos2keyword.items()))
         if isinstance(c, partial):
             pkeywords = c.keywords if c.keywords is not None else {}
             return callable2call_recursive(

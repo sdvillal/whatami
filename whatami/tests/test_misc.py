@@ -78,8 +78,8 @@ def test_callable2call_wrongargs():
 
 def test_callable2call_lambdas():
     # Anonymous functions are a bit of a corner case
-    assert callable2call(lambda x: x) == ('<lambda>', {})
-    assert callable2call(lambda x=5: x) == ('<lambda>', {'x': 5})
+    assert callable2call(lambda x: x) == ('lambda', {})
+    assert callable2call(lambda x=5: x) == ('lambda', {'x': 5})
 
 
 def test_mlexp_info_helper():
