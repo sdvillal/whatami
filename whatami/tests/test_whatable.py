@@ -1,7 +1,8 @@
 # coding=utf-8
 from functools import partial
-import pytest
-from whatami import whatable, whatareyou, is_whatable, What, trim_dict, config_dict_for_object
+
+from whatami import is_whatable, What, trim_dict, config_dict_for_object
+from whatami.tests.fixtures import *
 
 
 def test_whatable_simple(c1):
