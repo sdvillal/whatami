@@ -298,7 +298,27 @@ def pickle_roundtrip(x):
 
 def test_whatable_pickling():
 
+    # Decorating a Pickable class
     WhatablePickable = pickle_roundtrip(whatable(Pickable))
-
     assert WhatablePickable.__name__ == 'Pickable'
     assert WhatablePickable(5).what().id() == 'Pickable(x=5)'
+
+
+def pickable(x, y, z=3):  # pragma: no cover
+    return x + y + z
+
+
+def test_whatable_type():
+    whatable_partial = whatable(partial)
+    m = whatable_partial(pickable, x=1)
+    assert m.what().id() == 'pickable(x=1,z=3)'
+    assert m(y=2) == 6
+    whatable_partial = pickle_roundtrip(whatable_partial)
+    m = whatable_partial(pickable, x=1)
+    assert m.what().id() == 'pickable(x=1,z=3)'
+    assert m(y=2) == 6
+
+
+def test_whatable_builtin():
+    # use e.g. some numpy function
+    pass

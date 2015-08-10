@@ -350,6 +350,9 @@ def whatable(obj=None,
                        exclude_postfix=exclude_postfix,
                        excludes=excludes)
 
+    # type decorator
+    # if isinstance(obj, type):
+
     # function decorator
     if inspect.isfunction(obj) or isinstance(obj, partial):
 
@@ -379,7 +382,11 @@ def whatable(obj=None,
         return whatablefunc
 
     if inspect.isbuiltin(obj):
-        raise TypeError('builtins cannot be whatamised')
+        from forbiddenfruit import curse
+        curse(partial, 'what', lambda self: self.__class__.__name__)
+        curse(obj, 'what', lambda self: self.__class__.__name__)
+        return obj
+        # raise TypeError('builtins cannot be whatamised')
 
     # At the moment we just monkey-patch the object
     if hasattr(obj, 'what') and not is_whatable(obj):
@@ -406,7 +413,9 @@ def whatable(obj=None,
         whatablefunc = whatfunc if whatfunc is not None else whatablefunc
         whatablefunc.whatami = True
         if inspect.isclass(obj):
-            obj.what = whatablefunc
+            from forbiddenfruit import curse
+            # obj.what = whatablefunc
+            curse(obj, 'what', whatablefunc)
         else:
             obj.what = types.MethodType(whatablefunc, obj)
         return obj
