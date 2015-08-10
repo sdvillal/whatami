@@ -381,13 +381,6 @@ def whatable(obj=None,
 
         return whatablefunc
 
-    if inspect.isbuiltin(obj):
-        from forbiddenfruit import curse
-        curse(partial, 'what', lambda self: self.__class__.__name__)
-        curse(obj, 'what', lambda self: self.__class__.__name__)
-        return obj
-        # raise TypeError('builtins cannot be whatamised')
-
     # At the moment we just monkey-patch the object
     if hasattr(obj, 'what') and not is_whatable(obj):
         if force_flag_as_whatami:
@@ -412,12 +405,14 @@ def whatable(obj=None,
                               excludes=excludes)
         whatablefunc = whatfunc if whatfunc is not None else whatablefunc
         whatablefunc.whatami = True
-        if inspect.isclass(obj):
-            from forbiddenfruit import curse
-            # obj.what = whatablefunc
-            curse(obj, 'what', whatablefunc)
+        if inspect.isclass(obj) or inspect.isbuiltin(obj):
+            try:
+                obj.what = whatablefunc
+            except (AttributeError, TypeError):
+                from forbiddenfruit import curse
+                curse(obj, 'what', whatablefunc)
         else:
             obj.what = types.MethodType(whatablefunc, obj)
         return obj
     except:
-        raise Exception('cannot whatamise %s' % type(obj))
+        raise TypeError('cannot whatamise %s' % type(obj))

@@ -260,14 +260,24 @@ def test_whatable_duck():
     assert nested_duck.what().id() == 'NestedDuckedWhatable(ducked=DuckedWhatable(param1=33))'
 
 
-def test_whatable_builtin():
+def test_whatable_builtin():  # FIXME: two tests wheter forbiddenfruit is present or not
+
+    with pytest.raises(TypeError) as excinfo:
+        whatable(2)
+    assert 'cannot whatamise' in str(excinfo.value)
+
     with pytest.raises(TypeError) as excinfo:
         whatable(all)
-    assert 'builtins cannot be whatamised' in str(excinfo.value)
-
-    with pytest.raises(Exception) as excinfo:
-        whatable(str)
+        # forbidden fruit fails with all
+        # 'builtin_function_or_method' object has no attribute '__dict__'
     assert 'cannot whatamise' in str(excinfo.value)
+
+    # This forbiddenfruit can handle
+    # with pytest.raises(TypeError) as excinfo:
+    #     whatable(str)
+    # assert 'cannot whatamise' in str(excinfo.value)
+
+    # use e.g. some numpy function
 
 
 def test_whatable_faker():
@@ -317,8 +327,3 @@ def test_whatable_type():
     m = whatable_partial(pickable, x=1)
     assert m.what().id() == 'pickable(x=1,z=3)'
     assert m(y=2) == 6
-
-
-def test_whatable_builtin():
-    # use e.g. some numpy function
-    pass
