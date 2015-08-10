@@ -98,13 +98,13 @@ def df(request):
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
     dfs = {
         'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
-                'd6ac6db11e51f8991b8ad741bdee6edb', '62171fe1114d5d961742dd95e6af37d7'),
+                'fc5d5b43464052efbcd9e88dc0be4afd', '62171fe1114d5d961742dd95e6af37d7'),
         'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
-                'ef6fc324c5d710f14ef15be4733223df', '139261e54b3ac2f2e39da6d497f6d0fd'),
+                'fe226e22261ff56d4cf019aa64942050', '139261e54b3ac2f2e39da6d497f6d0fd'),
         'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
-                '0ea43fc0b4e99c9e3477d0c82ade7260', 'fcd984c10ea9379faee471eedafee77b'),
+                'f3d11416b1d5cb5da7753991941beb0d', 'fcd984c10ea9379faee471eedafee77b'),
         'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
-                'bb144c7abab7e2323c8882f0b6f129b7', 'c5234b1a362ef13c9c12b7b7444b8c85'),
+                '95fc40cb4635424c7ef1577d13183afa', 'c5234b1a362ef13c9c12b7b7444b8c85'),
         's1': (pd.Series(data=adjacency.ravel()),
                'e37122dc5f6320e9f12b413631056443', 'ee9729300f29a6917f30aa9e612ec67c'),
         's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
