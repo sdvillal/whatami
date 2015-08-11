@@ -38,3 +38,6 @@ nosetests.xml
 
 # Others
 .cache
+
+# Sphinx
+doc/_build
