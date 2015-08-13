@@ -65,8 +65,8 @@ def obj2what(obj,
     >>> print(obj2what(id2what, excludes=('parser',)).id())
     parse_whatid(visitor=None)
     """
-    # if is_whatable(obj):  # do not move this to whatareyou, or we face infinite recursion
-    #     return obj.what()
+    if is_whatable(obj):  # do not move this to whatareyou, or we face infinite recursion
+        return obj.what()
     return whatareyou(obj,
                       non_id_keys=non_id_keys,
                       add_dict=add_dict,

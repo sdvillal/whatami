@@ -68,7 +68,7 @@ buy(currency='euro',price=4294967296)
 from __future__ import print_function, unicode_literals, absolute_import
 import hashlib
 import inspect
-from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS, wraps
+from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
 
 from future.utils import PY3
@@ -269,7 +269,9 @@ def whatable(obj=None,
              add_properties=True,
              exclude_prefix='_',
              exclude_postfix='_',
-             excludes=('what',)):
+             excludes=('what',),
+             # Other
+             modify_func_inplace=False):
     """Decorates an object (also classes) to add a "what()" method.
 
     When decorating a callable (function, partial...), a brand new, equivalent callable will be
@@ -302,7 +304,7 @@ def whatable(obj=None,
     >>> int(cnormalize(5))
     1
     >>> hasattr(normalize, 'what')
-    True
+    False
     >>> @whatable
     ... def thunk(x, name='hi'):
     ...     print(x, name)
@@ -348,34 +350,33 @@ def whatable(obj=None,
                        # Keys ignoring options
                        exclude_prefix=exclude_prefix,
                        exclude_postfix=exclude_postfix,
-                       excludes=excludes)
+                       excludes=excludes,
+                       modify_func_inplace=modify_func_inplace)
 
     # function decorator
     if inspect.isfunction(obj) or isinstance(obj, partial):
 
-        #
-        # Do not modify func inplace
-        # def whatablefunc(*args, **kwargs):
-        #     return obj(*args, **kwargs)
-        #
-        #
-        # Wrapper to get proper '__name__', '__doc__' and '__module__' when present
-        # "wraps" won't work for partials or lambdas on python 2.x.
-        # See: http://bugs.python.org/issue3445
-        #
-        # update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(obj, method)]
-        # if len(update_in_wrapper):
-        #     whatablefunc = update_wrapper(wrapper=whatablefunc,
-        #                                   wrapped=obj,
-        #                                   assigned=update_in_wrapper)
-        #
+        if not modify_func_inplace:
+            # Do not modify func inplace
+            def whatablefunc(*args, **kwargs):
+                return obj(*args, **kwargs)
 
-        whatablefunc = obj
+            # Wrapper to get proper '__name__', '__doc__' and '__module__' when present
+            # "wraps" won't work for partials or lambdas on python 2.x.
+            # See: http://bugs.python.org/issue3445
+
+            update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(obj, method)]
+            if len(update_in_wrapper):
+                whatablefunc = update_wrapper(wrapper=whatablefunc,
+                                              wrapped=obj,
+                                              assigned=update_in_wrapper)
+        else:
+            whatablefunc = obj
 
         # Adds what method
         if whatfunc is None:
             name, config_dict = callable2call(obj, closure_extractor=extract_decorated_function_from_closure)
-            whatablefunc.what = lambda: What(name, config_dict, non_id_keys=excludes)
+            whatablefunc.what = partial(What, name=name, conf=config_dict, non_id_keys=excludes)
         else:
             whatablefunc.what = partial(whatfunc, whatablefunc)
         whatablefunc.what.whatami = True

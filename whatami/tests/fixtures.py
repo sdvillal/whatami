@@ -35,6 +35,7 @@ def c2(c1):
 def c3(c1, c2):
     """A whatable object with nested whatables and irrelevant members."""
 
+    @whatable(force_flag_as_whatami=True)
     class C3(object):
         def __init__(self, c1=c1, c2=c2, irrelevant=True):
             super(C3, self).__init__()
@@ -42,7 +43,6 @@ def c3(c1, c2):
             self.c2 = c2
             self.irrelevant = irrelevant
 
-        @whatable(force_flag_as_whatami=True)
         def what(self):
             return whatareyou(self, non_id_keys=('irrelevant',))
     return C3()
