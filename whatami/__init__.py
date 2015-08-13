@@ -5,7 +5,7 @@ try:
     from .what import *
     from .parsers import *
     from .whatutils import *
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 __version__ = '4.0.0-dev0'
