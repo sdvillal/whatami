@@ -285,20 +285,45 @@ def test_whatable_faker():
     assert whatareyou(Fool()).id() == 'Fool(faker=Faker())'
 
 
-class Pickable(object):
-    def __init__(self, x=3):
-        super(Pickable, self).__init__()
-        self.x = x
-
+# --- Test pickability (https://github.com/sdvillal/whatami/issues/8)
 
 def pickle_roundtrip(x):
     import pickle
     return pickle.loads(pickle.dumps(x))
 
 
-def test_whatable_pickling():
+class Pickable(object):
+    def __init__(self, x=3):
+        super(Pickable, self).__init__()
+        self.x = x
 
+
+def test_whatable_class_pickling():
+
+    # Decorating a Pickable class
     WhatablePickable = pickle_roundtrip(whatable(Pickable))
-
     assert WhatablePickable.__name__ == 'Pickable'
     assert WhatablePickable(5).what().id() == 'Pickable(x=5)'
+
+
+def pickable(x, y, z=3):  # pragma: no cover
+    return x + y + z
+
+
+def test_whatable_function_pickling():
+    whatable_pickable = whatable(pickable)
+    assert whatable_pickable.what().id() == 'pickable(z=3)'
+    roundtripped = pickle_roundtrip(whatable_pickable)
+    assert roundtripped.what().id() == 'pickable(z=3)'
+
+
+@pytest.mark.xfail(reason='allow to patch types and, if not, add at least a whatable partial construct')
+def test_whatable_type():  # pragma: no cover
+    whatable_partial = whatable(partial)
+    m = whatable_partial(pickable, x=1)
+    assert m.what().id() == 'pickable(x=1,z=3)'
+    assert m(y=2) == 6
+    whatable_partial = pickle_roundtrip(whatable_partial)
+    m = whatable_partial(pickable, x=1)
+    assert m.what().id() == 'pickable(x=1,z=3)'
+    assert m(y=2) == 6

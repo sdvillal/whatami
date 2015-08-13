@@ -68,7 +68,7 @@ buy(currency='euro',price=4294967296)
 from __future__ import print_function, unicode_literals, absolute_import
 import hashlib
 import inspect
-from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
+from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS, wraps
 import types
 
 from future.utils import PY3
@@ -302,7 +302,7 @@ def whatable(obj=None,
     >>> int(cnormalize(5))
     1
     >>> hasattr(normalize, 'what')
-    False
+    True
     >>> @whatable
     ... def thunk(x, name='hi'):
     ...     print(x, name)
@@ -353,25 +353,29 @@ def whatable(obj=None,
     # function decorator
     if inspect.isfunction(obj) or isinstance(obj, partial):
 
+        #
         # Do not modify func inplace
-        def whatablefunc(*args, **kwargs):
-            return obj(*args, **kwargs)
-
+        # def whatablefunc(*args, **kwargs):
+        #     return obj(*args, **kwargs)
+        #
         #
         # Wrapper to get proper '__name__', '__doc__' and '__module__' when present
         # "wraps" won't work for partials or lambdas on python 2.x.
         # See: http://bugs.python.org/issue3445
         #
-        update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(obj, method)]
-        if len(update_in_wrapper):
-            whatablefunc = update_wrapper(wrapper=whatablefunc,
-                                          wrapped=obj,
-                                          assigned=update_in_wrapper)
+        # update_in_wrapper = [method for method in WRAPPER_ASSIGNMENTS if hasattr(obj, method)]
+        # if len(update_in_wrapper):
+        #     whatablefunc = update_wrapper(wrapper=whatablefunc,
+        #                                   wrapped=obj,
+        #                                   assigned=update_in_wrapper)
+        #
+
+        whatablefunc = obj
 
         # Adds what method
         if whatfunc is None:
             name, config_dict = callable2call(obj, closure_extractor=extract_decorated_function_from_closure)
-            whatablefunc.what = lambda: What(name, config_dict)
+            whatablefunc.what = lambda: What(name, config_dict, non_id_keys=excludes)
         else:
             whatablefunc.what = partial(whatfunc, whatablefunc)
         whatablefunc.what.whatami = True
