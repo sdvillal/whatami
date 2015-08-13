@@ -36,10 +36,11 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Operating System :: Unix',
     ],
-    requires=['arpeggio', 'future', 'toolz'],
-    tests_require=['pytest'],
+    install_requires=['arpeggio>=1.0', 'future'],
+    tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
     extras_require={
-        'sklearn': ('scikit-learn',),
+        'sklearn': ['scikit-learn'],
+        'docs': ['Sphinx'],
     },
     platforms=['Any'],
 )

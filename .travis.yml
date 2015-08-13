@@ -11,12 +11,10 @@ before_install:
  - export PATH=/home/travis/miniconda/bin:$PATH
  - conda config --set always_yes yes
  - conda update conda
- - conda install scikit-learn
- - conda install future
- - conda install pytest
  - conda info -a
- - travis_retry conda create -n test python=$TRAVIS_PYTHON_VERSION pip pytest numpy scipy scikit-learn pandas future joblib
+ - travis_retry conda create -n test python=$TRAVIS_PYTHON_VERSION pip
  - source activate test
+ - conda install numpy scipy scikit-learn pandas joblib future pytest
  - travis_retry pip install arpeggio pytest-cov pytest-pep8 codecov scrutinizer-ocular
 
 script:
