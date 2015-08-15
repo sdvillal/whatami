@@ -9,14 +9,12 @@ try:
 except ImportError:
     from distutils.core import setup
 
-import whatami
-
 setup(
     name='whatami',
     license='BSD 3 clause',
     description='Easily provide python objects with self-identification',
     long_description=open('README.rst').read().replace('|Build Status| |Coverage Status| |Scrutinizer Status|', ''),
-    version=whatami.__version__,
+    version='4.0.0-dev0',
     url='https://github.com/sdvillal/whatami',
     author='Santi Villalba',
     author_email='sdvillal@gmail.com',
