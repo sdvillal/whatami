@@ -10,6 +10,7 @@ from past.builtins import basestring as basestring23
 
 from whatami import parse_whatid, whatareyou, What
 from whatami import whatable
+from whatami.parsers import build_oldwhatami_parser
 from whatami.what import is_whatable
 
 
@@ -171,3 +172,45 @@ def sort_whatids(whatids, *keys):
     whats = map(id2what, whatids)  # if this is bottleneck, allow to pass what themselves
     values = [whatvalues(what, keys) for what in whats]
     return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whatids), key=itemgetter(0))]))
+
+
+# --- Maintenance
+
+OLD_WHATID_PARSER = None
+
+
+def oldid2what(oldwhatid):
+    """Parses an old-style whatami id into a What object.
+
+    Examples
+    --------
+    >>> old_id = "out=acc_to_target#GoingTowards#im=True#positions=('x', 'y')#targets=(-0.1, -0.1)"
+    >>> what = oldid2what(old_id)
+    >>> print(what.id())
+    GoingTowards(im=True,out='acc_to_target',positions=('x','y'),targets=(-0.1,-0.1))
+    >>> old_id = "GoingTowards#im=True#positions=('x', 'y')#targets=('trg_x', 'trg_y')"
+    >>> what = oldid2what(old_id)
+    >>> print(what.id())
+    GoingTowards(im=True,positions=('x','y'),targets=('trg_x','trg_y'))
+    >>> old_id = "out=acc#GoingTowards#im=True#positions=('x', 'y')#targets=('trg_x', 'trg_y')#out='vel'"
+    >>> what = oldid2what(old_id)
+    Traceback (most recent call last):
+    ...
+    ValueError: whatid defines out ambiguously ("acc" and "vel")
+    """
+    global OLD_WHATID_PARSER
+    if OLD_WHATID_PARSER is None:
+        OLD_WHATID_PARSER = build_oldwhatami_parser()
+    out = None
+    if oldwhatid.startswith('out='):
+        out, _, oldwhatid = oldwhatid.partition('#')
+        out = out[4:]
+
+    what = id2what(oldwhatid, parser=OLD_WHATID_PARSER)
+
+    if out is not None:
+        if 'out' in what.conf:
+            raise ValueError('whatid defines out ambiguously ("%s" and "%s")' % (out, what['out']))
+        what.conf['out'] = out
+
+    return what

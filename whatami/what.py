@@ -370,7 +370,7 @@ def whatable(obj=None,
                 whatablefunc = update_wrapper(wrapper=whatablefunc,
                                               wrapped=obj,
                                               assigned=update_in_wrapper)
-        else:
+        else:  # pragma: no cover
             whatablefunc = obj
 
         # Adds what method
