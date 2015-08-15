@@ -328,3 +328,15 @@ def test_whatable_type():  # pragma: no cover
     m = whatable_partial(pickable, x=1)
     assert m.what().id() == 'pickable(x=1,z=3)'
     assert m(y=2) == 6
+
+
+def test_whatable_inplacefunc():
+
+    def afunc(x=3):  # pragma: no cover
+        return x
+
+    wafunc = whatable(afunc, modify_func_inplace=True)
+
+    assert afunc is wafunc
+    assert afunc.what().id() == wafunc.what().id()
+    assert wafunc.what().id() == 'afunc(x=3)'
