@@ -271,3 +271,93 @@ def parse_whatid(id_string, parser=None, visitor=None):
         # https://github.com/igordejanovic/Arpeggio/pull/21
         DEFAULT_WHATAMI_PARSER = build_whatami_parser()
         raise
+
+# --- Maintenance for old whatami id strings
+
+
+def build_oldwhatami_parser(reduce_tree=False, debug=False):
+
+    # Syntactic noise
+
+    def list_sep():
+        return StrMatch(',')
+
+    # Basic types
+
+    def an_id():
+        # These account for valid python 2 identifiers. Python 3 allow unicode in identifiers.
+        # See:
+        #   http://stackoverflow.com/questions/5474008/regular-expression-to-confirm-whether-a-string-is-a-valid-identifier-in-python
+        # When/if adapting to py3, that should be handled.
+        # Note also that arpeggio does not allow unicode in regexps;
+        # it should be easy to implement by just allowing arbitrary re flags in RegExMatch
+        return RegExMatch(r'[_A-Za-z][_a-zA-Z0-9]*')
+
+    def a_number():
+        return RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
+
+    def a_string():
+        return StrMatch("'"), RegExMatch("[^']*"), StrMatch("'")
+
+    def a_true():
+        return StrMatch('True')
+
+    def a_false():
+        return StrMatch('False')
+
+    def a_bool():
+        return [a_true, a_false]
+
+    def a_none():
+        return StrMatch('None')
+
+    # Collection types: lists, tuples, dictionaries
+
+    def list_elements():
+        return value, ZeroOrMore(list_sep, value)
+
+    def a_list():
+        return StrMatch('['), Optional(list_elements), StrMatch(']')
+
+    def a_tuple():
+        return StrMatch('('), Optional(list_elements), StrMatch(')')
+
+    def dictkv():
+        return value, StrMatch(':'), value
+
+    def dict_elements():
+        return dictkv, ZeroOrMore(list_sep, dictkv)
+
+    def a_dict():
+        return StrMatch('{'), Optional(dict_elements), StrMatch('}')
+
+    def an_empty_set():
+        return StrMatch('set()')
+
+    def a_non_empty_set():
+        return StrMatch('{'), Optional(list_elements), StrMatch('}')
+
+    def a_set():
+        return [an_empty_set, a_non_empty_set]
+
+    # Key-values
+
+    def value():
+        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_set, a_dict, whatami_id]
+
+    def kv():
+        return an_id, StrMatch('='), value
+
+    def kvs():
+        return kv, ZeroOrMore('#', kv)
+
+    # Top level
+
+    def whatami_id():
+        return [(an_id, StrMatch('#'), Optional(kvs)),
+                (StrMatch('"'), an_id, StrMatch('#'), Optional(kvs), StrMatch('"'))]
+
+    def whatami_id_top():
+        return whatami_id, EOF
+
+    return ParserPython(whatami_id_top, reduce_tree=reduce_tree, debug=debug)
