@@ -5,6 +5,7 @@
 # Licence: BSD 3 clause
 
 from operator import itemgetter
+from arpeggio import NoMatch
 
 from past.builtins import basestring as basestring23
 
@@ -214,3 +215,16 @@ def oldid2what(oldwhatid):
         what.conf['out'] = out
 
     return what
+
+
+def id2whatami4(oldwhatid):
+    """
+    >>> print(id2whatami4("out=vel_to_target#GoingTowards#im=True#positions=('x', 'y')#targets=('trg_x', 'trg_y')"))
+    GoingTowards(im=True,out='vel_to_target',positions=('x','y'),targets=('trg_x','trg_y'))
+    >>> print(id2whatami4("velocity"))
+    velocity
+    """
+    try:
+        return oldid2what(oldwhatid).id()
+    except NoMatch:
+        return oldwhatid
