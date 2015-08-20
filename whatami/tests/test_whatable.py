@@ -5,6 +5,24 @@ from whatami import is_whatable, What, trim_dict, config_dict_for_object
 from whatami.tests.fixtures import *
 
 
+def test_whatable_decorator():
+    @whatable
+    def normalize(x, loc=5, scale=3):
+        """returns (x+loc) / scale"""
+        return (x + loc) / scale
+    assert normalize.what().id() == 'normalize(loc=5,scale=3)'
+    assert normalize.__name__ == 'normalize'
+    assert normalize.__doc__ == 'returns (x+loc) / scale'
+
+    # very specific case: partial application over a whatable closure
+    normalize6 = partial(normalize, loc=6)
+    assert not hasattr(normalize6, 'what')
+    assert not hasattr(normalize6, '__name__')  # partials have no name
+    normalize6 = whatable(normalize6)
+    assert normalize6.what().id() == 'normalize(loc=6,scale=3)'
+    assert normalize6(3) == 3
+
+
 def test_whatable_simple(c1):
     # Non-nested configurations
     config_c1 = c1.what()

@@ -4,7 +4,6 @@
 # Licence: BSD 3 clause
 
 from __future__ import unicode_literals, absolute_import
-from functools import partial
 import hashlib
 
 from future.utils import PY3
@@ -97,24 +96,6 @@ def test_whatable_functions(c1):
     c1.p1 = identity
     assert c1.what().id() == "C1(length=1,p1=identity(),p2='bleh')"
     assert c1.p1(1) == 1
-
-
-def test_whatable_decorator():
-    @whatable
-    def normalize(x, loc=5, scale=3):
-        """returns (x+loc) / scale"""
-        return (x + loc) / scale
-    assert normalize.what().id() == 'normalize(loc=5,scale=3)'
-    assert normalize.__name__ == 'normalize'
-    assert normalize.__doc__ == 'returns (x+loc) / scale'
-
-    # very specific case: partial application over a whatable closure
-    normalize6 = partial(normalize, loc=6)
-    assert not hasattr(normalize6, 'what')
-    assert not hasattr(normalize6, '__name__')  # partials have no name
-    normalize6 = whatable(normalize6)
-    assert normalize6.what().id() == 'normalize(loc=6,scale=3)'
-    assert normalize6(3) == 3
 
 
 def test_list_parameters(c1):
