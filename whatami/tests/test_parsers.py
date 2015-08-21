@@ -12,8 +12,6 @@ from whatami import parse_whatid, What
 
 
 # --- Parsing id strings
-from whatami.whatutils import sort_whatids, id2what
-
 
 @pytest.mark.xfail(reason='known limitation, to fix or to document as permanent limitation')
 def test_parse_whatid_within_string():  # pragma: no cover

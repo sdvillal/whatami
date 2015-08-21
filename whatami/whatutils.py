@@ -7,7 +7,7 @@
 from operator import itemgetter
 from arpeggio import NoMatch
 
-from past.builtins import basestring as basestring23
+from future.builtins import str as str3
 
 from whatami import parse_whatid, whatareyou, What
 from whatami import whatable
@@ -28,7 +28,7 @@ def what2id(obj):
     """
     if obj is None:
         return None
-    if isinstance(obj, basestring23):
+    if isinstance(obj, str3):
         return obj
     try:
         return obj.what().id()

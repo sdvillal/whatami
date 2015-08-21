@@ -7,8 +7,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 import inspect
 from functools import partial
 
-from future.builtins import str
-from past.builtins import basestring as basestring23
+from future.builtins import str as str3
 
 from whatami.what import What, whatareyou
 from whatami.misc import callable2call, config_dict_for_object, curry2partial
@@ -71,7 +70,7 @@ def tuple_plugin(what, v):
 
 
 def string_plugin(_, v):
-    if isinstance(v, basestring23):
+    if isinstance(v, (str, str3)):
         return '\'%s\'' % v
     return None
 
