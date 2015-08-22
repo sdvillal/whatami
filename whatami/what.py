@@ -179,7 +179,7 @@ class What(object):
           Non-ids keys are ignored if nonids_too is False.
 
         malength: int, default 0
-          If the id length goes over maxlength, the parameters part get replaced by its sha256.
+          If the id length goes over maxlength, the parameters part get replaced by its sha1.
           If <= 0, it is ignored and the full id string will be returned.
         """
         kvs = ','.join('%s=%s' % (k, self.build_string(v))
@@ -198,9 +198,9 @@ class What(object):
 
     @staticmethod
     def _trim_too_long(string, maxlength=0):
-        """Returns the string or its sha256 if the string length is larger than maxlength."""
+        """Returns the string or its sha1 if the string length is larger than maxlength."""
         if 0 < maxlength < len(string):
-            return hashlib.sha256(string.encode('utf-8')).hexdigest()
+            return hashlib.sha1(string.encode('utf-8')).hexdigest()
         return string
 
 
