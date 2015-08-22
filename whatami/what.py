@@ -133,12 +133,6 @@ class What(object):
         # make recursive
         return [self[key] for key in self.keys(non_ids_too=non_ids_too)]
 
-    def positional_id(self, name=None, non_ids_too=False):
-        """Returns an id without parameter keys (ala positional)."""
-        # make recursive
-        name = name if name is not None else self.name
-        return '%s(%s)' % (name, ','.join(map(str, self.values(non_ids_too=non_ids_too))))
-
     # ---- Magics
 
     def __eq__(self, other):
@@ -175,17 +169,36 @@ class What(object):
 
         Parameters
         ----------
-        nonids_too: boolean, default False
+        nonids_too : boolean, default False
           Non-ids keys are ignored if nonids_too is False.
 
-        malength: int, default 0
-          If the id length goes over maxlength, the parameters part get replaced by its sha1.
+        malength : int, default 0
+          If the id length goes over maxlength, it gets replaced by its sha1.
           If <= 0, it is ignored and the full id string will be returned.
         """
         kvs = ','.join('%s=%s' % (k, self.build_string(v))
                        for k, v in sorted(self.conf.items())
                        if nonids_too or k not in self.non_id_keys)
         my_id = '%s(%s)' % (self.name, kvs)
+        return self._trim_too_long(my_id, maxlength=maxlength)
+
+    def positional_id(self, name=None, non_ids_too=False, maxlength=0):
+        """Returns an id without parameter names, just values.
+
+        Parameters
+        ----------
+        name : string, default None
+          The name to use in the id string; if None, the name of self is used.
+
+        non_ids_too : boolena, default False
+          Whether to include the non-id values too.
+
+        maxlength : int, default 0
+          If the id length goes over maxlength, it gets replaced by its sha1.
+          If <= 0, it is ignored and the full id string will be returned.
+        """
+        name = name if name is not None else self.name
+        my_id = '%s(%s)' % (name, ','.join(map(self.build_string, self.values(non_ids_too=non_ids_too))))
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     def build_string(self, v):

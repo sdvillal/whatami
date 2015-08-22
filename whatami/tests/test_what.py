@@ -109,6 +109,25 @@ def test_list_parameters(c1):
     assert w.what().id() == "WhatableWithList(list=[])"
 
 
+def test_what_keys():
+    what = What('tom', conf={'a': 3, 'b': 'z', 'c': 3.14}, non_id_keys=['b'])
+    assert what.keys() == ['a', 'c']
+    assert what.keys(non_ids_too=True) == ['a', 'b', 'c']
+
+
+def test_what_values():
+    what = What('tom', conf={'a': 3, 'b': 'z', 'c': 3.14}, non_id_keys=['b'])
+    assert what.values() == [3, 3.14]
+    assert what.values(non_ids_too=True) == [3, 'z', 3.14]
+
+
+def test_what_positional_ids():
+    what = What('tom', conf={'a': 3, 'b': 'z', 'c': 3.14}, non_id_keys=['b'])
+    assert what.positional_id() == 'tom(3,3.14)'
+    assert what.positional_id(non_ids_too=True) == "tom(3,'z',3.14)"
+    assert what.positional_id(name='jerry', non_ids_too=True) == "jerry(3,'z',3.14)"
+
+
 def test_tuple_parameters(c1):
     @whatable
     class WhatableWithTuple(object):
