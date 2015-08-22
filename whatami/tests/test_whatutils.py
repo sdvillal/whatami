@@ -31,3 +31,4 @@ def test_whatid2columns(df_with_whatid):
     assert edf is df_with_whatid
     for col in expected_value_columns:
         assert (df_with_whatid[col] == df_with_whatid['pre-' + col + '-post']).all()
+    # missing: test getting nested values via tuples as values in columns

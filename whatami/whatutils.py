@@ -213,15 +213,32 @@ def call2what(depth=1, non_id_keys=None):
 
 def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=True):
     """
-    Puts values of whatid strings into the columns of a pandas dataframe.
-
-    For example, if
+    Extract values from whatami id strings into new columns in a pandas dataframe.
 
     Parameters
     ----------
     df : pandas DataFrame
+      Should contain a column
 
-    whatid_col :
+    whatid_col : string
+      The name of the column where the whatami id strings are stored.
+
+    columns : list of strings or list of tuples of strings, default None
+      The coordinates of the parameters to extract from the whatami ids (usually a string)
+      If None, all the top-level parameters of the id string will be extracted.
+
+    prefix : string
+      The name of the new columns will be prefixed with this string (if None, no prefix)
+
+    postfix : string
+      The name of the new columns will be followed by this string (if None, no postfix)
+
+    inplace : boolean, default True
+      If False, make a copy of the dataframe and add the columns there; otherwise add the new columns to df.
+
+    Returns
+    -------
+    df itself or a copy if inplace is False.
     """
     # parsing is slow, cache the Whats
     whats = {whatid: id2what(whatid) for whatid in df[whatid_col].unique()}
@@ -236,7 +253,8 @@ def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=
         df = df.copy()
 
     for column in columns:
-        df[prefix + column + postfix] = df[whatid_col].apply(
+        column_name = '_'.join(column) if isinstance(column, (tuple, list)) else column
+        df[prefix + column_name + postfix] = df[whatid_col].apply(
             lambda whatid: whats[whatid].conf.get(column, None))
 
     return df
