@@ -4,6 +4,10 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
+from __future__ import print_function
+
+import inspect
+
 from operator import itemgetter
 from arpeggio import NoMatch
 
@@ -173,6 +177,39 @@ def sort_whatids(whatids, *keys):
     whats = map(id2what, whatids)  # if this is bottleneck, allow to pass what themselves
     values = [whatvalues(what, keys) for what in whats]
     return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whatids), key=itemgetter(0))]))
+
+
+def call2what(depth=1, non_id_keys=None):
+    """
+    Returns a What instance with information about the locals of the caller at depth.
+
+    With the current implementation this could not work on interpreters other than cpython.
+
+    Parameters
+    ----------
+    depth : int, default 1
+      The depth of the desired caller in the stack; 1 is the immediate caller of call2what
+
+    non_id_keys : string iterable, default None
+      What variables of the locals to consider as non-id when creating the What object.
+
+    Examples
+    --------
+    >>> def f(x, y=3, z=5):
+    ...     j = 33
+    ...     print('With all locals', call2what().id())
+    ...     print('Only keywords', call2what(non_id_keys=['x', 'j']).id())
+    ...     return j, x + y + z
+    >>> _ = f(2, z=12)
+    With all locals f(j=33,x=2,y=3,z=12)
+    Only keywords f(y=3,z=12)
+    """
+    # this would probably break on interpreters other than CPython
+    frame, _, _, name, _, _ = inspect.stack()[depth]
+    # we could probably be (too) clever here and get only the function parameter values
+    # also we could add a parameter to automatically grab only keywords... for next iteration
+    conf_dict = frame.f_locals
+    return What(name, conf=conf_dict, non_id_keys=non_id_keys)
 
 
 # --- Maintenance
