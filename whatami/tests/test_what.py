@@ -8,9 +8,9 @@ import hashlib
 
 from future.utils import PY3
 
-from whatami import What, id2what
-from whatami.whatutils import what2id
-from whatami.tests.fixtures import *
+from ..what import What
+from ..whatutils import id2what, what2id
+from .fixtures import *
 
 
 def test_configuration_nonids():

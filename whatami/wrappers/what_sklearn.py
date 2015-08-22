@@ -8,7 +8,6 @@ Example
 -------
 
 >>> # Monkey-patch sklearn estimators
->>> from whatami.wrappers.what_sklearn import whatamise_sklearn
 >>> whatamise_sklearn()
 >>> # Use what() to retrieve the id of a model
 >>> from sklearn.ensemble import RandomForestClassifier
@@ -61,8 +60,8 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-from whatami import What
-from whatami.misc import all_subclasses
+from ..what import What
+from ..misc import all_subclasses
 
 
 # ----- Manually check which parameters are not part of the default id (WIP)
@@ -241,5 +240,8 @@ def _check_all_monkeypatched():
 # Notes:
 #  - As usual, when rng (random_state) is a None or a custom rng, identity is not really defined.
 #    Maybe we could warn to always use an int random_state when this is detected (in what_for_sklearn).
+#
+#  - This is too aggressive on patching, but creating a lighter version by getting a plugin to whatareyou
+#    that realizes about sklearn classes and applies ignores wisely is very easy to do.
 #
 ####

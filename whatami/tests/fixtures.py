@@ -1,7 +1,7 @@
 # coding=utf-8
-from whatami import whatable, whatareyou
+from ..what import whatable, whatareyou
+from ..plugins import has_numpy, has_joblib, has_pandas
 import pytest
-from whatami.plugins import has_numpy, has_joblib, has_pandas
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ def numpy_skip(test):  # pragma: no cover
                 ids=['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'])
 def array(request):
     """Hardcodes hashes, so we can detect hashing changes in joblib."""
-    from whatami.plugins import np
+    from ..plugins import np
     arrays = {
         # base array
         'a1': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]),
@@ -94,7 +94,7 @@ def pandas_skip(test):  # pragma: no cover
                 ids=['df1', 'df2', 'df3', 'df4', 's1', 's2'])
 def df(request):
     """Hardcodes hashes, so we can detect hashing changes in joblib."""
-    from whatami.plugins import pd, np
+    from ..plugins import pd, np
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
     dfs = {
         'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),

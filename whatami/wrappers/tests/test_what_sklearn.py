@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 
-from whatami.wrappers.what_sklearn import whatamise_sklearn, _check_all_monkeypatched
+from ..what_sklearn import whatamise_sklearn, _check_all_monkeypatched
 
 whatamise_sklearn(check=True, log=True)
 

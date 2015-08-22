@@ -6,9 +6,10 @@
 from __future__ import unicode_literals, absolute_import
 import arpeggio
 
-import pytest
+from ..what import What
+from ..parsers import parse_whatid
 
-from whatami import parse_whatid, What
+import pytest
 
 
 # --- Parsing id strings

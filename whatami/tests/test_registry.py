@@ -4,10 +4,11 @@
 # Licence: BSD 3 clause
 
 from __future__ import unicode_literals, absolute_import
-import pytest
-from whatami import whatable
 
-from whatami.registry import WhatamiRegistry
+from ..what import whatable
+from ..registry import WhatamiRegistry
+
+import pytest
 
 
 @pytest.fixture()

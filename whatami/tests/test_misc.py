@@ -11,10 +11,10 @@ from time import strptime, mktime
 from functools import partial
 from future.utils import PY3
 
-import pytest
-from whatami import whatable
+from ..what import whatable
+from ..misc import callable2call, is_iterable, mlexp_info_helper
 
-from whatami.misc import callable2call, is_iterable, mlexp_info_helper
+import pytest
 
 
 def test_is_iterable():

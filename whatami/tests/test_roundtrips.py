@@ -5,8 +5,10 @@
 # Licence: BSD 3 clause
 
 from __future__ import unicode_literals, absolute_import
-from whatami import whatable, What
-from whatami.parsers import parse_whatid
+
+from ..what import whatable, What
+from ..parsers import parse_whatid
+
 import pytest
 
 

@@ -1,8 +1,10 @@
 # coding=utf-8
 from functools import partial
 
-from whatami import is_whatable, What, trim_dict, config_dict_for_object
-from whatami.tests.fixtures import *
+import pickle
+
+from ..what import is_whatable, What, trim_dict, config_dict_for_object
+from .fixtures import *
 
 
 def test_whatable_decorator():
@@ -150,7 +152,6 @@ def test_whatable_custom_func_recursive():
 
 
 def test_whatable_slots():
-
     # N.B. Slots are implemented as descriptors
     @whatable
     class Slots(object):
@@ -164,7 +165,6 @@ def test_whatable_slots():
 
 
 def test_whatable_inheritance():
-
     # Inheritance works as spected
     @whatable
     class Super(object):
@@ -306,7 +306,6 @@ def test_whatable_faker():
 # --- Test pickability (https://github.com/sdvillal/whatami/issues/8)
 
 def pickle_roundtrip(x):
-    import pickle
     return pickle.loads(pickle.dumps(x))
 
 
