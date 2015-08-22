@@ -121,6 +121,24 @@ class What(object):
         """
         return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
 
+    def keys(self, non_ids_too=False):
+        """Returns a list with the keys in the configuration."""
+        # make recursive
+        if non_ids_too:
+            return sorted(self.conf.keys())
+        return sorted(key for key in self.conf.keys() if key not in self.non_id_keys)
+
+    def values(self, non_ids_too=False):
+        """Returns a list with the keys in the configuration."""
+        # make recursive
+        return [self[key] for key in self.keys(non_ids_too=non_ids_too)]
+
+    def positional_id(self, name=None, non_ids_too=False):
+        """Returns an id without parameter keys (ala positional)."""
+        # make recursive
+        name = name if name is not None else self.name
+        return '%s(%s)' % (name, ','.join(map(str, self.values(non_ids_too=non_ids_too))))
+
     # ---- Magics
 
     def __eq__(self, other):
