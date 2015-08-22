@@ -111,3 +111,27 @@ def df(request):
                'c0f4565b063599c6075ec6108cbca344', '74e14992d8587454d561b3194d11a984'),
     }
     return dfs[request.param]
+
+
+@pytest.fixture(params=map(pandas_skip, ['dfw1']),
+                ids=['dfw1'])
+def df_with_whatid(request):
+    """Fixtures to test whatid manipulations mixed with pandas dataframes."""
+    from ..plugins import pd
+    if request.param == 'dfw1':
+        whatids = [
+            "Blosc(cname='blosclz',level=5,shuffle=False)",
+            "Blosc(cname='blosclz',level=6,shuffle=True)",
+            "Blosc(cname='lz4hc',level=7,shuffle=True)",
+            "Blosc(cname='lz4hc',level=8,shuffle=False)",
+        ] * 4
+        cnames = ['blosclz', 'blosclz', 'lz4hc', 'lz4hc'] * 4
+        levels = [5, 6, 7, 8] * 4
+        shuffles = [False, True, True, False] * 4
+        df = pd.DataFrame({'whatid': whatids,
+                           'cname': cnames,
+                           'level': levels,
+                           'shuffle': shuffles})
+        return df
+    else:  # pragma: no cover
+        raise ValueError('Unknown fixture %s' % request.param)

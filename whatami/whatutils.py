@@ -211,19 +211,35 @@ def call2what(depth=1, non_id_keys=None):
     return What(name, conf=conf_dict, non_id_keys=non_id_keys)
 
 
-def whatid2columns(df, whatid_col, columns=None, prefix='', postfix=''):
+def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=True):
+    """
+    Puts values of whatid strings into the columns of a pandas dataframe.
+
+    For example, if
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+
+    whatid_col :
+    """
     # parsing is slow, cache the Whats
     whats = {whatid: id2what(whatid) for whatid in df[whatid_col].unique()}
 
     if columns is None:
-        columns = sorted(set(chain.from_iterable(what.keys() for what in whats)))
+        columns = sorted(set(chain.from_iterable(what.keys() for what in whats.values())))
 
     prefix = '' if prefix is None else prefix
     postfix = '' if postfix is None else postfix
 
+    if not inplace:
+        df = df.copy()
+
     for column in columns:
         df[prefix + column + postfix] = df[whatid_col].apply(
             lambda whatid: whats[whatid].conf.get(column, None))
+
+    return df
 
 # --- Maintenance
 
