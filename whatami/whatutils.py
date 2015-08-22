@@ -7,6 +7,7 @@
 from __future__ import print_function
 
 import inspect
+from itertools import chain
 
 from operator import itemgetter
 from arpeggio import NoMatch
@@ -209,6 +210,20 @@ def call2what(depth=1, non_id_keys=None):
     conf_dict = frame.f_locals
     return What(name, conf=conf_dict, non_id_keys=non_id_keys)
 
+
+def whatid2columns(df, whatid_col, columns=None, prefix='', postfix=''):
+    # parsing is slow, cache the Whats
+    whats = {whatid: id2what(whatid) for whatid in df[whatid_col].unique()}
+
+    if columns is None:
+        columns = sorted(set(chain.from_iterable(what.keys() for what in whats)))
+
+    prefix = '' if prefix is None else prefix
+    postfix = '' if postfix is None else postfix
+
+    for column in columns:
+        df[prefix + column + postfix] = df[whatid_col].apply(
+            lambda whatid: whats[whatid].conf.get(column, None))
 
 # --- Maintenance
 
