@@ -45,8 +45,8 @@ def test_non_id_keys(c3):
                                             "irrelevant=True)"
     c3id = "C3(c1=C1(length=1,p1='blah',p2='bleh'),c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
     assert config_c3.id(nonids_too=False) == c3id
-    sha2 = hashlib.sha256(c3id.encode('utf-8')).hexdigest()
-    assert config_c3.id(maxlength=1) == sha2
+    sha1 = hashlib.sha1(c3id.encode('utf-8')).hexdigest()
+    assert config_c3.id(maxlength=1) == sha1
 
 
 def test_what_str_magic(c1, c2, c3):
