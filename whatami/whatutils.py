@@ -13,10 +13,8 @@ from arpeggio import NoMatch
 
 from future.builtins import str as str3
 
-from whatami import parse_whatid, whatareyou, What
-from whatami import whatable
-from whatami.parsers import build_oldwhatami_parser
-from whatami.what import is_whatable
+from .parsers import parse_whatid, build_oldwhatami_parser
+from .what import whatable, whatareyou, What, is_whatable
 
 
 def what2id(obj):

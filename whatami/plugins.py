@@ -9,8 +9,8 @@ from functools import partial
 
 from future.builtins import str as str3
 
-from whatami.what import What, whatareyou
-from whatami.misc import callable2call, config_dict_for_object, curry2partial
+from .what import What, whatareyou
+from .misc import callable2call, config_dict_for_object, curry2partial
 
 
 # --- Basic plugins

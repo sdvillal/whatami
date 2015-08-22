@@ -5,7 +5,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import unicode_literals, absolute_import
-from whatami import what2id
+from .whatutils import what2id
 
 
 class WhatamiRegistry(object):

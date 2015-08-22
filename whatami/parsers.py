@@ -221,7 +221,7 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_whatami_id(_, children):
-        from whatami import What
+        from .what import What
         an_id = children[0]
         kvs = list(children[1]) if len(children) > 1 else []
         return What(an_id, dict(kvs))

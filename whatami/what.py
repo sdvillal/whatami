@@ -73,8 +73,7 @@ import types
 
 from future.utils import PY3
 
-from whatami.misc import callable2call, is_iterable, config_dict_for_object, extract_decorated_function_from_closure, \
-    trim_dict
+from .misc import callable2call, is_iterable, config_dict_for_object, extract_decorated_function_from_closure, trim_dict
 
 
 class What(object):
