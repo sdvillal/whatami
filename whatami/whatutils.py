@@ -83,46 +83,6 @@ def obj2what(obj,
                       excludes=excludes)
 
 
-def flatten_what(what):
-    """Returns two lists: keys and values.
-
-    keys is a list of tuples, each tuple being able to address a parameter of what
-    values is a list with the value corresponding to each corresponding key in the keys array
-
-    Examples
-    --------
-    >>> what = whatareyou(lambda x=1, y=(1,2,{None: 3}): None)
-    >>> keys, values = flatten_what(what)
-    >>> keys
-    [('x',), ('y',), ('y', 0), ('y', 1), ('y', 2), ('y', 2, None)]
-    >>> what[keys[0]]
-    1
-    >>> what[keys[-1]]
-    3
-    >>> values[0] == what[keys[0]]
-    True
-    >>> values[-1] == what[keys[-1]]
-    True
-    """
-    def flatten(what, flattened_keys, flattened_values, partial_k):
-        if isinstance(what, What):
-            kvs = sorted(what.conf.items())
-        elif isinstance(what, (list, tuple)):
-            kvs = enumerate(what)
-        elif isinstance(what, dict):
-            kvs = sorted(what.items())
-        else:
-            kvs = ()
-        for k, v in kvs:
-            k = partial_k + (k,)
-            flattened_keys.append(k)
-            flattened_values.append(v)
-            flatten(v, flattened_keys, flattened_values, k)
-        return flattened_keys, flattened_values
-    # pity that python recursion is terribly inefficient, we could convert this to tailrec
-    return flatten(what, [], [], ())
-
-
 def whatvalues(what, keys=()):
     """Returns a tuple with the values assigned to keys in the the what.what() What object.
     Examples
@@ -211,6 +171,17 @@ def call2what(depth=1, non_id_keys=None):
     return What(name, conf=conf_dict, non_id_keys=non_id_keys)
 
 
+def _get_or_none(what, key):
+    try:
+        return what[key]
+    except KeyError:
+        return None
+
+
+def _key2colname(key):
+    return '_'.join(map(str, key)) if isinstance(key, (tuple, list)) else key
+
+
 def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=True):
     """
     Extract values from whatami id strings into new columns in a pandas dataframe.
@@ -244,7 +215,7 @@ def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=
     whats = {whatid: id2what(whatid) for whatid in df[whatid_col].unique()}
 
     if columns is None:
-        columns = sorted(set(chain.from_iterable(what.keys() for what in whats.values())))
+        columns = sorted(set(chain.from_iterable(what.keys() for what in whats.values())), key=_key2colname)
 
     prefix = '' if prefix is None else prefix
     postfix = '' if postfix is None else postfix
@@ -253,9 +224,11 @@ def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=
         df = df.copy()
 
     for column in columns:
-        column_name = '_'.join(column) if isinstance(column, (tuple, list)) else column
+        column_name = _key2colname(column)
+        if isinstance(column, list):
+            column = tuple(column)
         df[prefix + column_name + postfix] = df[whatid_col].apply(
-            lambda whatid: whats[whatid].conf.get(column, None))
+            lambda whatid: _get_or_none(whats[whatid], column))
 
     return df
 

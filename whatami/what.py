@@ -121,17 +121,64 @@ class What(object):
         """
         return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
 
-    def keys(self, non_ids_too=False):
-        """Returns a list with the keys in the configuration."""
-        # make recursive
-        if non_ids_too:
-            return sorted(self.conf.keys())
-        return sorted(key for key in self.conf.keys() if key not in self.non_id_keys)
+    def flatten(self, non_ids_too=False, collections_too=False, recursive=True):
+        """Returns two lists: keys and values.
+        - keys is a list of tuples, each tuple being able to address a parameter of this what
+        - values is a list with the value corresponding to each corresponding key in the keys array
 
-    def values(self, non_ids_too=False):
+        Parameters
+        ----------
+        non_ids_too : boolean, default False
+          If True, include also non id keys
+
+        collections_too : boolean, default False
+          If True, include also keys that address members of python lists, tuples and dictionaries
+
+        recursive : boolean, default True
+          If True, recurse into nested What and collections
+
+        Examples
+        --------
+        >>> what = whatareyou(lambda x=1, y=(1,2,{None: 3}): None)
+        >>> keys, values = what.flatten(collections_too=True)
+        >>> keys
+        ['x', 'y', ('y', 0), ('y', 1), ('y', 2), ('y', 2, None)]
+        >>> what[keys[0]]
+        1
+        >>> what[keys[-1]]
+        3
+        >>> values[0] == what[keys[0]]
+        True
+        >>> values[-1] == what[keys[-1]]
+        True
+        """
+        def flatten(what, flattened_keys, flattened_values, partial_k):
+            if isinstance(what, What):
+                if non_ids_too:
+                    kvs = sorted(what.conf.items())
+                else:
+                    kvs = sorted(item for item in what.conf.items() if item[0] not in self.non_id_keys)
+            elif isinstance(what, (list, tuple)) and collections_too:
+                kvs = enumerate(what)
+            elif isinstance(what, dict) and collections_too:
+                kvs = sorted(what.items())
+            else:
+                kvs = ()
+            for k, v in kvs:
+                flattened_keys.append(partial_k + (k,) if 0 < len(partial_k) else k)
+                flattened_values.append(v)
+                if recursive:
+                    flatten(v, flattened_keys, flattened_values, partial_k + (k,))
+            return flattened_keys, flattened_values
+        return flatten(self, [], [], ())
+
+    def keys(self, non_ids_too=False, collections_too=False, recursive=True):
         """Returns a list with the keys in the configuration."""
-        # make recursive
-        return [self[key] for key in self.keys(non_ids_too=non_ids_too)]
+        return self.flatten(collections_too=collections_too, non_ids_too=non_ids_too, recursive=recursive)[0]
+
+    def values(self, non_ids_too=False, collections_too=False, recursive=True):
+        """Returns a list with the keys in the configuration."""
+        return self.flatten(collections_too=collections_too, non_ids_too=non_ids_too, recursive=recursive)[1]
 
     # ---- Magics
 

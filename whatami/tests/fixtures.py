@@ -116,7 +116,14 @@ def df(request):
 @pytest.fixture(params=map(pandas_skip, ['dfw1']),
                 ids=['dfw1'])
 def df_with_whatid(request):
-    """Fixtures to test whatid manipulations mixed with pandas dataframes."""
+    """Fixtures to test whatid manipulations mixed with pandas dataframes.
+
+    Provides dataframes with:
+      - A column "whatid" with the whatami ids
+      - The rest of the columns must be the expectations for the extracted values, named as:
+        - key: for top level keys
+        - key1_key2_key3: for recursive keys
+    """
     from ..plugins import pd
     if request.param == 'dfw1':
         whatids = [
@@ -124,14 +131,17 @@ def df_with_whatid(request):
             "Blosc(cname='blosclz',level=6,shuffle=True)",
             "Blosc(cname='lz4hc',level=7,shuffle=True)",
             "Blosc(cname='lz4hc',level=8,shuffle=False)",
+            "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')",
         ] * 4
-        cnames = ['blosclz', 'blosclz', 'lz4hc', 'lz4hc'] * 4
-        levels = [5, 6, 7, 8] * 4
-        shuffles = [False, True, True, False] * 4
+        cnames = ['blosclz', 'blosclz', 'lz4hc', 'lz4hc', None] * 4
+        levels = [5, 6, 7, 8, None] * 4
+        shuffles = [False, True, True, False, None] * 4
+        c1_lengths = [None, None, None, None, 1] * 4
         df = pd.DataFrame({'whatid': whatids,
                            'cname': cnames,
                            'level': levels,
-                           'shuffle': shuffles})
+                           'shuffle': shuffles,
+                           'c1_length': c1_lengths})
         return df
     else:  # pragma: no cover
         raise ValueError('Unknown fixture %s' % request.param)
