@@ -23,30 +23,35 @@ It works this way:
    All attributes will be considered part of the configuration, except for those
    whose names start or end by '\_'.
 
+-
+
 
 The id strings
 --------------
 
 They aim to look like they would be generated if __repr__ in python was always implemented
-taking into account recursion and exposing only result-changing parameters.
+taking into account recursion and exposing only result-changing parameters. They pretty much
+look like python function calls with nested parameters expanded to look like python calls.
 
-
-Versioning
-----------
-
-Since release 2.0.0 whatami uses `semantic versioning`_, where a major version bump
-happens also if the default id strings can be generated differently, even if no API
-actually changes.
 
 Features
 --------
 
 * **Represent your computations as standardized strings.**
+* **Pluggable architecture.**
+* **ID strings can be parsed.**
 * **"whatamise" your library**. Included support for:
 
   * `scikit-learn`_
-  * `arch`_
   * `pyopy`_
+
+
+Versioning
+----------
+
+Since release 4.0.0 whatami uses `semantic versioning`_, where a major version bump
+happens also if the default id strings can be generated differently, even if no API
+actually changes.
 
 
 Example
@@ -69,7 +74,7 @@ Example
 
     # The configuration id string sorts by key alphanumeric order, helping id consistency
     print duckedc.what().id()
-    # ducked#company=None#name='salty-lollypops'#quantity=33
+    # ducked(company=None,name='salty-lollypops',quantity=33)
 
     # Using the whatable decorator makes objects gain a what() method;
     # in this case, what() is infered automatically
@@ -82,20 +87,20 @@ Example
             self._verbose = verbose  # not part of config
             self.social_reason_ = '%s S.A., %s' % (name, city)  # not part of config
     cc = Company(name='Chupa Chups', city='Barcelona')
-    print cc.what().id()
-    # Company#city='Barcelona'#name='Chupa Chups'
+    print(cc.what().id())
+    # Company(city='Barcelona',name='Chupa Chups')
 
     # Ultimately, we can nest whatables...
     duckedc = DuckedConfigurable(33, 'salty-lollypops', company=cc, verbose=False)
     print duckedc.what().id()
-    # ducked#company="Company#city='Barcelona'#name='Chupa Chups'"#name='salty-lollypops'#quantity=33
+    # ducked(company=Company(city='Barcelona',name='Chupa Chups'),name='salty-lollypops',quantity=33)
 
     # We can also decorate functions and partials - use with caution
     @whatable
     def buy(company, price=2**32, currency='euro'):
         return '%s is now mine for %g %s' % (company.name, price, currency)
     print buy.what().id()
-    # buy#currency='euro'#price=4294967296
+    # buy(currency='euro',price=4294967296)
 
 
 .. |Build Status| image:: https://travis-ci.org/sdvillal/whatami.svg?branch=master
@@ -106,7 +111,6 @@ Example
    :target: http://badge.fury.io/py/whatami
 .. _semantic versioning: http://semver.org/
 .. _scikit-learn: http://scikit-learn.org
-.. _arch: https://github.com/bashtage/arch
 .. _pyopy: https://github.com/sdvillal/pyopy
 .. |Scrutinizer Status| image:: https://scrutinizer-ci.com/g/sdvillal/whatami/badges/quality-score.png?b=master
    :target: https://scrutinizer-ci.com/g/sdvillal/whatami/?branch=master
