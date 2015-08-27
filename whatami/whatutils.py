@@ -232,6 +232,41 @@ def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=
 
     return df
 
+
+def whatadd(what, key, values):
+    """Returns a list of ids setting .
+
+    Parameters
+    ----------
+    what : What object
+      It won't be modified
+    key : string
+      The key to set the values on
+    values : list of objects
+      The values to set key to in the configuration dictonary of what
+
+    Returns
+    -------
+    A list of ids generated from what by setting key to the different values.
+
+    Examples
+    --------
+    >>> what = What('permen', conf={'order': 2})
+    >>> print('\\n'.join(whatadd(what, 'out', ['A', 'B'])))
+    permen(order=2,out='A')
+    permen(order=2,out='B')
+    >>> print(what.id())
+    permen(order=2)
+    >>> print('\\n'.join(whatadd(what, 'order', ['A', 'B'])))
+    Traceback (most recent call last):
+    ...
+    ValueError: "order" already exists as a key in the id
+    """
+    what = what.copy()
+    if key in what.conf:
+        raise ValueError('"%s" already exists as a key in the id' % key)
+    return [what.set(key, value).id() for value in values]
+
 # --- Maintenance
 
 OLD_WHATID_PARSER = None

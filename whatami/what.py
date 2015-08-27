@@ -209,6 +209,15 @@ class What(object):
                 return w
             raise
 
+    # ---- Fluency
+
+    def set(self, key, value, copy=False):
+        """Sets a (non-recursive) key in the configuration dictionary and returns self or a copy."""
+        # implement recursive keys
+        what = self if not copy else self.copy()
+        what.conf[key] = value
+        return what
+
     # ---- ID string generation
 
     def id(self, nonids_too=False, maxlength=0):
