@@ -57,6 +57,7 @@ from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier, K
     RadiusNeighborsRegressor, NearestCentroid
 from sklearn.pipeline import FeatureUnion
 from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing.data import MinMaxScaler
 from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
@@ -160,10 +161,11 @@ _a(PLSSVD, 'plssvd')
 _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
 
 # Clusterers
-_a(KMeans, None, ('n_jobs', 'copy_x'))
+_a(KMeans, None, ('n_jobs', 'copy_x', 'verbose', 'precompute_distances'))
 
 # Preprocessing
 _a(Normalizer, None, ('copy',))
+_a(MinMaxScaler, None, ('copy',))
 
 # Pipelines
 _a(FeatureUnion, 'f_union', ('n_jobs',))
