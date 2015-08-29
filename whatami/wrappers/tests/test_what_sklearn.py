@@ -31,8 +31,8 @@ def test_pipeline():
     assert norm_id == "Normalizer(norm='l1')"
     kmeans = KMeans(n_clusters=12)
     kmeans_id = kmeans.what().id()
+    print(kmeans_id)
     assert kmeans_id == \
-        "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10," \
-        "precompute_distances='auto',random_state=None,tol=0.0001,verbose=0)"
+        "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
     assert pipeline_id == "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id)
