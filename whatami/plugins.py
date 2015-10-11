@@ -19,7 +19,6 @@ def what_plugin(_, v):
     """Deals with What objects."""
     if isinstance(v, What):
         return v.id()
-    return None
 
 
 def whatable_plugin(_, v):
@@ -47,32 +46,27 @@ def dict_plugin(what, v):
     if isinstance(v, dict):
         kvs = sorted('%s:%s' % (what.build_string(k), what.build_string(v)) for k, v in v.items())
         return '{%s}' % ','.join(kvs)
-    return None
 
 
 def set_plugin(what, v):
     if isinstance(v, set):
         elements = sorted(map(what.build_string, v))
         return '{%s}' % ','.join(elements) if len(elements) > 0 else 'set()'
-    return None
 
 
 def list_plugin(what, v):
     if isinstance(v, list):
         return '[%s]' % ','.join(map(what.build_string, v))
-    return None
 
 
 def tuple_plugin(what, v):
     if isinstance(v, tuple):
         return '(%s)' % ','.join(map(what.build_string, v))
-    return None
 
 
 def string_plugin(_, v):
     if isinstance(v, (str, str3)):
         return '\'%s\'' % v
-    return None
 
 
 # --- Function plugins
@@ -86,7 +80,6 @@ def partial_plugin(what, v):
     if isinstance(v, partial):
         name, keywords = callable2call(v)
         return What(name, keywords, what.non_id_keys).id()
-    return None
 
 
 def function_plugin(what, v):
