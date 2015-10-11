@@ -116,7 +116,7 @@ class What(object):
     def copy(self):
         """Returns a copy of this whatable object.
 
-        N.B. The configuration dictionary is copy is shallow;
+        N.B. The configuration dictionary copy is shallow;
         side-effects might happen if changes are made to mutable values.
         """
         return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
