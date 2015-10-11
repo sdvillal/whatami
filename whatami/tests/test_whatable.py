@@ -5,6 +5,7 @@ import pickle
 
 from ..what import is_whatable, What, trim_dict, config_dict_for_object
 from .fixtures import *
+from whatami.plugins import WhatamiPluginManager, anyobject0x_plugin, anyobject_plugin
 
 
 def test_whatable_decorator():
@@ -72,11 +73,21 @@ def test_whatable_builtins(c1):
 
 def test_whatable_anyobject(c1):
 
-    # Objects without proper representation
+    # Objects without proper representation - default
     class RandomClass(object):
         def __init__(self):
             self.param = 'yes'
     c1.p1 = RandomClass()
+    assert c1.what().id() == "C1(length=1,p1=RandomClass(),p2='bleh')"
+
+    # Objects without proper representation - deep introspection
+    WhatamiPluginManager.drop(anyobject0x_plugin)
+    WhatamiPluginManager.insert(partial(anyobject0x_plugin, deep=True), before=anyobject_plugin)
+    assert c1.what().id() == "C1(length=1,p1=RandomClass(param='yes'),p2='bleh')"
+    WhatamiPluginManager.reset()
+
+    # Making the object whatable
+    c1.p1 = whatable(RandomClass())
     assert c1.what().id() == "C1(length=1,p1=RandomClass(param='yes'),p2='bleh')"
 
 
