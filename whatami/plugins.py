@@ -96,12 +96,14 @@ def function_plugin(what, v):
 
 # --- "Capture all" plugins
 
-def anyobject0x_plugin(what, v):
+def anyobject0x_plugin(what, v, deep=False):
     """An object without proper representation, try a best effort."""
     if ' at 0x' in str(v):
-        what = What(v.__class__.__name__, config_dict_for_object(v), what.non_id_keys)
+        if deep:
+            what = What(v.__class__.__name__, config_dict_for_object(v), what.non_id_keys)
+        else:
+            what = What(v.__class__.__name__, {})
         return what.id()
-    return None
 
 
 def anyobject_plugin(_, v):

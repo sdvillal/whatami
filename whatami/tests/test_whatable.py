@@ -77,6 +77,8 @@ def test_whatable_anyobject(c1):
         def __init__(self):
             self.param = 'yes'
     c1.p1 = RandomClass()
+    assert c1.what().id() == "C1(length=1,p1=RandomClass(),p2='bleh')"
+    c1.p1 = whatable(RandomClass())
     assert c1.what().id() == "C1(length=1,p1=RandomClass(param='yes'),p2='bleh')"
 
 
