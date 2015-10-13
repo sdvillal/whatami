@@ -38,6 +38,18 @@ def test_parse_id_simple():
     assert what.conf == {'n_jobs': 3.4, 'n_trees': 100, 'seed': 'rng', 'deep': True, 'splitter': None, 'gini': False}
 
 
+def test_parse_id_infs_nans():
+    # -inf
+    what = parse_whatid("rfc(min=-inf)")
+    assert what['min'] == -float('inf')
+    # +inf
+    what = parse_whatid("rfc(min=inf)")
+    assert what['min'] == float('inf')
+    # nan
+    what = parse_whatid("rfc(min=nan)")
+    assert what['min'] != what['min']
+
+
 def test_parse_id_lists():
     # lists become lists
     what = parse_whatid("rfc(splits=[1,7,'end'])")
