@@ -178,11 +178,11 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_a_list(_, children):
-        return children[0]
+        return children[0] if len(children) else []
 
     @staticmethod
     def visit_a_tuple(_, children):
-        return tuple(children[0])
+        return tuple(children[0]) if len(children) else ()
 
     @staticmethod
     def visit_dictkv(_, children):

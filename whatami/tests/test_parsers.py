@@ -52,13 +52,13 @@ def test_parse_id_infs_nans():
 
 def test_parse_id_lists():
     # lists become lists
-    what = parse_whatid("rfc(splits=[1,7,'end'])")
+    what = parse_whatid("rfc(splits=[1,7,'end'],empty=[])")
     assert what.name == 'rfc'
-    assert what.conf == {'splits': [1, 7, 'end']}
+    assert what.conf == {'splits': [1, 7, 'end'], 'empty': []}
     # also with tuples
-    what = parse_whatid("rfc(splits=(1,7,'end'))")
+    what = parse_whatid("rfc(splits=(1,7,'end'),empty=[])")
     assert what.name == 'rfc'
-    assert what.conf == {'splits': (1, 7, 'end')}
+    assert what.conf == {'splits': (1, 7, 'end'), 'empty': []}
 
 
 def test_parse_id_dicts():
