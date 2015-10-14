@@ -274,12 +274,12 @@ class What(object):
 
     # --- ID to dictionary
 
-    def to_dict(self, name_key='whatname', nonids_too=False):
+    def to_dict(self, nonids_too=False):
         """Converts the id string of this What object into a dictionary.
         This should be suitable to store using json/yaml/... without custom converters.
         """
         from whatami import id2dict
-        return id2dict(self.id(nonids_too=nonids_too, maxlength=0), name_key=name_key)
+        return id2dict(self.id(nonids_too=nonids_too, maxlength=0))
 
 
 def whatareyou(obj,

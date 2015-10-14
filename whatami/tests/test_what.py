@@ -58,7 +58,7 @@ def test_what_str_magic(c1, c2, c3):
 
 def test_what_repr_magic(c1):
     empty_dict_repr = 'set()' if PY3 else 'set([])'
-    result = repr(c1.what()).replace("u'", "'")
+    result = repr(c1.what()).replace("'", "'")
     assert "What('C1', {" in result
     assert "'p2': 'bleh'" in result
     assert "'length': 1" in result
@@ -212,15 +212,17 @@ def test_pandas_plugin(df):
 
 
 def test_to_dict(c1, c2, c3):
-    assert c1.what().to_dict() == {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'}
-    assert c2.what().to_dict() == {'c1': {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'},
-                                   'name': 'roxanne',
-                                   'whatname': 'C2'}
-    assert c3.what().to_dict() == {'c1': {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'},
-                                   'c2': {'c1': {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'},
-                                          'name': 'roxanne',
-                                          'whatname': 'C2'},
-                                   'whatname': 'C3'}
-    with pytest.raises(Exception) as excinfo:
-        c2.what().to_dict(name_key='name')
-    assert str(excinfo.value) == 'Name field "name" collides with parameter name'
+    assert c1.what().to_dict() == {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'}, 'whatami_name': 'C1'}
+    assert c2.what().to_dict() == {'whatami_conf': {'c1': {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'},
+                                                           'whatami_name': 'C1'}, 'name': 'roxanne'},
+                                   'whatami_name': 'C2'}
+    expected = {'whatami_name': 'C3',
+                'whatami_conf': {'c2': {'whatami_name': 'C2',
+                                        'whatami_conf': {'c1': {'whatami_name': 'C1',
+                                                                'whatami_conf': {'p2': 'bleh',
+                                                                                 'length': 1,
+                                                                                 'p1': 'blah'}},
+                                                         'name': 'roxanne'}},
+                                 'c1': {'whatami_name': 'C1',
+                                        'whatami_conf': {'p2': 'bleh', 'length': 1, 'p1': 'blah'}}}}
+    assert c3.what().to_dict() == expected

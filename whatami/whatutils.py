@@ -46,25 +46,23 @@ def what2id(obj):
 id2what = parse_whatid
 
 
-def id2dict(whatid, name_key='whatname'):
-    """Makes a dictionary out of a whatami id.
+def id2dict(whatid):
+    """
+    Makes a dictionary out of a whatami id.
+
+    The dictionary has two keys, 'whatami_name' and 'whatami_conf'.
 
     This should be suitable to store using json/yaml/... without custom converters.
 
     Parameters
     ----------
-
-    name_key : string, default "whatname"
-      The key used to store What.name.
+    whatid : string
+      a whatami id string
     """
     what = id2what(whatid)
-    result = {name_key: what.name}
-    for k, v in what.conf.items():
-        if k == name_key:
-            raise Exception('Name field "%s" collides with parameter name' % name_key)
-        v = v if not isinstance(v, What) else v.to_dict(name_key=name_key)
-        result[k] = v
-    return result
+    return {'whatami_name': what.name,
+            'whatami_conf': {k: (v if not isinstance(v, What) else v.to_dict())
+                             for k, v in what.conf.items()}}
 
 
 def obj2what(obj,
