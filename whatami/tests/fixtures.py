@@ -105,7 +105,7 @@ def df(request):
     from distutils.version import LooseVersion
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
     dfs = {}
-    if LooseVersion('0.16') <= LooseVersion(pd.__version__) < LooseVersion('0.17'):
+    if LooseVersion('0.16') <= LooseVersion(pd.__version__) < LooseVersion('0.17'):  # pragma: no cover
         dfs = {
             'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
                     'fc5d5b43464052efbcd9e88dc0be4afd', '62171fe1114d5d961742dd95e6af37d7'),
@@ -120,7 +120,7 @@ def df(request):
             's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
                    'c0f4565b063599c6075ec6108cbca344', '74e14992d8587454d561b3194d11a984'),
         }
-    elif LooseVersion('0.17') <= LooseVersion(pd.__version__):
+    elif LooseVersion('0.17') <= LooseVersion(pd.__version__) < LooseVersion('0.18'):  # pragma: no cover
         dfs = {
             'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
                     '4e3bd601694d810b122afcaa03dc8657', '4e170e720983e95acf9f3dc236aad281'),
