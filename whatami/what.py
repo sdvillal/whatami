@@ -278,8 +278,8 @@ class What(object):
         """Converts the id string of this What object into a dictionary.
         This should be suitable to store using json/yaml/... without custom converters.
         """
-        from whatami import whatid2dict
-        return whatid2dict(self.id(nonids_too=nonids_too, maxlength=0), name_key=name_key)
+        from whatami import id2dict
+        return id2dict(self.id(nonids_too=nonids_too, maxlength=0), name_key=name_key)
 
 
 def whatareyou(obj,
