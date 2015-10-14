@@ -339,4 +339,3 @@ def whatid2dict(whatid, name_key='whatname'):
         v = v if not isinstance(v, What) else v.to_dict(name_key=name_key)
         result[k] = v
     return result
-
