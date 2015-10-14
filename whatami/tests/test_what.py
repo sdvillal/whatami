@@ -209,3 +209,15 @@ def test_pandas_plugin(df):
         return adjacency
 
     assert lpp.what().id() == "lpp(adjacency=%s(hash='%s'))" % (name, df_hash)
+
+
+def test_to_dict(c1, c2, c3):
+    assert c1.what().to_dict() == {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'}
+    assert c2.what().to_dict() == {'c1': {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'},
+                                   'name': 'roxanne',
+                                   'whatname': 'C2'}
+    assert c3.what().to_dict() == {'c1': {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'},
+                                   'c2': {'c1': {'length': 1, 'p1': 'blah', 'p2': 'bleh', 'whatname': 'C1'},
+                                          'name': 'roxanne',
+                                          'whatname': 'C2'},
+                                   'whatname': 'C3'}

@@ -320,3 +320,23 @@ def id2whatami4(oldwhatid):
         return oldid2what(oldwhatid).id()
     except NoMatch:
         return oldwhatid
+
+
+def whatid2dict(whatid, name_key='whatname'):
+    """Makes a dictionary out of a whatami id.
+
+    Parameters
+    ----------
+
+    name_key : string, default "whatname"
+      The key used to store What.name.
+    """
+    what = id2what(whatid)
+    result = {name_key: what.name}
+    for k, v in what.conf.items():
+        if k == name_key:
+            raise Exception('Name field "%d" collides with parameter name' % name_key)
+        v = v if not isinstance(v, What) else v.to_dict(name_key=name_key)
+        result[k] = v
+    return result
+
