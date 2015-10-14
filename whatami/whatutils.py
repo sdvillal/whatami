@@ -335,7 +335,7 @@ def whatid2dict(whatid, name_key='whatname'):
     result = {name_key: what.name}
     for k, v in what.conf.items():
         if k == name_key:
-            raise Exception('Name field "%d" collides with parameter name' % name_key)
+            raise Exception('Name field "%s" collides with parameter name' % name_key)
         v = v if not isinstance(v, What) else v.to_dict(name_key=name_key)
         result[k] = v
     return result

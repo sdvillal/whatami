@@ -221,3 +221,6 @@ def test_to_dict(c1, c2, c3):
                                           'name': 'roxanne',
                                           'whatname': 'C2'},
                                    'whatname': 'C3'}
+    with pytest.raises(Exception) as excinfo:
+        c2.what().to_dict(name_key='name')
+    assert str(excinfo.value) == 'Name field "name" collides with parameter name'
