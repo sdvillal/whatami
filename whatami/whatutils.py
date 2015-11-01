@@ -253,7 +253,7 @@ def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=
 
 
 def whatadd(what, key, values):
-    """Returns a list of ids setting .
+    """Returns a list of ids setting key to the specified values.
 
     Parameters
     ----------
