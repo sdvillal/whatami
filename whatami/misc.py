@@ -223,6 +223,38 @@ def _propsdict(obj):
             '__weakref__' != dname and not inspect.ismemberdescriptor(value)}
 
 
+def _classdict(obj):
+    """Returns a copy of the class dictionary, or {} if it does not exist.
+    Example:
+    >>> class C(object):
+    ...     x = 3
+    ...     __slots__ = 'y'
+    >>> class D(C):
+    ...     x = 'x'
+    ...     z = 'z'
+    >>> c = _classdict(C())
+    >>> print(c['x'])
+    3
+    >>> d = _classdict(D())
+    >>> print(d['x'])
+    x
+    >>> print(d['z'])
+    z
+    >>> d = D()
+    >>> d.z = 42
+    >>> d = _classdict(D())
+    >>> print(d['z'])
+    z
+    """
+    # N.B. this will include all methods down to object
+    # we could avoid it ala
+    #   http://stackoverflow.com/questions/4241171/inspect-python-class-attributes
+    # but I feel that can be brittle
+    # for example, one can wonder why removing only member from object and not also
+    # from other superclasses like object...
+    return dict(inspect.getmembers(obj.__class__))
+
+
 def trim_dict(cd, exclude_prefix='_', exclude_postfix='_', excludes=('what',)):
     """Removes keys from a dictionary if they are (pre/post)fixed or fully match forbidden strings.
 
@@ -253,7 +285,8 @@ def trim_dict(cd, exclude_prefix='_', exclude_postfix='_', excludes=('what',)):
 def config_dict_for_object(obj,
                            add_dict=True,
                            add_slots=True,
-                           add_properties=True):
+                           add_properties=True,
+                           add_class=False):
     """Returns a dictionary with obj attributes defined in __dict__, __slots__ or as @properties.
     Does not fail in case any of these are not defined.
 
@@ -270,6 +303,9 @@ def config_dict_for_object(obj,
 
     add_properties: boolean, default True
         Add all the attributes defined as obj @properties
+
+    add_class: boolean, default False
+        Add all the attributes defined in the class, but not in the instance
 
     Returns
     -------
@@ -313,6 +349,8 @@ def config_dict_for_object(obj,
     """
     # see also dir
     cd = {}
+    if add_class:
+        cd.update(_classdict(obj))
     if add_dict:
         cd.update(_dict(obj))
     if add_slots:
