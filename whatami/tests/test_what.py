@@ -110,12 +110,15 @@ def test_list_parameters(c1):
 
 
 def test_string_escape():
-    # single quotes inside strings need to be escaped
+    # single quotes inside strings need to be escaped...
     what = What(name='A', conf={'b': "C(d='hey')"})
     assert what.id() == "A(b='C(d=\\'hey\\')')"
-    # but already escaped quotes should not
+    # ...but already escaped quotes should not...
     what = What(name='A', conf={'b': "C(d=\\'hey\\')"})
     assert what.id() == "A(b='C(d=\\'hey\\')')"
+    # ...while other escaped chars should be kept
+    what = What(name='A', conf={'b': "C(d=\\'\\they\\')"})
+    assert what.id() == "A(b='C(d=\\'\\they\\')')"
 
 
 def test_what_keys():

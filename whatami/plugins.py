@@ -73,14 +73,7 @@ def tuple_plugin(what, v):
 #  http://stackoverflow.com/questions/1885181/how-do-i-un-escape-a-backslash-escaped-string-in-python
 
 
-_ESCAPE_SEQUENCE_RE = re.compile(r'''
-    ( \\U........      # 8-digit hex escapes
-    | \\u....          # 4-digit hex escapes
-    | \\x..            # 2-digit hex escapes
-    | \\[0-7]{1,3}     # Octal escapes
-    | \\N\{[^}]+\}     # Unicode characters by name
-    | \\[\\'"abfnrtv]  # Single-character escapes
-    )''', re.UNICODE | re.VERBOSE)
+_ESCAPE_SEQUENCE_RE = re.compile(r"\\'", re.UNICODE | re.VERBOSE)
 
 
 def _decode_escapes(s):
