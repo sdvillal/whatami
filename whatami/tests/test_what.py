@@ -109,6 +109,15 @@ def test_list_parameters(c1):
     assert w.what().id() == "WhatableWithList(list=[])"
 
 
+def test_string_escape():
+    # single quotes inside strings need to be escaped
+    what = What(name='A', conf={'b': "C(d='hey')"})
+    assert what.id() == "A(b='C(d=\\'hey\\')')"
+    # but already escaped quotes should not
+    what = What(name='A', conf={'b': "C(d=\\'hey\\')"})
+    assert what.id() == "A(b='C(d=\\'hey\\')')"
+
+
 def test_what_keys():
     what = What('tom', conf={'a': 3, 'b': 'z', 'c': 3.14}, non_id_keys=['b'])
     assert what.keys() == ['a', 'c']

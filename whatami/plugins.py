@@ -66,7 +66,7 @@ def tuple_plugin(what, v):
 
 def string_plugin(_, v):
     if isinstance(v, string_types):
-        return '\'%s\'' % v.replace("'", "\\'")
+        return '\'%s\'' % v.decode('string_escape').replace("'", "\\'")
 
 
 # --- Function plugins
