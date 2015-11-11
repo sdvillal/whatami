@@ -312,17 +312,8 @@ def whatareyou(obj,
     try:
         name, cd = callable2call(obj)
     except (ValueError, TypeError):
-        if type(obj) == list:  # N.B. do not use isinstance here
-            name = 'list'
-            cd = {'seq': obj}
-        elif type(obj) == tuple:
-            name = 'tuple'
-            cd = {'seq': obj}
-        elif type(obj) == set:
-            name = 'set'
-            cd = {'seq': obj}
-        elif type(obj) == dict:
-            name = 'dict'
+        if type(obj) in (list, tuple, set, dict):  # N.B. do not use isinstance here
+            name = obj.__class__.__name__
             cd = {'seq': obj}
         else:
             name = obj.__class__.__name__
