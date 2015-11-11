@@ -7,7 +7,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 import inspect
 from functools import partial
 
-from future.builtins import str as str3
+from future.utils import string_types
 
 from .what import What, whatareyou
 from .misc import callable2call, config_dict_for_object, curry2partial
@@ -65,8 +65,8 @@ def tuple_plugin(what, v):
 
 
 def string_plugin(_, v):
-    if isinstance(v, (str, str3)):
-        return '\'%s\'' % v
+    if isinstance(v, string_types):
+        return '\'%s\'' % v.replace("'", "\\'")
 
 
 # --- Function plugins
