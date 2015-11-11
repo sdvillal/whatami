@@ -289,6 +289,7 @@ def whatareyou(obj,
                add_dict=True,
                add_slots=True,
                add_properties=True,
+               add_class=True,
                # Keys ignoring options
                exclude_prefix='_',
                exclude_postfix='_',
@@ -312,9 +313,16 @@ def whatareyou(obj,
         name, cd = callable2call(obj)
     except ValueError:
         name = obj.__class__.__name__
-        cd = config_dict_for_object(obj, add_dict=add_dict, add_slots=add_slots, add_properties=add_properties)
+        cd = config_dict_for_object(obj,
+                                    add_dict=add_dict,
+                                    add_slots=add_slots,
+                                    add_properties=add_properties,
+                                    add_class=add_class)
     return What(name=name,
-                conf=trim_dict(cd, exclude_prefix=exclude_prefix, exclude_postfix=exclude_postfix, excludes=excludes),
+                conf=trim_dict(cd,
+                               exclude_prefix=exclude_prefix,
+                               exclude_postfix=exclude_postfix,
+                               excludes=excludes),
                 non_id_keys=non_id_keys)
 
 
@@ -362,6 +370,7 @@ def whatable(obj=None,
              add_dict=True,
              add_slots=True,
              add_properties=True,
+             add_class=True,
              exclude_prefix='_',
              exclude_postfix='_',
              excludes=('what',),
@@ -442,6 +451,7 @@ def whatable(obj=None,
                        add_dict=add_dict,
                        add_slots=add_slots,
                        add_properties=add_properties,
+                       add_class=add_class,
                        # Keys ignoring options
                        exclude_prefix=exclude_prefix,
                        exclude_postfix=exclude_postfix,
@@ -500,6 +510,7 @@ def whatable(obj=None,
                               add_dict=add_dict,
                               add_slots=add_slots,
                               add_properties=add_properties,
+                              add_class=add_class,
                               exclude_prefix=exclude_prefix,
                               exclude_postfix=exclude_postfix,
                               excludes=excludes)

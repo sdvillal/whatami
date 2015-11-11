@@ -368,3 +368,24 @@ def test_whatable_inplacefunc():
     assert afunc is wafunc
     assert afunc.what().id() == wafunc.what().id()
     assert wafunc.what().id() == 'afunc(x=3)'
+
+
+def test_whatable_class_members():
+
+    @whatable(add_class=True)
+    class C(object):
+        x = 1
+        y = 33
+
+    class D(C):
+        z = 'z'
+
+    class E(D):
+        x = 'x'
+
+    c = C()
+    assert c.what().id() == 'C(x=1,y=33)'
+    c.y = 'y'
+    assert c.what().id() == "C(x=1,y='y')"
+    assert D().what().id() == "D(x=1,y=33,z='z')"
+    assert E().what().id() == "E(x='x',y=33,z='z')"
