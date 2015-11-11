@@ -14,10 +14,6 @@ def build_whatami_parser(reduce_tree=False, debug=False):
 
     (this function also describes the grammar of the language that What.id() strings should pertain to)
 
-    Known limitations:
-      - does not handle escaped single quoted in strings
-       (for example, it will fail to parse "rfc(name='\'banyan\'')")
-
     Parameters
     ----------
     reduce_tree : boolean, default False
@@ -52,7 +48,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
                 StrMatch('-inf'), StrMatch('inf'), StrMatch('nan')]
 
     def a_string():
-        return StrMatch("'"), RegExMatch("[^']*"), StrMatch("'")
+        return StrMatch("'"), RegExMatch(r"(\\.|[^'])*"), StrMatch("'")
 
     def a_true():
         return StrMatch('True')
@@ -299,7 +295,7 @@ def build_oldwhatami_parser(reduce_tree=False, debug=False):
                 StrMatch('-inf'), StrMatch('inf'), StrMatch('nan')]
 
     def a_string():
-        return StrMatch("'"), RegExMatch("[^']*"), StrMatch("'")
+        return StrMatch("'"), RegExMatch(r"(\\.|[^'])*"), StrMatch("'")
 
     def a_true():
         return StrMatch('True')

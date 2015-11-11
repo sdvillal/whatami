@@ -140,6 +140,12 @@ def test_parse_id_wrong():
         parse_whatid('rfc5)')
 
 
+def test_parse_id_escaped():
+    whatid = "A(b='C(d=\\'hey\\')')"
+    what = parse_whatid(whatid)
+    assert what.id() == whatid
+
+
 def test_arpeggio_resilience():
     with pytest.raises(TypeError):
         parse_whatid(map)
