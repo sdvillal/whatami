@@ -5,6 +5,7 @@
 
 from __future__ import unicode_literals, absolute_import
 from future.builtins import str
+import sklearn
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
@@ -35,4 +36,8 @@ def test_pipeline():
     assert kmeans_id == \
         "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
-    assert pipeline_id == "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id)
+    expected_ids = (
+        "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id),  # sklearn < 0.17
+        "Pipeline(steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id),  # sklearn >= 0.17
+    )
+    assert pipeline_id in expected_ids
