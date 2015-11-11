@@ -286,7 +286,7 @@ def config_dict_for_object(obj,
                            add_dict=True,
                            add_slots=True,
                            add_properties=True,
-                           add_class=True):
+                           add_class=False):
     """Returns a dictionary with obj attributes defined in __dict__, __slots__ or as @properties.
     Does not fail in case any of these are not defined.
 
