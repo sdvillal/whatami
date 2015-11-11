@@ -23,7 +23,7 @@ def curry2partial(obj):
     """Transforms toolz/cytoolz curry sugar into standard partials."""
     try:
         return partial(obj.func, *obj.args, **obj.keywords)
-    except AttributeError:
+    except (AttributeError, TypeError):
         return obj
 
 
@@ -88,6 +88,7 @@ def callable2call(c, closure_extractor=lambda c: c):
     {'x': 5}
     """
     def callable2call_recursive(c, positional=None, keywords=None):
+        c = curry2partial(c)
         if keywords is None:
             keywords = {}
         if positional is None:
