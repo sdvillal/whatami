@@ -311,13 +311,26 @@ def whatareyou(obj,
     """
     try:
         name, cd = callable2call(obj)
-    except ValueError:
-        name = obj.__class__.__name__
-        cd = config_dict_for_object(obj,
-                                    add_dict=add_dict,
-                                    add_slots=add_slots,
-                                    add_properties=add_properties,
-                                    add_class=add_class)
+    except (ValueError, TypeError):
+        if type(obj) == list:  # N.B. do not use isinstance here
+            name = 'list'
+            cd = {'seq': obj}
+        elif type(obj) == tuple:
+            name = 'tuple'
+            cd = {'seq': obj}
+        elif type(obj) == set:
+            name = 'set'
+            cd = {'seq': obj}
+        elif type(obj) == dict:
+            name = 'dict'
+            cd = {'seq': obj}
+        else:
+            name = obj.__class__.__name__
+            cd = config_dict_for_object(obj,
+                                        add_dict=add_dict,
+                                        add_slots=add_slots,
+                                        add_properties=add_properties,
+                                        add_class=add_class)
     return What(name=name,
                 conf=trim_dict(cd,
                                exclude_prefix=exclude_prefix,
