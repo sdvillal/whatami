@@ -85,7 +85,7 @@ def _decode_escapes(s):
 
 def string_plugin(_, v):
     if isinstance(v, string_types):
-        return '\'%s\'' % _decode_escapes(v).replace("'", "\\'")
+        return '\'%s\'' % v.replace("\\'", "'").replace("'", "\\'")
 
 
 # --- Function plugins
