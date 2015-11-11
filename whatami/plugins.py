@@ -5,6 +5,8 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 import inspect
+import re
+import codecs
 from functools import partial
 
 from future.utils import string_types
@@ -64,9 +66,33 @@ def tuple_plugin(what, v):
         return '(%s)' % ','.join(map(what.build_string, v))
 
 
+# --- String plugin
+# The challenge is to manage escaping in a robust and general way
+# See:
+#  http://stackoverflow.com/questions/4020539/process-escape-sequences-in-a-string-in-python
+#  http://stackoverflow.com/questions/1885181/how-do-i-un-escape-a-backslash-escaped-string-in-python
+
+
+_ESCAPE_SEQUENCE_RE = re.compile(r'''
+    ( \\U........      # 8-digit hex escapes
+    | \\u....          # 4-digit hex escapes
+    | \\x..            # 2-digit hex escapes
+    | \\[0-7]{1,3}     # Octal escapes
+    | \\N\{[^}]+\}     # Unicode characters by name
+    | \\[\\'"abfnrtv]  # Single-character escapes
+    )''', re.UNICODE | re.VERBOSE)
+
+
+def _decode_escapes(s):
+    def decode_match(match):
+        return codecs.decode(match.group(0), 'unicode-escape')
+
+    return _ESCAPE_SEQUENCE_RE.sub(decode_match, s)
+
+
 def string_plugin(_, v):
     if isinstance(v, string_types):
-        return '\'%s\'' % v.decode('string_escape').replace("'", "\\'")
+        return '\'%s\'' % _decode_escapes(v).replace("'", "\\'")
 
 
 # --- Function plugins
