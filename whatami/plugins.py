@@ -5,8 +5,6 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 import inspect
-import re
-import codecs
 from functools import partial
 
 from future.utils import string_types
@@ -67,25 +65,25 @@ def tuple_plugin(what, v):
 
 
 # --- String plugin
-# The challenge is to manage escaping in a robust and general way
-# See:
-#  http://stackoverflow.com/questions/4020539/process-escape-sequences-in-a-string-in-python
+#
+# The challenge is to manage escaping in a robust and general way, without generating double escaping
+#
+# We need to unescape and escape back. In the general case this is difficult, see:
 #  http://stackoverflow.com/questions/1885181/how-do-i-un-escape-a-backslash-escaped-string-in-python
-
-
-_ESCAPE_SEQUENCE_RE = re.compile(r"\\'", re.UNICODE | re.VERBOSE)
-
-
-def _decode_escapes(s):
-    def decode_match(match):
-        return codecs.decode(match.group(0), 'unicode-escape')
-
-    return _ESCAPE_SEQUENCE_RE.sub(decode_match, s)
-
+#  http://stackoverflow.com/questions/4020539/process-escape-sequences-in-a-string-in-python
+# The more robust, general approach seems to use regexps:
+#   http://stackoverflow.com/a/24519338
+# But because we only want to escape unescaped single quotes, our case seems simpler to solve...
+#
 
 def string_plugin(_, v):
     if isinstance(v, string_types):
         return '\'%s\'' % v.replace("\\'", "'").replace("'", "\\'")
+        # This is correct because of these relations:
+        # "'" == "\'"
+        # "\\'" == "\\\'"
+        # "\\\\'" => == "\\\\\'"
+        # ...
 
 
 # --- Function plugins

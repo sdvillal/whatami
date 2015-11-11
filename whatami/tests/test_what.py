@@ -116,8 +116,11 @@ def test_string_escape():
     # ...but already escaped quotes should not...
     what = What(name='A', conf={'b': "C(d=\\'hey\\')"})
     assert what.id() == "A(b='C(d=\\'hey\\')')"
-    # ...while other escaped chars should be kept
+    # ...while other escaped chars should be kept...
     what = What(name='A', conf={'b': "C(d=\\'\\they\\')"})
+    assert what.id() == "A(b='C(d=\\'\\they\\')')"
+    # ...and many consecutive escaped "\" should be handled graciously...
+    what = What(name='A', conf={'b': "C(d=\\\'\\they\\')"})
     assert what.id() == "A(b='C(d=\\'\\they\\')')"
 
 
