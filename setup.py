@@ -32,9 +32,10 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Operating System :: Unix',
     ],
-    install_requires=['arpeggio>=1.0', 'future'],
+    install_requires=['arpeggio>=1.0', 'future>=0.15.2'],
     tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
     extras_require={
         'sklearn': ['scikit-learn'],
