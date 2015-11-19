@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
 
 
@@ -281,6 +281,13 @@ def parse_whatid(id_string, parser=None, visitor=None):
 
 def build_oldwhatami_parser(reduce_tree=False, debug=False):
 
+    # Unfortunately this is an almost verbatim copy & paste of "build_whatami_parser"
+    # It is hard to avoid code duplication here:
+    #  - Put rules in a class: Arpeggio does not like it (maybe accepting an object with certain API could be helpful)
+    #  - Put rules in module scope: functions for old-style and new-style rules should be named alike so that
+    #    visitors can be reused; it turns out that it is not possible to configure if we want new/old rules
+    #  - I have not explored other options (use peg syntax, use higher order functions that return rules...)
+
     # Syntactic noise
 
     def list_sep():
@@ -353,12 +360,12 @@ def build_oldwhatami_parser(reduce_tree=False, debug=False):
     def kv():
         return an_id, StrMatch('='), value
 
-    def kvs():
+    def kvs():  # Difference from copied-pasted
         return kv, ZeroOrMore('#', kv)
 
     # Top level
 
-    def whatami_id():
+    def whatami_id():  # Difference 1
         return [(an_id, StrMatch('#'), Optional(kvs)),
                 (StrMatch('"'), an_id, StrMatch('#'), Optional(kvs), StrMatch('"'))]
 
