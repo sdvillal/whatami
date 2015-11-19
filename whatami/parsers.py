@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import print_function, unicode_literals, absolute_import
+from __future__ import print_function, absolute_import
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
 
 
@@ -240,7 +240,14 @@ def parse_whatid(id_string, parser=None, visitor=None):
     Parameters
     ----------
     id_string : string
-        The whatami id string to parse back.
+      The whatami id string to parse back.
+
+    parser : An arpeggio parser or None
+      The parser. Use None to use the default parser.
+
+    visitor : An arpeggio visitor or None.
+      Semantic actions over the AST.
+      If None, the default visitor (that returns a What object) is used.
 
     Returns
     -------
