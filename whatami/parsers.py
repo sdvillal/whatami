@@ -221,10 +221,16 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     def visit_whatami_id(_, children):
         from whatami import What
         # lengths can be 1, 2 or 3
-        out_name = children[0] if len(children) == 3 else None
-        an_id = children[0] if len(children) != 3 else children[1]
-        kvs = list(children[1]) if len(children) > 1 else []
-        return What(an_id, dict(kvs), out_name=out_name)
+        if 3 == len(children):
+            out_name, an_id, kvs = children
+        elif 2 == len(children):
+            an_id, kvs = children
+            out_name = None
+        else:
+            an_id = children[0]
+            kvs = []
+            out_name = None
+        return What(an_id, dict(list(kvs)), out_name=out_name)
 
     @staticmethod
     def visit_whatami_id_top(_, children):
@@ -260,15 +266,13 @@ def parse_whatid(id_string, parser=None, visitor=None):
 
     Examples
     --------
-    >>> what, out_name = parse_whatid('rfc(n_jobs=multiple(here=100))')
+    >>> what = parse_whatid('rfc(n_jobs=multiple(here=100))')
     >>> print(what.name)
     rfc
     >>> print(len(what.conf))
     1
     >>> print(what.conf['n_jobs'].conf['here'])
     100
-    >>> out_name is None
-    True
     """
     global DEFAULT_WHATAMI_PARSER
     if parser is None:
@@ -377,6 +381,6 @@ def build_oldwhatami_parser(reduce_tree=False, debug=False):
                 (StrMatch('"'), an_id, StrMatch('#'), Optional(kvs), StrMatch('"'))]
 
     def whatami_id_top():
-        return Optional(an_id, StrMatch('#')), whatami_id, EOF
+        return whatami_id, EOF
 
     return ParserPython(whatami_id_top, reduce_tree=reduce_tree, debug=debug)
