@@ -19,11 +19,6 @@ def what_plugin(v):
     """Deals with What objects.
 
     This should be first in the plugin chain to allow free specialisation of the what method.
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
     """
     if isinstance(v, What):
         return v.id()
@@ -33,11 +28,6 @@ def whatable_plugin(v):
     """Deals with whatable objects.
 
     This should be second in the plugin chain to allow free specialisation of the what method.
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
     """
     if hasattr(v, 'what'):
         what = v.what
@@ -46,38 +36,20 @@ def whatable_plugin(v):
 
 
 def builtin_plugin(v):
-    """Special message if we try to pass something like sorted or np.array.
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
-    """
+    """Special message if we try to pass something like sorted or np.array."""
     if inspect.isbuiltin(v):
         raise Exception('Cannot determine the argspec of a non-python function (%s). '
                         'Please wrap it in a whatable' % v.__name__)
 
 
 def property_plugin(v):
-    """Deals with dynamic properties, which are at the moment unsupported (so always raises).
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
-    """
+    """Deals with dynamic properties, which are at the moment unsupported (so always raises)."""
     if isinstance(v, property):
         raise Exception('Dynamic properties are not suppported.')
 
 
 def dict_plugin(v):
-    """Returns an id for a dictionary, sorting the keys for unique id.
-
-    Parameters
-    ----------
-    v : dict
-      The object to represent as an id string
-    """
+    """Returns an id for a dictionary, sorting the keys for unique id."""
     if isinstance(v, dict):
         kvs = sorted('%s:%s' % (WhatamiPluginManager.build_string(k),
                                 WhatamiPluginManager.build_string(v)) for k, v in v.items())
@@ -88,13 +60,7 @@ def dict_plugin(v):
 
 
 def set_plugin(v):
-    """Generates an id for python sets and frozensets, sorting the elements for id uniqueness.
-
-    Parameters
-    ----------
-    v : set
-      The object to represent as an id string
-    """
+    """Generates an id for python sets and frozensets, sorting the elements for id uniqueness."""
     if isinstance(v, (set, frozenset)):
         elements = sorted(map(WhatamiPluginManager.build_string, v))
         if type(v) == frozenset:
@@ -106,13 +72,7 @@ def set_plugin(v):
 
 
 def list_plugin(v):
-    """Generate a unique id for lists.
-
-    Parameters
-    ----------
-    v : list
-      The object to represent as an id string
-    """
+    """Generate a unique id for lists."""
     if isinstance(v, list):
         id_string = '[%s]' % ','.join(map(WhatamiPluginManager.build_string, v))
         if type(v) == list:
@@ -121,13 +81,7 @@ def list_plugin(v):
 
 
 def tuple_plugin(v):
-    """Generate a unique id for tuples.
-
-    Parameters
-    ----------
-    v : tuple
-      The object to represent as an id string
-    """
+    """Generate a unique id for tuples."""
     if isinstance(v, tuple):
         id_string = '(%s)' % ','.join(map(WhatamiPluginManager.build_string, v))
         if type(v) == tuple:
@@ -153,11 +107,6 @@ def string_plugin(v):
     Returns an id string for a string.
 
     This is a single-quoted string with single-quoted characters escaped.
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
     """
     if isinstance(v, string_types):
         return '\'%s\'' % v.replace("\\'", "'").replace("'", "\\'")
@@ -176,11 +125,6 @@ def partial_plugin(v):
 
     Configuration are the set parameters ("compulsory") and default parameters
     ("weak", as can be changed at dispatch time).
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
     """
     v = curry2partial(v)
     if isinstance(v, partial):
@@ -192,11 +136,6 @@ def function_plugin(v):
     """Deals with functions, configuration are the keyword args.
 
     Note that configuration is "weak" and not guaranteed, as can change at dispatch time.
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
     """
     if inspect.isfunction(v):
         args, _, _, defaults = inspect.getargspec(v)
@@ -231,18 +170,13 @@ def anyobject0x_plugin(v, deep=False):
 
 
 def anyobject_plugin(v):
-    """Delegate to str, this should be the last plugin in the chain.
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
-    """
+    """Delegate to str, this should be the last plugin in the chain."""
     return str(v)
 
 # --- Numpy and pandas
 
 try:  # pragma: no cover
+    # noinspection PyPackageRequirements
     from joblib.hashing import hash as hasher
     hasher = partial(hasher, hash_name='md5')
 except ImportError:  # pragma: no cover
@@ -255,6 +189,7 @@ def has_joblib():
 
 
 try:  # pragma: no cover
+    # noinspection PyPackageRequirements
     import numpy as np
 except ImportError:  # pragma: no cover
     np = None
@@ -264,8 +199,8 @@ def has_numpy():
     """Returns True iff numpy can be imported."""
     return np is not None
 
-
 try:  # pragma: no cover
+    # noinspection PyPackageRequirements
     import pandas as pd
 except ImportError:  # pragma: no cover
     pd = None
@@ -277,44 +212,24 @@ def has_pandas():
 
 
 def numpy_plugin(v):
-    """Represents numpy arrays as "class(hash='xxx')".
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
-    """
+    """Represents numpy arrays as "class(hash='xxx')"."""
     if np is not None and hasher is not None:
         if isinstance(v, np.ndarray):
             return "%s(hash='%s')" % (v.__class__.__name__, hasher(v))
 
 
-def pandas_plugin(v):
-    """Represents pandas objects as any of "DataFrame(hash='xxx')" or "Series(hash='xxx')".
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
-    """
-    if pd is not None and hasher is not None:
-        if isinstance(v, (pd.DataFrame, pd.Series)):
-            return "%s(hash='%s')" % (v.__class__.__name__, hasher(v))
-
-
-# --- Random number generators plugins
-
 def rng_plugin(v):
-    """
-
-    Parameters
-    ----------
-    v : object
-      The object to represent as an id string
-    """
+    """Represents a numpy rng as a string RandomState(state=xxx)."""
     if np is not None and hasher is not None:
         if isinstance(v, np.random.RandomState):
             return "%s(state=%s)" % (v.__class__.__name__, whatareyou(v.__getstate__()).id())
+
+
+def pandas_plugin(v):
+    """Represents pandas objects as any of "DataFrame(hash='xxx')" or "Series(hash='xxx')"."""
+    if pd is not None and hasher is not None:
+        if isinstance(v, (pd.DataFrame, pd.Series)):
+            return "%s(hash='%s')" % (v.__class__.__name__, hasher(v))
 
 
 # --- Plugin management
