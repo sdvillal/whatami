@@ -38,6 +38,8 @@ setup(
     install_requires=['arpeggio>=1.0', 'future>=0.15.2'],
     tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
     extras_require={
+        'numpy': ['numpy', 'joblib'],
+        'pandas': ['pandas', 'joblib'],
         'sklearn': ['scikit-learn'],
         'docs': ['Sphinx'],
     },
