@@ -83,10 +83,11 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return StrMatch('{'), Optional(dict_elements), StrMatch('}')
 
     def an_empty_set():
-        return StrMatch('set()')
+        return [StrMatch('set()'), StrMatch('frozenset()')]
 
     def a_non_empty_set():
-        return StrMatch('{'), Optional(list_elements), StrMatch('}')
+        return [(StrMatch('{'), Optional(list_elements), StrMatch('}')),
+                (StrMatch('frozenset({'), Optional(list_elements), StrMatch('})'))]
 
     def a_set():
         return [an_empty_set, a_non_empty_set]
