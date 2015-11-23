@@ -97,15 +97,17 @@ class What(object):
         Keys here won't make it to the configuration string unless explicitly asked for
     """
 
-    __slots__ = ('name', 'conf', 'non_id_keys')
+    __slots__ = ('name', 'conf', 'non_id_keys', 'out_name')
 
     def __init__(self,
                  name,
                  conf,
-                 non_id_keys=None):
+                 non_id_keys=None,
+                 out_name=None):
         super(What, self).__init__()
         self.name = name
         self.conf = conf
+        self.out_name = out_name
         if non_id_keys is None:
             self.non_id_keys = set()
         elif is_iterable(non_id_keys):
@@ -119,7 +121,7 @@ class What(object):
         N.B. The configuration dictionary copy is shallow;
         side-effects might happen if changes are made to mutable values.
         """
-        return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
+        return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys, out_name=self.out_name)
 
     def flatten(self, non_ids_too=False, collections_too=False, recursive=True):
         """Returns two lists: keys and values.
@@ -184,15 +186,16 @@ class What(object):
 
     def __eq__(self, other):
         """Two configurations are equal if they have the same name and parameters."""
-        return hasattr(other, 'name') and self.name == other.name and \
-            hasattr(other, 'conf') and self.conf == other.conf
+        return (hasattr(other, 'name') and self.name == other.name and
+                hasattr(other, 'conf') and self.conf == other.conf and
+                hasattr(other, 'out_name') and self.out_name == other.out_name)
 
     def __str__(self):
         """The default representation is the configuration string including non_ids keys."""
         return self.id(nonids_too=True)
 
     def __repr__(self):
-        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self.non_id_keys)
+        return '%s(%r, %r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self.non_id_keys, self.out_name)
 
     def __getitem__(self, item):
         """Allow to retrieve configuration values using [] notations, recursively, whatami aware."""
@@ -237,6 +240,8 @@ class What(object):
                        for k, v in sorted(self.conf.items())
                        if nonids_too or k not in self.non_id_keys)
         my_id = '%s(%s)' % (self.name, kvs)
+        if self.out_name is not None:
+            my_id = '%s=%s' % (self.out_name, my_id)
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     def positional_id(self, name=None, non_ids_too=False, maxlength=0):
@@ -258,6 +263,8 @@ class What(object):
         name = name if name is not None else self.name
         my_id = '%s(%s)' % (name, ','.join(map(WhatamiPluginManager.build_string,
                                                self.values(non_ids_too=non_ids_too))))
+        if self.out_name is not None:
+            my_id = '%s=%s' % (self.out_name, my_id)
         return self._trim_too_long(my_id, maxlength=maxlength)
 
     @staticmethod

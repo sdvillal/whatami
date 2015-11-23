@@ -106,7 +106,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     # Top level
 
     def whatami_id():
-        return an_id, StrMatch('('), Optional(kvs), StrMatch(')')
+        return Optional(an_id, StrMatch('=')), an_id, StrMatch('('), Optional(kvs), StrMatch(')')
 
     def whatami_id_top():
         return whatami_id, EOF
@@ -219,10 +219,12 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_whatami_id(_, children):
-        from .what import What
-        an_id = children[0]
+        from whatami import What
+        # lengths can be 1, 2 or 3
+        out_name = children[0] if len(children) == 3 else None
+        an_id = children[0] if len(children) != 3 else children[1]
         kvs = list(children[1]) if len(children) > 1 else []
-        return What(an_id, dict(kvs))
+        return What(an_id, dict(kvs), out_name=out_name)
 
     @staticmethod
     def visit_whatami_id_top(_, children):
@@ -252,17 +254,21 @@ def parse_whatid(id_string, parser=None, visitor=None):
 
     Returns
     -------
-    A `whatami.What` object, containing name and conf (name is a string and configuration is a dictionary).
+    A two-tuple (what, out_name)
+    what is a `whatami.What` object, containing name and conf
+    out_name is a string or None
 
     Examples
     --------
-    >>> what = parse_whatid('rfc(n_jobs=multiple(here=100))')
+    >>> what, out_name = parse_whatid('rfc(n_jobs=multiple(here=100))')
     >>> print(what.name)
     rfc
     >>> print(len(what.conf))
     1
     >>> print(what.conf['n_jobs'].conf['here'])
     100
+    >>> out_name is None
+    True
     """
     global DEFAULT_WHATAMI_PARSER
     if parser is None:
@@ -371,6 +377,6 @@ def build_oldwhatami_parser(reduce_tree=False, debug=False):
                 (StrMatch('"'), an_id, StrMatch('#'), Optional(kvs), StrMatch('"'))]
 
     def whatami_id_top():
-        return whatami_id, EOF
+        return Optional(an_id, StrMatch('#')), whatami_id, EOF
 
     return ParserPython(whatami_id_top, reduce_tree=reduce_tree, debug=debug)
