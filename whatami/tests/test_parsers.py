@@ -16,7 +16,7 @@ import pytest
 
 @pytest.mark.xfail(reason='known limitation, to fix or to document as permanent limitation')
 def test_parse_whatid_within_string():  # pragma: no cover
-    what, _ = parse_whatid("rfc(name=''banyan'')")
+    what = parse_whatid("rfc(name=''banyan'')")
     assert what.name == 'rfc'
     assert what.conf == {'name': "'banyan'"}
 
