@@ -228,11 +228,12 @@ class What(object):
         nonids_too : boolean, default False
           Non-ids keys are ignored if nonids_too is False.
 
-        malength : int, default 0
+        maxlength : int, default 0
           If the id length goes over maxlength, it gets replaced by its sha1.
           If <= 0, it is ignored and the full id string will be returned.
         """
-        kvs = ','.join('%s=%s' % (k, self.build_string(v))
+        from whatami.plugins import WhatamiPluginManager
+        kvs = ','.join('%s=%s' % (k, WhatamiPluginManager.build_string(v))
                        for k, v in sorted(self.conf.items())
                        if nonids_too or k not in self.non_id_keys)
         my_id = '%s(%s)' % (self.name, kvs)
@@ -253,17 +254,11 @@ class What(object):
           If the id length goes over maxlength, it gets replaced by its sha1.
           If <= 0, it is ignored and the full id string will be returned.
         """
+        from whatami.plugins import WhatamiPluginManager
         name = name if name is not None else self.name
-        my_id = '%s(%s)' % (name, ','.join(map(self.build_string, self.values(non_ids_too=non_ids_too))))
+        my_id = '%s(%s)' % (name, ','.join(map(WhatamiPluginManager.build_string,
+                                               self.values(non_ids_too=non_ids_too))))
         return self._trim_too_long(my_id, maxlength=maxlength)
-
-    def build_string(self, v):
-        """Returns the nested configuration string for a variety of value types."""
-        from .plugins import WhatamiPluginManager
-        for plugin in WhatamiPluginManager.plugins():
-            string = plugin(self, v)
-            if string is not None:
-                return string
 
     @staticmethod
     def _trim_too_long(string, maxlength=0):
