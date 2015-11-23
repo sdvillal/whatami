@@ -5,6 +5,7 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 import inspect
+from collections import OrderedDict
 from functools import partial
 
 from future.utils import string_types
@@ -49,10 +50,15 @@ def property_plugin(v):
 
 
 def dict_plugin(v):
-    """Returns an id for a dictionary, sorting the keys for unique id."""
+    """Returns an id for dictionaries, sorting the keys for unique id (except for OrderedDict).
+    Any custom representation for a dictionary subclass must precede this plugin in the plugins chain.
+    """
     if isinstance(v, dict):
-        kvs = sorted('%s:%s' % (WhatamiPluginManager.build_string(k),
-                                WhatamiPluginManager.build_string(v)) for k, v in v.items())
+        kvs = ['%s:%s' % (WhatamiPluginManager.build_string(dict_k),
+                          WhatamiPluginManager.build_string(dict_v))
+               for dict_k, dict_v in v.items()]
+        if not isinstance(v, OrderedDict):
+            kvs = sorted(kvs)
         id_string = '{%s}' % ','.join(kvs)
         if type(v) == dict:
             return id_string

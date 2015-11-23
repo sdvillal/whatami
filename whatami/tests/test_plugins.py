@@ -17,16 +17,12 @@ def test_dict_plugin():
     # dict
     assert dict_plugin({}) == '{}'
     assert (dict_plugin({'int': 1, 'str': '1', 'func': test_dict_plugin}) ==
-            "{'int': 1, 'str': '1', 'func': test_dict_plugin}")
-
-    # defaultdict
+            "{'func':test_dict_plugin(),'int':1,'str':'1'}")
 
     # OrderedDict
-    assert dict_plugin(OrderedDict()) == 'OrderedDict()'
+    assert dict_plugin(OrderedDict()) == 'OrderedDict(seq={})'
     assert (dict_plugin(OrderedDict([('int', 1), ('str', '1'), ('func', test_dict_plugin)])) ==
-            "OrderedDict([('int',1),('str','1'),('func',test_dict_plugin)])")
-
-    # Counter
+            "OrderedDict(seq={'int':1,'str':'1','func':test_dict_plugin()})")
 
 
 def test_set_plugin():
