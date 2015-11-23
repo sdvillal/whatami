@@ -236,6 +236,12 @@ def pandas_plugin(v):
     if pd is not None and hasher is not None:
         if isinstance(v, (pd.DataFrame, pd.Series)):
             return "%s(hash='%s')" % (v.__class__.__name__, hasher(v))
+    #
+    # Given the variability of pandas key classes and the stability of numpy
+    # ABI it should repay to create an spesialised pandas plugin that just
+    # cast indices and data as arrays and use these to generate IDs that
+    # are stable between pandas versions.
+    #
 
 
 # --- Plugin management
@@ -386,31 +392,3 @@ class WhatamiPluginManager(object):
             string = plugin(v)
             if string is not None:
                 return string
-
-#
-# simplify plugins api
-#
-# Narrows the application of collections types (list, tuple, set, dict)
-# to these actual basic types, not trying for subclasses.
-# We probably want to selectively add things like
-#
-# Makes the numpy plugin take care of pandas.
-# Still, given the variability of pandas key classes and the stability of numpy
-# ABI it should repay to create an spesialised pandas plugin that just
-# cast indices and data as arrays and use these to generate IDs that
-# are stable between pandas versions.
-#
-# Passing a what instance is not necessary anymore, so enabling they
-# direct usage in whatareyou
-#
-# Adds docs where necessary and where not.
-# Sometimes it is a redundant copy and paste to make pycharm happy.
-#
-# Brings "build_string" to the PluginManager
-#
-# Adds a RandomState plugin
-#
-# Consistently use implicit None return
-#
-# Add frozenset
-#
