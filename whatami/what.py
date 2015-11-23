@@ -244,14 +244,11 @@ class What(object):
             my_id = '%s=%s' % (self.out_name, my_id)
         return self._trim_too_long(my_id, maxlength=maxlength)
 
-    def positional_id(self, name=None, non_ids_too=False, maxlength=0):
+    def positional_id(self, non_ids_too=False, maxlength=0):
         """Returns an id without parameter names, just values.
 
         Parameters
         ----------
-        name : string, default None
-          The name to use in the id string; if None, the name of self is used.
-
         non_ids_too : boolena, default False
           Whether to include the non-id values too.
 
@@ -260,9 +257,8 @@ class What(object):
           If <= 0, it is ignored and the full id string will be returned.
         """
         from whatami.plugins import WhatamiPluginManager
-        name = name if name is not None else self.name
-        my_id = '%s(%s)' % (name, ','.join(map(WhatamiPluginManager.build_string,
-                                               self.values(non_ids_too=non_ids_too))))
+        my_id = '%s(%s)' % (self.name, ','.join(map(WhatamiPluginManager.build_string,
+                                                    self.values(non_ids_too=non_ids_too))))
         if self.out_name is not None:
             my_id = '%s=%s' % (self.out_name, my_id)
         return self._trim_too_long(my_id, maxlength=maxlength)

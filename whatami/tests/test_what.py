@@ -32,7 +32,8 @@ def test_configuration_nonids():
 def test_whatid():
     assert what2id(None) is None
     assert what2id('Myself') == 'Myself'
-    assert what2id(int) == 'int()'  # correct behavior?
+    assert what2id(int) == 'int()'  # FIXME correct behavior?
+    assert what2id(What(name='me', conf={'x': 1}, out_name='you')) == 'you=me(x=1)'
 
 
 def test_non_id_keys(c3):
@@ -137,10 +138,12 @@ def test_what_values():
 
 
 def test_what_positional_ids():
+    what = What('tom', conf={'a': 3, 'b': 'z', 'c': 3.14}, non_id_keys=['b'], out_name='jerry')
+    assert what.positional_id() == 'jerry=tom(3,3.14)'
+    assert what.positional_id(non_ids_too=True) == "jerry=tom(3,'z',3.14)"
     what = What('tom', conf={'a': 3, 'b': 'z', 'c': 3.14}, non_id_keys=['b'])
     assert what.positional_id() == 'tom(3,3.14)'
     assert what.positional_id(non_ids_too=True) == "tom(3,'z',3.14)"
-    assert what.positional_id(name='jerry', non_ids_too=True) == "jerry(3,'z',3.14)"
 
 
 def test_tuple_parameters(c1):
