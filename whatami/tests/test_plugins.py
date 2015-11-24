@@ -1,6 +1,9 @@
 # coding=utf-8
 """Test id string generation plugins on isolation."""
 from collections import namedtuple, OrderedDict
+
+from future.utils import PY2
+
 from whatami.plugins import (string_plugin, rng_plugin, has_joblib, has_numpy,
                              tuple_plugin, list_plugin, set_plugin, dict_plugin)
 import pytest
@@ -70,12 +73,15 @@ def test_tuple_plugin():
 @pytest.mark.skipif(not (has_numpy() and has_joblib()),
                     reason='the numpy RandomState plugin requires both numpy and joblib')
 def test_rng_plugin():
+    # noinspection PyPackageRequirements
     import numpy as np
     # The state will depend on the seed...
     rng = np.random.RandomState(0)
-    expected = "RandomState(state=tuple(seq=('MT19937',ndarray(hash='5b6099022c0aef7e918077c51e887a8a'),624,0,0.0)))"
+    expected_hash = '5b6099022c0aef7e918077c51e887a8a' if PY2 else '17debf0d63a4ef211ea37a05af1f66f7'
+    expected = "RandomState(state=tuple(seq=('MT19937',ndarray(hash='%s'),624,0,0.0)))" % expected_hash
     assert rng_plugin(rng) == expected
     # ...and on where are we on the pseudo-random sampling chain
     rng.uniform(size=1)
-    expected = "RandomState(state=tuple(seq=('MT19937',ndarray(hash='831b5fa156c3cd5941c1a8090c13aa4a'),2,0,0.0)))"
+    expected_hash = '831b5fa156c3cd5941c1a8090c13aa4a' if PY2 else 'd700a30c6dc897d7ac58a508e48cc095'
+    expected = "RandomState(state=tuple(seq=('MT19937',ndarray(hash='%s'),2,0,0.0)))" % expected_hash
     assert rng_plugin(rng) == expected
