@@ -61,6 +61,7 @@ def id2dict(whatid):
     """
     what = id2what(whatid)
     return {'whatami_name': what.name,
+            'whatami_out_name': what.out_name,
             'whatami_conf': {k: (v if not isinstance(v, What) else v.to_dict())
                              for k, v in what.conf.items()}}
 

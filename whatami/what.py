@@ -68,6 +68,7 @@ buy(currency='euro',price=4294967296)
 from __future__ import print_function, unicode_literals, absolute_import
 import hashlib
 import inspect
+from copy import deepcopy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
 
@@ -81,20 +82,28 @@ class What(object):
 
     Configurations are just dictionaries {key: value} that can nest and have a name.
 
-    This helper class allows to represent configurations as (reasonable, python-like) strings.
+    This class allows to represent configurations as (reasonable, python-like) strings.
 
     Parameters
     ----------
     name : string
-        The name of this configuration (e.g. "RandomForest").
+      The name of this configuration (e.g. "RandomForest").
 
     conf : dictionary
-        The {key:value} property dictionary for this configuration.
+      The {key:value} property dictionary for this configuration.
 
     non_id_keys : iterable (usually of strings), default None
-        A list of keys that should not be considered when generating ids.
-        For example: "num_threads" or "verbose" should not change results when fitting a model.
-        Keys here won't make it to the configuration string unless explicitly asked for
+      A list of keys that should not be considered when generating ids.
+      For example: "num_threads" or "verbose" should not change results when fitting a model.
+      Keys here won't make it to the configuration string unless explicitly asked for
+
+    out_name : string, default None
+      If provided, the output name of the computation (e.g. "feature_importances")
+
+    Attributes
+    ----------
+    `What` objects carry the same attributes passed to the constructor:
+    name, conf, non_id_keys and out_name.
     """
 
     __slots__ = ('name', 'conf', 'non_id_keys', 'out_name')
@@ -115,13 +124,16 @@ class What(object):
         else:
             raise Exception('non_ids must be None or an iterable')
 
-    def copy(self):
+    def copy(self, deep=False):
         """Returns a copy of this whatable object.
 
-        N.B. The configuration dictionary copy is shallow;
-        side-effects might happen if changes are made to mutable values.
+        N.B. If the copy is shallow, side-effects might happen
+        if changes are made to mutable values in the configuration dictionary.
         """
-        return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys, out_name=self.out_name)
+        return What(name=self.name,
+                    conf=self.conf.copy() if not deep else deepcopy(self.conf),
+                    non_id_keys=self.non_id_keys,
+                    out_name=self.out_name)
 
     def flatten(self, non_ids_too=False, collections_too=False, recursive=True):
         """Returns two lists: keys and values.
@@ -185,7 +197,7 @@ class What(object):
     # ---- Magics
 
     def __eq__(self, other):
-        """Two configurations are equal if they have the same name and parameters."""
+        """Two configurations are equal if they have the same name, out_name and parameters."""
         return (hasattr(other, 'name') and self.name == other.name and
                 hasattr(other, 'conf') and self.conf == other.conf and
                 hasattr(other, 'out_name') and self.out_name == other.out_name)
@@ -195,7 +207,12 @@ class What(object):
         return self.id(nonids_too=True)
 
     def __repr__(self):
-        return '%s(%r, %r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self.non_id_keys, self.out_name)
+        return '%s(%r, %r, %r, %r)' % (
+            self.__class__.__name__,
+            self.name,
+            self.conf,
+            self.non_id_keys,
+            self.out_name)
 
     def __getitem__(self, item):
         """Allow to retrieve configuration values using [] notations, recursively, whatami aware."""

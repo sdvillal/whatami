@@ -230,17 +230,27 @@ def test_pandas_plugin(df):
 
 
 def test_to_dict(c1, c2, c3):
-    assert c1.what().to_dict() == {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'}, 'whatami_name': 'C1'}
+    assert c1.what().to_dict() == {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'},
+                                   'whatami_name': 'C1',
+                                   'whatami_out_name': None}
     assert c2.what().to_dict() == {'whatami_conf': {'c1': {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'},
-                                                           'whatami_name': 'C1'}, 'name': 'roxanne'},
-                                   'whatami_name': 'C2'}
+                                                           'whatami_name': 'C1',
+                                                           'whatami_out_name': None},
+                                                    'name': 'roxanne'},
+                                   'whatami_name': 'C2',
+                                   'whatami_out_name': None}
+
     expected = {'whatami_name': 'C3',
+                'whatami_out_name': None,
                 'whatami_conf': {'c2': {'whatami_name': 'C2',
+                                        'whatami_out_name': None,
                                         'whatami_conf': {'c1': {'whatami_name': 'C1',
+                                                                'whatami_out_name': None,
                                                                 'whatami_conf': {'p2': 'bleh',
                                                                                  'length': 1,
                                                                                  'p1': 'blah'}},
                                                          'name': 'roxanne'}},
                                  'c1': {'whatami_name': 'C1',
+                                        'whatami_out_name': None,
                                         'whatami_conf': {'p2': 'bleh', 'length': 1, 'p1': 'blah'}}}}
     assert c3.what().to_dict() == expected
