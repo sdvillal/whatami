@@ -83,10 +83,11 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return StrMatch('{'), Optional(dict_elements), StrMatch('}')
 
     def an_empty_set():
-        return StrMatch('set()')
+        return [StrMatch('set()'), StrMatch('frozenset()')]
 
     def a_non_empty_set():
-        return StrMatch('{'), Optional(list_elements), StrMatch('}')
+        return [(StrMatch('{'), Optional(list_elements), StrMatch('}')),
+                (StrMatch('frozenset({'), Optional(list_elements), StrMatch('})'))]
 
     def a_set():
         return [an_empty_set, a_non_empty_set]
@@ -105,7 +106,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     # Top level
 
     def whatami_id():
-        return an_id, StrMatch('('), Optional(kvs), StrMatch(')')
+        return Optional(an_id, StrMatch('=')), an_id, StrMatch('('), Optional(kvs), StrMatch(')')
 
     def whatami_id_top():
         return whatami_id, EOF
@@ -218,10 +219,18 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_whatami_id(_, children):
-        from .what import What
-        an_id = children[0]
-        kvs = list(children[1]) if len(children) > 1 else []
-        return What(an_id, dict(kvs))
+        from whatami import What
+        # lengths can be 1, 2 or 3
+        if 3 == len(children):
+            out_name, an_id, kvs = children
+        elif 2 == len(children):
+            an_id, kvs = children
+            out_name = None
+        else:
+            an_id = children[0]
+            kvs = []
+            out_name = None
+        return What(an_id, dict(list(kvs)), out_name=out_name)
 
     @staticmethod
     def visit_whatami_id_top(_, children):
@@ -251,7 +260,9 @@ def parse_whatid(id_string, parser=None, visitor=None):
 
     Returns
     -------
-    A `whatami.What` object, containing name and conf (name is a string and configuration is a dictionary).
+    A two-tuple (what, out_name)
+    what is a `whatami.What` object, containing name and conf
+    out_name is a string or None
 
     Examples
     --------

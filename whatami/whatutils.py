@@ -14,8 +14,8 @@ from arpeggio import NoMatch
 
 from future.builtins import str as str3
 
-from .parsers import parse_whatid, build_oldwhatami_parser
-from .what import whatable, whatareyou, What, is_whatable
+from whatami.parsers import parse_whatid, build_oldwhatami_parser
+from whatami.what import whatable, whatareyou, What, is_whatable
 
 
 def what2id(obj):
@@ -61,6 +61,7 @@ def id2dict(whatid):
     """
     what = id2what(whatid)
     return {'whatami_name': what.name,
+            'whatami_out_name': what.out_name,
             'whatami_conf': {k: (v if not isinstance(v, What) else v.to_dict())
                              for k, v in what.conf.items()}}
 

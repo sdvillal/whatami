@@ -5,6 +5,7 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 import inspect
+from collections import OrderedDict
 from functools import partial
 
 from future.utils import string_types
@@ -15,55 +16,86 @@ from .misc import callable2call, config_dict_for_object, curry2partial
 
 # --- Basic plugins
 
-def what_plugin(_, v):
-    """Deals with What objects."""
+def what_plugin(v):
+    """Deals with What objects.
+
+    This should be first in the plugin chain to allow free specialisation of the what method.
+    """
     if isinstance(v, What):
         return v.id()
 
 
-def whatable_plugin(_, v):
-    """Deals with whatable objects."""
+def whatable_plugin(v):
+    """Deals with whatable objects.
+
+    This should be second in the plugin chain to allow free specialisation of the what method.
+    """
     if hasattr(v, 'what'):
         what = v.what
         what = what() if callable(what) else what
-        return what_plugin(None, what)
+        return what_plugin(what)
 
 
-def builtin_plugin(_, v):
-    """Special message if we try to pass something like sorted or np.array"""
+def builtin_plugin(v):
+    """Special message if we try to pass something like sorted or np.array."""
     if inspect.isbuiltin(v):
         raise Exception('Cannot determine the argspec of a non-python function (%s). '
                         'Please wrap it in a whatable' % v.__name__)
 
 
-def property_plugin(_, v):
-    """Deals with dynamic properties."""
+def property_plugin(v):
+    """Deals with dynamic properties, which are at the moment unsupported (so always raises)."""
     if isinstance(v, property):
         raise Exception('Dynamic properties are not suppported.')
 
 
-def dict_plugin(what, v):
+def dict_plugin(v):
+    """Returns an id for dictionaries, sorting the keys for unique id (except for OrderedDict).
+    Any custom representation for a dictionary subclass must precede this plugin in the plugins chain.
+    """
     if isinstance(v, dict):
-        kvs = sorted('%s:%s' % (what.build_string(k), what.build_string(v)) for k, v in v.items())
-        return '{%s}' % ','.join(kvs)
+        kvs = ['%s:%s' % (WhatamiPluginManager.build_string(dict_k),
+                          WhatamiPluginManager.build_string(dict_v))
+               for dict_k, dict_v in v.items()]
+        if not isinstance(v, OrderedDict):
+            kvs = sorted(kvs)
+        id_string = '{%s}' % ','.join(kvs)
+        if type(v) == dict:
+            return id_string
+        return '%s(seq=%s)' % (v.__class__.__name__, id_string)
 
 
-def set_plugin(what, v):
-    if isinstance(v, set):
-        elements = sorted(map(what.build_string, v))
-        return '{%s}' % ','.join(elements) if len(elements) > 0 else 'set()'
+def set_plugin(v):
+    """Generates an id for python sets and frozensets, sorting the elements for id uniqueness."""
+    if isinstance(v, (set, frozenset)):
+        elements = sorted(map(WhatamiPluginManager.build_string, v))
+        if type(v) == frozenset:
+            return 'frozenset({%s})' % ','.join(elements) if elements else 'frozenset()'
+        id_string = '{%s}' % ','.join(elements) if len(elements) > 0 else 'set()'
+        if type(v) == set:
+            return id_string
+        return '%s(seq=%s)' % (v.__class__.__name__, id_string)
 
 
-def list_plugin(what, v):
+def list_plugin(v):
+    """Generate a unique id for lists."""
     if isinstance(v, list):
-        return '[%s]' % ','.join(map(what.build_string, v))
+        id_string = '[%s]' % ','.join(map(WhatamiPluginManager.build_string, v))
+        if type(v) == list:
+            return id_string
+        return '%s(seq=%s)' % (v.__class__.__name__, id_string)
 
 
-def tuple_plugin(what, v):
+def tuple_plugin(v):
+    """Generate a unique id for tuples."""
     if isinstance(v, tuple):
-        return '(%s)' % ','.join(map(what.build_string, v))
+        id_string = '(%s)' % ','.join(map(WhatamiPluginManager.build_string, v))
+        if type(v) == tuple:
+            return id_string
+        return '%s(seq=%s)' % (v.__class__.__name__, id_string)
 
 
+#
 # --- String plugin
 #
 # The challenge is to manage escaping in a robust and general way, without generating double escaping
@@ -76,7 +108,12 @@ def tuple_plugin(what, v):
 # But because we only want to escape unescaped single quotes, our case seems simpler to solve...
 #
 
-def string_plugin(_, v):
+def string_plugin(v):
+    """
+    Returns an id string for a string.
+
+    This is a single-quoted string with single-quoted characters escaped.
+    """
     if isinstance(v, string_types):
         return '\'%s\'' % v.replace("\\'", "'").replace("'", "\\'")
         # This is correct because of these relations:
@@ -89,47 +126,63 @@ def string_plugin(_, v):
 # --- Function plugins
 
 
-def partial_plugin(what, v):
+def partial_plugin(v):
     """Deals with partials and toolz curried functions.
-    Configuration are the set parameters ("compulsory") and default parameters ("weak").
+
+    Configuration are the set parameters ("compulsory") and default parameters
+    ("weak", as can be changed at dispatch time).
     """
     v = curry2partial(v)
     if isinstance(v, partial):
         name, keywords = callable2call(v)
-        return What(name, keywords, what.non_id_keys).id()
+        return What(name, keywords).id()
 
 
-def function_plugin(what, v):
-    """Deals with functions, configuration are the keyword args."""
+def function_plugin(v):
+    """Deals with functions, configuration are the keyword args.
+
+    Note that configuration is "weak" and not guaranteed, as can change at dispatch time.
+    """
     if inspect.isfunction(v):
         args, _, _, defaults = inspect.getargspec(v)
         defaults = [] if not defaults else defaults
         args = [] if not args else args
         params_with_defaults = dict(zip(args[-len(defaults):], defaults))
         name = v.__name__ if v.__name__ != '<lambda>' else 'lambda'
-        what = What(name, params_with_defaults, what.non_id_keys)
+        what = What(name, params_with_defaults)
         return what.id()
 
 
 # --- "Capture all" plugins
 
-def anyobject0x_plugin(what, v, deep=False):
-    """An object without proper representation, try a best effort."""
+def anyobject0x_plugin(v, deep=False):
+    """An object without proper representation, try a best effort.
+
+    Parameters
+    ----------
+    v : object
+      The object to represent as an id string
+
+    deep : boolean, default False
+      If True, an id string will be generated recursively for all members of v
+      Note that this is quite unsafe and we do not check for circular recursion.
+    """
     if ' at 0x' in str(v):
         if deep:
-            what = What(v.__class__.__name__, config_dict_for_object(v), what.non_id_keys)
+            what = What(v.__class__.__name__, config_dict_for_object(v))
         else:
             what = What(v.__class__.__name__, {})
         return what.id()
 
 
-def anyobject_plugin(_, v):
+def anyobject_plugin(v):
     """Delegate to str, this should be the last plugin in the chain."""
     return str(v)
 
 # --- Numpy and pandas
 
 try:  # pragma: no cover
+    # noinspection PyPackageRequirements
     from joblib.hashing import hash as hasher
     hasher = partial(hasher, hash_name='md5')
 except ImportError:  # pragma: no cover
@@ -142,6 +195,7 @@ def has_joblib():
 
 
 try:  # pragma: no cover
+    # noinspection PyPackageRequirements
     import numpy as np
 except ImportError:  # pragma: no cover
     np = None
@@ -151,8 +205,8 @@ def has_numpy():
     """Returns True iff numpy can be imported."""
     return np is not None
 
-
 try:  # pragma: no cover
+    # noinspection PyPackageRequirements
     import pandas as pd
 except ImportError:  # pragma: no cover
     pd = None
@@ -163,22 +217,31 @@ def has_pandas():
     return pd is not None
 
 
-def numpy_plugin(_, v):
-    """Represents numpy arrays as strings "ndarray(hash='xxx')"."""
+def numpy_plugin(v):
+    """Represents numpy arrays as "class(hash='xxx')"."""
     if np is not None and hasher is not None:
         if isinstance(v, np.ndarray):
-            return "ndarray(hash='%s')" % hasher(v)
-    return None
+            return "%s(hash='%s')" % (v.__class__.__name__, hasher(v))
 
 
-def pandas_plugin(_, v):
+def rng_plugin(v):
+    """Represents a numpy rng as a string RandomState(state=xxx)."""
+    if np is not None and hasher is not None:
+        if isinstance(v, np.random.RandomState):
+            return "%s(state=%s)" % (v.__class__.__name__, whatareyou(v.__getstate__()).id())
+
+
+def pandas_plugin(v):
     """Represents pandas objects as any of "DataFrame(hash='xxx')" or "Series(hash='xxx')"."""
     if pd is not None and hasher is not None:
-        if isinstance(v, pd.DataFrame):
-            return "DataFrame(hash='%s')" % hasher(v)
-        elif isinstance(v, pd.Series):
-            return "Series(hash='%s')" % hasher(v)
-    return None
+        if isinstance(v, (pd.DataFrame, pd.Series)):
+            return "%s(hash='%s')" % (v.__class__.__name__, hasher(v))
+    #
+    # Given the variability of pandas key classes and the stability of numpy
+    # ABI it should repay to create an spesialised pandas plugin that just
+    # cast indices and data as arrays and use these to generate IDs that
+    # are stable between pandas versions.
+    #
 
 
 # --- Plugin management
@@ -187,7 +250,7 @@ class WhatamiPluginManager(object):
     """
     Examples
     --------
-    >>> def float_plugin(_, v):
+    >>> def float_plugin(v):
     ...     if isinstance(v, float):
     ...         return "'float=%g'" % v
     ...     return None
@@ -233,21 +296,29 @@ class WhatamiPluginManager(object):
     >>> WhatamiPluginManager.reset()
     """
 
-    DEFAULT_PLUGINS = (what_plugin,
-                       whatable_plugin,
-                       builtin_plugin,
-                       property_plugin,
-                       string_plugin,
-                       tuple_plugin,
-                       list_plugin,
-                       dict_plugin,
-                       set_plugin,
-                       partial_plugin,
-                       function_plugin,
-                       pandas_plugin,
-                       numpy_plugin,
-                       anyobject0x_plugin,
-                       anyobject_plugin)
+    DEFAULT_PLUGINS = (
+        # whatami plugins, should go first
+        what_plugin,
+        whatable_plugin,
+        # basic plugins
+        builtin_plugin,
+        property_plugin,
+        string_plugin,
+        tuple_plugin,
+        list_plugin,
+        dict_plugin,
+        set_plugin,
+        # callable plugins
+        partial_plugin,
+        function_plugin,
+        # numpy/pandas plugins
+        pandas_plugin,
+        numpy_plugin,
+        rng_plugin,
+        # capture-all plugins, should come last in the chain
+        anyobject0x_plugin,
+        anyobject_plugin,
+    )
 
     PLUGINS = DEFAULT_PLUGINS
 
@@ -263,7 +334,13 @@ class WhatamiPluginManager(object):
 
     @classmethod
     def drop(cls, plugin):
-        """Removes a plugin from the list of plugins."""
+        """Removes a plugin from the list of plugins.
+
+        Parameters
+        ----------
+        plugin : function
+          The plugin to drop
+        """
         plugins = list(cls.PLUGINS)
         try:
             plugins.remove(plugin)
@@ -277,9 +354,8 @@ class WhatamiPluginManager(object):
 
         Parameters
         ----------
-        plugin : function (what, value) -> string
-          A function that checks for value type and if it applies generates a string representing it,
-          optionally using the information on What instance what.
+        plugin : function (value) -> string
+          A function that checks for value type and if it applies generates a string representing it.
 
         before : function, default anyobject0x_plugin
           A plugin already registered in the list. Note that the last two plugins capture most objects,
@@ -302,3 +378,17 @@ class WhatamiPluginManager(object):
             except ValueError:
                 raise ValueError('plugin to insert before (%s) not in plugins list' % before.__name__)
         cls.PLUGINS = tuple(plugins)
+
+    @classmethod
+    def build_string(cls, v):
+        """Returns the nested configuration string for a variety of value types.
+
+        Parameters
+        ----------
+        v : object
+          The object to represent as a string
+        """
+        for plugin in cls.plugins():
+            string = plugin(v)
+            if string is not None:
+                return string

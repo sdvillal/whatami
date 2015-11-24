@@ -51,7 +51,7 @@ def c3(c1, c2):
 def numpy_skip(test):  # pragma: no cover
     """Skips a test if the numpy plugin is not available."""
     if not (has_numpy() and has_joblib()):
-        return pytest.mark.skipif(test, reason='the numpy plugin requires both pandas and joblib')
+        return pytest.mark.skipif(test, reason='the numpy plugin requires both numpy and joblib')
     return test
 
 

@@ -68,6 +68,7 @@ buy(currency='euro',price=4294967296)
 from __future__ import print_function, unicode_literals, absolute_import
 import hashlib
 import inspect
+from copy import deepcopy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
 
@@ -81,31 +82,41 @@ class What(object):
 
     Configurations are just dictionaries {key: value} that can nest and have a name.
 
-    This helper class allows to represent configurations as (reasonable, python-like) strings.
+    This class allows to represent configurations as (reasonable, python-like) strings.
 
     Parameters
     ----------
     name : string
-        The name of this configuration (e.g. "RandomForest").
+      The name of this configuration (e.g. "RandomForest").
 
     conf : dictionary
-        The {key:value} property dictionary for this configuration.
+      The {key:value} property dictionary for this configuration.
 
     non_id_keys : iterable (usually of strings), default None
-        A list of keys that should not be considered when generating ids.
-        For example: "num_threads" or "verbose" should not change results when fitting a model.
-        Keys here won't make it to the configuration string unless explicitly asked for
+      A list of keys that should not be considered when generating ids.
+      For example: "num_threads" or "verbose" should not change results when fitting a model.
+      Keys here won't make it to the configuration string unless explicitly asked for
+
+    out_name : string, default None
+      If provided, the output name of the computation (e.g. "feature_importances")
+
+    Attributes
+    ----------
+    `What` objects carry the same attributes passed to the constructor:
+    name, conf, non_id_keys and out_name.
     """
 
-    __slots__ = ('name', 'conf', 'non_id_keys')
+    __slots__ = ('name', 'conf', 'non_id_keys', 'out_name')
 
     def __init__(self,
                  name,
                  conf,
-                 non_id_keys=None):
+                 non_id_keys=None,
+                 out_name=None):
         super(What, self).__init__()
         self.name = name
         self.conf = conf
+        self.out_name = out_name
         if non_id_keys is None:
             self.non_id_keys = set()
         elif is_iterable(non_id_keys):
@@ -113,13 +124,16 @@ class What(object):
         else:
             raise Exception('non_ids must be None or an iterable')
 
-    def copy(self):
+    def copy(self, deep=False):
         """Returns a copy of this whatable object.
 
-        N.B. The configuration dictionary copy is shallow;
-        side-effects might happen if changes are made to mutable values.
+        N.B. If the copy is shallow, side-effects might happen
+        if changes are made to mutable values in the configuration dictionary.
         """
-        return What(name=self.name, conf=self.conf.copy(), non_id_keys=self.non_id_keys)
+        return What(name=self.name,
+                    conf=self.conf.copy() if not deep else deepcopy(self.conf),
+                    non_id_keys=self.non_id_keys,
+                    out_name=self.out_name)
 
     def flatten(self, non_ids_too=False, collections_too=False, recursive=True):
         """Returns two lists: keys and values.
@@ -183,16 +197,22 @@ class What(object):
     # ---- Magics
 
     def __eq__(self, other):
-        """Two configurations are equal if they have the same name and parameters."""
-        return hasattr(other, 'name') and self.name == other.name and \
-            hasattr(other, 'conf') and self.conf == other.conf
+        """Two configurations are equal if they have the same name, out_name and parameters."""
+        return (hasattr(other, 'name') and self.name == other.name and
+                hasattr(other, 'conf') and self.conf == other.conf and
+                hasattr(other, 'out_name') and self.out_name == other.out_name)
 
     def __str__(self):
         """The default representation is the configuration string including non_ids keys."""
         return self.id(nonids_too=True)
 
     def __repr__(self):
-        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.name, self.conf, self.non_id_keys)
+        return '%s(%r, %r, %r, %r)' % (
+            self.__class__.__name__,
+            self.name,
+            self.conf,
+            self.non_id_keys,
+            self.out_name)
 
     def __getitem__(self, item):
         """Allow to retrieve configuration values using [] notations, recursively, whatami aware."""
@@ -228,24 +248,24 @@ class What(object):
         nonids_too : boolean, default False
           Non-ids keys are ignored if nonids_too is False.
 
-        malength : int, default 0
+        maxlength : int, default 0
           If the id length goes over maxlength, it gets replaced by its sha1.
           If <= 0, it is ignored and the full id string will be returned.
         """
-        kvs = ','.join('%s=%s' % (k, self.build_string(v))
+        from whatami.plugins import WhatamiPluginManager
+        kvs = ','.join('%s=%s' % (k, WhatamiPluginManager.build_string(v))
                        for k, v in sorted(self.conf.items())
                        if nonids_too or k not in self.non_id_keys)
         my_id = '%s(%s)' % (self.name, kvs)
+        if self.out_name is not None:
+            my_id = '%s=%s' % (self.out_name, my_id)
         return self._trim_too_long(my_id, maxlength=maxlength)
 
-    def positional_id(self, name=None, non_ids_too=False, maxlength=0):
+    def positional_id(self, non_ids_too=False, maxlength=0):
         """Returns an id without parameter names, just values.
 
         Parameters
         ----------
-        name : string, default None
-          The name to use in the id string; if None, the name of self is used.
-
         non_ids_too : boolena, default False
           Whether to include the non-id values too.
 
@@ -253,17 +273,12 @@ class What(object):
           If the id length goes over maxlength, it gets replaced by its sha1.
           If <= 0, it is ignored and the full id string will be returned.
         """
-        name = name if name is not None else self.name
-        my_id = '%s(%s)' % (name, ','.join(map(self.build_string, self.values(non_ids_too=non_ids_too))))
+        from whatami.plugins import WhatamiPluginManager
+        my_id = '%s(%s)' % (self.name, ','.join(map(WhatamiPluginManager.build_string,
+                                                    self.values(non_ids_too=non_ids_too))))
+        if self.out_name is not None:
+            my_id = '%s=%s' % (self.out_name, my_id)
         return self._trim_too_long(my_id, maxlength=maxlength)
-
-    def build_string(self, v):
-        """Returns the nested configuration string for a variety of value types."""
-        from .plugins import WhatamiPluginManager
-        for plugin in WhatamiPluginManager.plugins():
-            string = plugin(self, v)
-            if string is not None:
-                return string
 
     @staticmethod
     def _trim_too_long(string, maxlength=0):

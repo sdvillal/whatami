@@ -146,6 +146,15 @@ def test_parse_id_escaped():
     assert what.id() == whatid
 
 
+def test_parse_id_out_name():
+    what = parse_whatid('kurtosis=moments(x=std=Normal(mean=0,std=1))')
+    assert what.out_name == 'kurtosis'
+    assert what.name == 'moments'
+    assert what.conf == {'x': What(name='Normal',
+                                   conf={'mean': 0, 'std': 1},
+                                   out_name='std')}
+
+
 def test_arpeggio_resilience():
     with pytest.raises(TypeError):
         parse_whatid(map)
