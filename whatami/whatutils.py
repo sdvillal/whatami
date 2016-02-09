@@ -5,14 +5,13 @@
 # Licence: BSD 3 clause
 
 from __future__ import print_function
+from future.utils import string_types
 
 import inspect
 from itertools import chain
 
 from operator import itemgetter
 from arpeggio import NoMatch
-
-from future.builtins import str as str3
 
 from whatami.parsers import parse_whatid, build_oldwhatami_parser
 from whatami.what import whatable, whatareyou, What, is_whatable
@@ -31,7 +30,7 @@ def what2id(obj):
     """
     if obj is None:
         return None
-    if isinstance(obj, str3):
+    if isinstance(obj, string_types):
         return obj
     try:
         return obj.what().id()
