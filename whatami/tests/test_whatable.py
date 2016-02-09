@@ -4,6 +4,7 @@ from functools import partial
 import pickle
 
 from ..what import is_whatable, What, trim_dict, config_dict_for_object
+from ..whatutils import what2id
 from .fixtures import *
 from whatami.plugins import WhatamiPluginManager, anyobject0x_plugin, anyobject_plugin
 
@@ -60,6 +61,31 @@ def test_whatable_partial(c1):
     c1.p1 = partial(identity, x=1)
     assert c1.what().id() == "C1(length=1,p1=identity(x=1),p2='bleh')"
     assert c1.p1() == 1
+
+
+def test_whatable_recursive_partials():
+
+    def f0(x, y=3, z=12):
+        return x + y + z
+
+    # Just the function
+    assert what2id(f0) == 'f0(y=3,z=12)'
+    assert whatable(f0).what().id() == 'f0(y=3,z=12)'
+
+    # A partial with a lambda
+    f2 = partial(f0, x=lambda x: x**2)
+    assert what2id(f2) == 'f0(x=lambda(),y=3,z=12)'
+    assert whatable(f2).what().id() == 'f0(x=lambda(),y=3,z=12)'
+
+    # A partial with a partial
+    f1 = partial(f0, x=partial(f0, x=2))
+    assert what2id(f1) == 'f0(x=f0(x=2,y=3,z=12),y=3,z=12)'
+    assert whatable(f1).what().id() == 'f0(x=f0(x=2,y=3,z=12),y=3,z=12)'
+
+    # A partial with a partial with a partial
+    f3 = partial(f0, x=partial(f0, x=partial(f0, x=None)))
+    assert what2id(f3) == 'f0(x=f0(x=f0(x=None,y=3,z=12),y=3,z=12),y=3,z=12)'
+    assert whatable(f3).what().id() == 'f0(x=f0(x=f0(x=None,y=3,z=12),y=3,z=12),y=3,z=12)'
 
 
 def test_whatable_builtins(c1):
