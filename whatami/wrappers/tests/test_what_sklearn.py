@@ -5,7 +5,6 @@
 
 from __future__ import unicode_literals, absolute_import
 from future.builtins import str
-import sklearn
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
