@@ -45,6 +45,7 @@ import warnings
 
 from sklearn.base import BaseEstimator
 from sklearn.cluster import KMeans
+from sklearn.cluster.k_means_ import MiniBatchKMeans
 from sklearn.cross_decomposition import PLSRegression, PLSCanonical, CCA, PLSSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, ExtraTreesClassifier, ExtraTreesRegressor
 from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier, GradientBoostingRegressor
@@ -162,6 +163,7 @@ _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
 
 # Clusterers
 _a(KMeans, None, ('n_jobs', 'copy_x', 'verbose', 'precompute_distances'))
+_a(MiniBatchKMeans, None, ('verbose',))
 
 # Preprocessing
 _a(Normalizer, None, ('copy',))
