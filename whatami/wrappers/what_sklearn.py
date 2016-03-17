@@ -44,7 +44,10 @@ import inspect
 import warnings
 
 from sklearn.base import BaseEstimator
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN, MeanShift, SpectralClustering, Birch
+from sklearn.cluster.affinity_propagation_ import AffinityPropagation
+from sklearn.cluster.bicluster import SpectralCoclustering, SpectralBiclustering
+from sklearn.cluster.hierarchical import AgglomerativeClustering, FeatureAgglomeration
 from sklearn.cluster.k_means_ import MiniBatchKMeans
 from sklearn.cross_decomposition import PLSRegression, PLSCanonical, CCA, PLSSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, ExtraTreesClassifier, ExtraTreesRegressor
@@ -164,6 +167,15 @@ _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
 # Clusterers
 _a(KMeans, None, ('n_jobs', 'copy_x', 'verbose', 'precompute_distances'))
 _a(MiniBatchKMeans, None, ('verbose',))
+_a(MeanShift, None, ('n_jobs',))
+_a(AffinityPropagation, None, ('copy', 'verbose',))
+_a(SpectralClustering, None, ())
+_a(DBSCAN, None, ())
+_a(AgglomerativeClustering, None, ('memory',))
+_a(Birch, None, ('compute_labels', 'copy'))
+_a(FeatureAgglomeration, None, ('memory',))
+_a(SpectralCoclustering, None, ('n_jobs',))
+_a(SpectralBiclustering, None, ('n_jobs',))
 
 # Preprocessing
 _a(Normalizer, None, ('copy',))
