@@ -217,7 +217,7 @@ def test_pandas_plugin(df):
     df_hash = df_hash2 if not PY3 else df_hash3
     name = df.__class__.__name__
 
-    # check for changes in joblib hashing
+    # check for changes in joblib hashing and pandas pickling across versions
     from whatami.plugins import hasher
     assert df_hash == hasher(df)
 

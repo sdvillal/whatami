@@ -12,6 +12,7 @@ from future.utils import string_types
 
 from .what import What, whatareyou
 from .misc import callable2call, config_dict_for_object, curry2partial
+from .minijoblib.hashing import hash as hasher
 
 
 # --- Basic plugins
@@ -181,17 +182,7 @@ def anyobject_plugin(v):
 
 # --- Numpy and pandas
 
-try:  # pragma: no cover
-    # noinspection PyPackageRequirements
-    from joblib.hashing import hash as hasher
-    hasher = partial(hasher, hash_name='md5')
-except ImportError:  # pragma: no cover
-    hasher = None
-
-
-def has_joblib():
-    """Returns True iff joblib can be imported."""
-    return hasher is not None
+hasher = partial(hasher, hash_name='md5')
 
 
 try:  # pragma: no cover

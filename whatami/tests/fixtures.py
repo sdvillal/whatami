@@ -1,6 +1,6 @@
 # coding=utf-8
 from ..what import whatable, whatareyou
-from ..plugins import has_numpy, has_joblib, has_pandas
+from ..plugins import has_numpy, has_pandas
 import pytest
 
 
@@ -50,8 +50,8 @@ def c3(c1, c2):
 
 def numpy_skip(test):  # pragma: no cover
     """Skips a test if the numpy plugin is not available."""
-    if not (has_numpy() and has_joblib()):
-        return pytest.mark.skipif(test, reason='the numpy plugin requires both numpy and joblib')
+    if not has_numpy():
+        return pytest.mark.skipif(test, reason='the numpy plugin requires numpy')
     return test
 
 
@@ -63,22 +63,22 @@ def array(request):
     arrays = {
         # base array
         'a1': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]),
-               'a6bb4681650ec50fce0123412a78753e', 'cbded866f66a0fa6767b4e286c3552df'),
+               '6f02029610d8eb28c804bb45e7f9d143', 'cdbda364c2078ca23ec48efc135a4056'),
         # hash changes with dtype
         'a2': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.bool),
-               '82fe62950379505b6581df73d5a5bf2d', '5118dfbd9491eab8ce757c49b6fd06df'),
+               '84cb98527346d5fcf7883a795b8967e5', '9407c2fc16a7c36b3aeb965ce9ce01ef'),
         'a3': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=np.float),
-               '1b5b918e0bae98539bb7aa886c791548', '7149c69cf4a5f85bd49e92496d5d2cb8'),
+               '94a704b9d7de461139fc94798cca01c5', '2e796b1399e90dac8c8204e0b4ad13dc'),
         # hash changes with shape and ndim
         'a4': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]).reshape((1, 9)),
-               'bc2afdb8b2d4ac89b5718105c554921b', '37c27fea094cf3eddf4b11e602955c2a'),
+               '2d68497a547c11f6ccfb638eac05ce50', '575c139d5e96b6ce189f55f491239006'),
         'a5': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], ndmin=3),
-               '657a4d5a3a3e2190e21d1a06772b90fc', '33d23b13c6a0d41d9b6273ff4962f6c9'),
+               'f8912d3c3bad0a81511f30426e9a69b7', '42b6871f9e881b5005e0eef1d96a7fd3'),
         # hash changes with stride/order/contiguity
         'a6': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], order='F'),
-               'fddb29315104f69723750835086584bf', '6465c08894edcc3d0d122b2fd0acb68f'),
+               'ed2bf87a6f657114a742b23ce1d35d8a', '488d258f3e1cbc58d51f1ed0303be2e5'),
         'a7': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]).T,
-               'fddb29315104f69723750835086584bf', '6465c08894edcc3d0d122b2fd0acb68f'),
+               'ed2bf87a6f657114a742b23ce1d35d8a', '488d258f3e1cbc58d51f1ed0303be2e5'),
     }
     return arrays[request.param]
 
@@ -86,13 +86,13 @@ def array(request):
 def pandas_skip(test):  # pragma: no cover
     """Skips a test if the pandas plugin is not available."""
     # Check libraries are present
-    if not (has_pandas() and has_joblib()):
-        return pytest.mark.skipif(test, reason='the pandas plugin requires both pandas and joblib')
+    if not has_pandas():
+        return pytest.mark.skipif(test, reason='the pandas plugin requires pandas')
     # Check library versions
     from ..plugins import pd
     from distutils.version import LooseVersion
     minor = LooseVersion(pd.__version__).version[1]
-    if minor not in (16, 17):
+    if minor not in (16, 17, 18):
         return pytest.mark.skipif(test, reason='these tests do not support pandas version %s' % pd.__version__)
     return test
 
@@ -100,7 +100,7 @@ def pandas_skip(test):  # pragma: no cover
 @pytest.fixture(params=map(pandas_skip, ['df1', 'df2', 'df3', 'df4', 's1', 's2']),
                 ids=['df1', 'df2', 'df3', 'df4', 's1', 's2'])
 def df(request):
-    """Hardcodes hashes, so we can detect hashing changes in joblib."""
+    """Hardcodes hashes, so we can detect hashing changes in joblib and pandas serialisation across versions."""
     from ..plugins import pd, np
     from distutils.version import LooseVersion
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
@@ -108,32 +108,47 @@ def df(request):
     if LooseVersion('0.16') <= LooseVersion(pd.__version__) < LooseVersion('0.17'):  # pragma: no cover
         dfs = {
             'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
-                    'fc5d5b43464052efbcd9e88dc0be4afd', '62171fe1114d5d961742dd95e6af37d7'),
+                    '06b4dd3696595163ee418eb398f12ad4', '86b79ea3b24cce05ec8d027e8e946f41'),
             'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
-                    'fe226e22261ff56d4cf019aa64942050', '139261e54b3ac2f2e39da6d497f6d0fd'),
+                    '65f768a5c45764c2be969fcf067217a8', '4d00fbdb39c6b996412d27c34b2377f2'),
             'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
-                    'f3d11416b1d5cb5da7753991941beb0d', 'fcd984c10ea9379faee471eedafee77b'),
+                    'd657fe3c5db78513015744fd91ef45a9', '238dd9d366d5c247bce4bceeb72513c2'),
             'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
-                    '95fc40cb4635424c7ef1577d13183afa', 'c5234b1a362ef13c9c12b7b7444b8c85'),
+                    '5958e91e3f3d516cd347fadb08eb8d34', 'c5b977fc361c3e7c418841b646b41a7b'),
             's1': (pd.Series(data=adjacency.ravel()),
-                   'e37122dc5f6320e9f12b413631056443', 'ee9729300f29a6917f30aa9e612ec67c'),
+                   'fb803a8ea8f4defdac3c0c5c19a4d618', 'c24006ddea03888c8e0311a6a163e918'),
             's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
-                   'c0f4565b063599c6075ec6108cbca344', '74e14992d8587454d561b3194d11a984'),
+                   'f8282784d8ae6f26dd6555a17ecf374a', '117b9a9d74d990b22a303cb5c4e34064'),
         }
     elif LooseVersion('0.17') <= LooseVersion(pd.__version__) < LooseVersion('0.18'):  # pragma: no cover
         dfs = {
             'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
-                    '4e3bd601694d810b122afcaa03dc8657', '4e170e720983e95acf9f3dc236aad281'),
+                    'cfbd33cb950a963f1f69c18040393c57', '213370e5881a6677a16a36ef928e7a2d'),
             'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
-                    'bed8e94e953d1a69b6b10f122db9d768', 'd37e44c3ea7562be9256435ec925080a'),
+                    '4deccdb1a2e05b76f66d75747bd59d87', '69b9b1d16e798228ea7ae4d1a66644b4'),
             'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
-                    'b5a2fa63a034eff697e95eb4f849ba38', 'f5bf82a7647a0789b1714e503cad7d7a'),
+                    'acdc2d8ab2cf74b7cb9228f7c821543b', '0147d912cb628a67bd4a7755534989cd'),
             'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
-                    '6a24c46e973fe74b208b13f74435b041', 'b7747e3d4bbd4477698037eb9d933282'),
+                    'bb369093d962c1102737f556448e0a4c', '06816343ea060281009194d31970e1d8'),
             's1': (pd.Series(data=adjacency.ravel()),
-                   'd5dc5e9943d1b74f604a99dd74e8d034', '6e62c2340b898886512176c20011fab6'),
+                   'f7aa3fa9cb0e83c0bc4bc8c6946db39f', '282e928e7af9a28e4a4a487d8b3aace2'),
             's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
-                   'd8ec7deecaca6a0a42a2c9967e2beba6', '1f6fc6f831e48c59868f1e0157df79c5'),
+                   '3e906bba8938fc47b10babf0abcd9c7c', '015f8cf4282495f03bdd185901fe67a0'),
+        }
+    elif LooseVersion('0.18') <= LooseVersion(pd.__version__) < LooseVersion('0.19'):  # pragma: no cover
+        dfs = {
+            'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
+                    'b42c35390383ea16e6cbdd386a650352', '7133178ca4922a7ed8b17c8cc9b7c6c2'),
+            'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
+                    'c7634ccb336070327fcb72237010a132', '20759a616b21a050c7edfabb7f8d3197'),
+            'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
+                    '111429cc6780467d5f1360ac080413b8', '74680aa0ba883e3df7f370708641df3b'),
+            'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
+                    '771739ab3741e83d4058092c3e7048fa', '41c3285396a6a23eecf5170bd4d05089'),
+            's1': (pd.Series(data=adjacency.ravel()),
+                   '2b0e7e414f6cbf83df534c715f307b25', '4273d3625a0b2f4374aef2405e144d81'),
+            's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
+                   '43dbf2ae18abdf54921ea1a49e8d847b', '50052bba6794aceab461a1f2a1baa785'),
         }
     return dfs[request.param]
 
