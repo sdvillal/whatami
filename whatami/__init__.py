@@ -5,4 +5,4 @@ from .what import *
 from .parsers import *
 from .whatutils import *
 
-__version__ = '5.1.1'
+__version__ = '5.1.2'
