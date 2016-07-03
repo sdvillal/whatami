@@ -20,6 +20,7 @@ setup(
     author_email='sdvillal@gmail.com',
     packages=['whatami',
               'whatami.tests',
+              'whatami.minijoblib',
               'whatami.wrappers',
               'whatami.wrappers.tests'],
     classifiers=[
