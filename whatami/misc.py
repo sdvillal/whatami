@@ -266,7 +266,7 @@ def trim_dict(cd, exclude_prefix='_', exclude_postfix='_', excludes=('what',)):
     exclude_prefix: string, default '_'
         Exclude all attributes whose name starts with this string
 
-    exclude_postix: string, default '_'
+    exclude_postfix: string, default '_'
         Exclude all attributes whose name ends with this string
 
     excludes: string iterable, default ('what',)
