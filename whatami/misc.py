@@ -19,6 +19,62 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
+def call_dict(depth=1, ignore_varargs=False, remove_self=True):
+    """
+    Returns a dictionary {parameter: value} for the call at the specified frame depth.
+
+    Keyword arguments (**kwargs) are added to the dictionary, and "self" can be removed.
+
+    Variadic arguments (*args) are either ignored or trigger an error.
+
+    Parameters
+    ----------
+    depth : int, default 1
+      How many levels up is the call of interest.
+      1 means "the immediate function calling call_dict"
+
+    ignore_varargs : bool, default False
+      Variable arguments are ignored if this flag is True, as no name can be assigned to them.
+      If the flag is True and varargs are provided, a ValueError is raised.
+
+    remove_self : bool, default True
+      If True, removes "self" from the returned dictionary, if it exists in the call spec.
+
+    Examples
+    --------
+    >>> # noinspection PyUnusedLocal
+    ... def caller(x, y=3, *args, **kwargs):
+    ...     return call_dict()
+    >>> sorted(caller(1).items())
+    [('x', 1), ('y', 3)]
+    >>> sorted(caller(1, z=5.2).items())
+    [('x', 1), ('y', 3), ('z', 5.2)]
+    >>> caller(1, 2, 3)
+    Traceback (most recent call last):
+        ...
+    ValueError: call_dict assumes there are no varargs
+    """
+    import inspect
+    _, varargs, kwargs_name, values = inspect.getargvalues(inspect.stack()[depth][0])
+    # Ignore unnammed parameters
+    if varargs is not None:
+        if not ignore_varargs and values[varargs]:
+            raise ValueError('call_dict assumes there are no varargs')
+        del values[varargs]
+    # Remove self
+    if remove_self:
+        try:
+            del values['self']
+        except KeyError:
+            pass
+    # Flatten kwargs
+    if kwargs_name is not None:
+        kwargs = values[kwargs_name]
+        del values[kwargs_name]
+        values.update(kwargs)
+    return values
+
+
 def curry2partial(obj):
     """Transforms toolz/cytoolz curry sugar into standard partials."""
     try:
