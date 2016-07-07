@@ -19,7 +19,7 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
-def call_dict(depth=1, ignore_varargs=False, remove_self=True):
+def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, **over_overrides):
     """
     Returns a dictionary {parameter: value} for the call at the specified frame depth.
 
@@ -40,6 +40,17 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True):
     remove_self : bool, default True
       If True, removes "self" from the returned dictionary, if it exists in the call spec.
 
+    overrides : dictionary or None, default None
+      Any key in the call dictionary also in overrides will get the value in overrides.
+      Any key not already in the call dictionary is added with the value in overrides.
+      As opposed to over_overrides, this allows to override parameters named like any of this
+      function parameters (e.g. depth).
+
+    over_overrides : kwargs
+      Any key in the call dictionary or oveerides also in over_overrides will get the value in
+      over_overrides.
+      Any key not already in the call dictionary is added mapping to the value in over_overrides.
+
     Examples
     --------
     >>> # noinspection PyUnusedLocal
@@ -53,6 +64,11 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True):
     Traceback (most recent call last):
         ...
     ValueError: call_dict assumes there are no varargs
+    >>> # noinspection PyUnusedLocal
+    ... def overriding_caller(x, y=3, depth=33, *args, **kwargs):
+    ...     return call_dict(overrides={'depth': 99}, x=99)
+    >>> sorted(overriding_caller(1).items())
+    [('depth', 99), ('x', 99), ('y', 3)]
     """
     import inspect
     _, varargs, kwargs_name, values = inspect.getargvalues(inspect.stack()[depth][0])
@@ -72,6 +88,11 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True):
         kwargs = values[kwargs_name]
         del values[kwargs_name]
         values.update(kwargs)
+    # Override values
+    if overrides:
+        values.update(overrides)
+    if over_overrides:
+        values.update(over_overrides)
     return values
 
 
