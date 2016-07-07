@@ -96,8 +96,6 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, *
         call_param_value.update(overrides)
     if over_overrides:
         call_param_value.update(over_overrides)
-    if 'names' in call_param_value:
-        raise Exception('%s has names' % call_param_value['name'])
     return call_param_value
 
 
