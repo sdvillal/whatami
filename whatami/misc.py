@@ -71,33 +71,34 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, *
     [('depth', 99), ('x', 99), ('y', 3)]
     """
     import inspect
-    _, varargs, kwargs_name, values = inspect.getargvalues(inspect.stack()[depth][0])
+    args, varargs, kwargs_name, frame_locals = inspect.getargvalues(inspect.stack()[depth][0])
+    call_param_value = {arg: frame_locals[arg] for arg in args}
     # Ignore unnammed parameters
     if varargs is not None:
-        if not ignore_varargs and values[varargs]:
+        if not ignore_varargs and frame_locals[varargs]:
             raise ValueError('call_dict assumes there are no varargs')
-        del values[varargs]
     # Remove self
     if remove_self:
         try:
-            del values['self']
+            del call_param_value['self']
         except KeyError:
             pass
         try:
-            del values['cls']
+            del call_param_value['cls']
         except KeyError:
             pass
     # Flatten kwargs
     if kwargs_name is not None:
-        kwargs = values[kwargs_name]
-        del values[kwargs_name]
-        values.update(kwargs)
+        kwargs = frame_locals[kwargs_name]
+        call_param_value.update(kwargs)
     # Override values
     if overrides:
-        values.update(overrides)
+        call_param_value.update(overrides)
     if over_overrides:
-        values.update(over_overrides)
-    return values
+        call_param_value.update(over_overrides)
+    if 'names' in call_param_value:
+        raise Exception('%s has names' % call_param_value['name'])
+    return call_param_value
 
 
 def curry2partial(obj):
