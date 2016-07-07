@@ -12,4 +12,4 @@ exclude_lines =
 omit=
     whatami/minijoblib/*
     whatami/tests/*
-    whatami/wrappers/*
+    whatami/wrappers/tests/*
