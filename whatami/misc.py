@@ -19,7 +19,7 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
-def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, **over_overrides):
+def call_dict(depth=1, ignores=('cls', 'self'), ignore_varargs=False, overrides=None, **over_overrides):
     """
     Returns a dictionary {parameter: value} for the call at the specified frame depth.
 
@@ -37,8 +37,8 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, *
       Variable arguments are ignored if this flag is True, as no name can be assigned to them.
       If the flag is True and varargs are provided, a ValueError is raised.
 
-    remove_self : bool, default True
-      If True, removes "self" and "cls" from the returned dictionary, if they exists in the call spec.
+    ignores : string iterable, default ('cls', 'self')
+      A collection of parameter names to be ignored.
 
     overrides : dictionary or None, default None
       Any key in the call dictionary also in overrides will get the value in overrides.
@@ -78,13 +78,9 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, *
         if not ignore_varargs and frame_locals[varargs]:
             raise ValueError('call_dict assumes there are no varargs')
     # Remove self
-    if remove_self:
+    for to_ignore in ignores:
         try:
-            del call_param_value['self']
-        except KeyError:
-            pass
-        try:
-            del call_param_value['cls']
+            del call_param_value[to_ignore]
         except KeyError:
             pass
     # Flatten kwargs
