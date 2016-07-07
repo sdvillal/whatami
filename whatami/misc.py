@@ -38,7 +38,7 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, *
       If the flag is True and varargs are provided, a ValueError is raised.
 
     remove_self : bool, default True
-      If True, removes "self" from the returned dictionary, if it exists in the call spec.
+      If True, removes "self" and "cls" from the returned dictionary, if they exists in the call spec.
 
     overrides : dictionary or None, default None
       Any key in the call dictionary also in overrides will get the value in overrides.
@@ -81,6 +81,10 @@ def call_dict(depth=1, ignore_varargs=False, remove_self=True, overrides=None, *
     if remove_self:
         try:
             del values['self']
+        except KeyError:
+            pass
+        try:
+            del values['cls']
         except KeyError:
             pass
     # Flatten kwargs
