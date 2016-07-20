@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import
 from functools import partial
 from itertools import chain
 import datetime
@@ -462,6 +462,105 @@ def is_iterable(v):
     except:
         return False
     return True
+
+
+# --- Metaprogramming (aka black magic) tools
+
+def decorate_some(name='DecorateSome', **decorators):
+    """
+    Returns a metaclass decorating some methods in all derived classes.
+
+    Stay away if you do not like black magic!
+
+    Python decorators are not inherited, which is sensible.
+    Using "DecorateSome" can maybe make sense if, for example, one would like
+    to force that a decorator applies to all specializations of a method
+    without explicitly decorating the method at each override
+    (originally I wrote this to force toolz "curry" to decorate a method
+    in a whole class hierarchy).
+    Probably decorating methods by hand in each subclass is a less surprising,
+    more explicit, better way to go in most use cases.
+    Still there are a lot of people as lazy as me:
+      http://stackoverflow.com/questions/6307761/how-can-i-decorate-all-functions-of-a-class-without-typing-it-over-and-over-for
+
+    Parameters
+    ----------
+    name : string, default "DecorateSome"
+      The name for the metaclass.
+
+    decorators : kwargs
+      Map {method: decorators}, the decorators to apply to the corresponding members of the created classes.
+      If a member does not exist in the class, it is just ignored.
+      decorators can be a single callable or a list of callables
+
+    Returns
+    -------
+    A metaclass that will apply "decorators" to each corresponding member of each derived class.
+
+    Examples
+    --------
+    Let's create some logging decorators...
+    >>> from future.utils import with_metaclass
+    >>> from functools import wraps
+    >>> def decorator1(f):
+    ...     @wraps(f)
+    ...     def wrapper(*args, **kwds):
+    ...         print('Decorator 1')
+    ...         return f(*args, **kwds)
+    ...     return wrapper
+    >>> def decorator2(f):
+    ...     @wraps(f)
+    ...     def wrapper(*args, **kwds):
+    ...         print('Decorator 2')
+    ...         return f(*args, **kwds)
+    ...     return wrapper
+
+    The following metaclass will apply these decorators to the methods "foo" and "bar"
+    of all created classes.
+    >>> DecoratingMetaclass = decorate_some(name='HeyThere', foo=decorator1, bar=(decorator1, decorator2))
+    >>> print(DecoratingMetaclass.__name__)
+    HeyThere
+
+    For example, we can create a simple base class
+    >>> class Base(with_metaclass(DecoratingMetaclass)):
+    ...     def foo(self):
+    ...         print('Called foo at %s' % self.__class__.__name__)
+    ...     def bar(self):
+    ...         print('Called bar at %s'  % self.__class__.__name__)
+    >>> foobar = Base()
+    >>> foobar.foo()
+    Decorator 1
+    Called foo at Base
+    >>> foobar.bar()
+    Decorator 2
+    Decorator 1
+    Called bar at Base
+
+    Note that the decorators are applied to each override of the method,
+    which is the original reason for "DecorateSome" to exist, but which might
+    or might not be what you want.
+    >>> class Sub(Base):
+    ...     def foo(self):
+    ...         print('Calling overrided foo')
+    ...         super(Sub, self).foo()
+    >>> subfoobar = Sub()
+    >>> subfoobar.foo()
+    Decorator 1
+    Calling overrided foo
+    Decorator 1
+    Called foo at Sub
+    """
+    def new_decorate(mcs, name, bases=None, d=None):
+        # Use a closure to keep metaclass parameters
+        # Alternative: add a "decorators" member to the metaclass "mcs" dictionary
+        for attr, attr_decorators in decorators.items():
+            if attr in d:
+                if not is_iterable(attr_decorators):
+                    attr_decorators = [attr_decorators]
+                for attr_decorator in attr_decorators:
+                    d[attr] = attr_decorator(d[attr])
+        return type.__new__(mcs, name, bases, d)
+    return type(name, (type,), {'__new__': new_decorate})
 
 
 # --- Tools to make aggregation of information from functions and whatables easier
