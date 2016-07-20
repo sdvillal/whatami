@@ -3,7 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import
 from datetime import datetime
 import inspect
 from time import strptime, mktime
@@ -69,10 +69,7 @@ def test_callable2call_builtins():
 def test_callable2call_wrongargs():
     with pytest.raises(Exception) as excinfo:
         callable2call('sorted')
-    if PY3:  # pragma: no cover
-        expected = 'Only callables (partials, functions, builtins...) are allowed, \'sorted\' is none of them'
-    else:  # pragma: no cover
-        expected = 'Only callables (partials, functions, builtins...) are allowed, u\'sorted\' is none of them'
+    expected = 'Only callables (partials, functions, builtins...) are allowed, \'sorted\' is none of them'
     assert str(excinfo.value) == expected
 
 

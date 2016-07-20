@@ -2,7 +2,7 @@
 """Tests various functions in whatutils."""
 from functools import partial
 from ..whatutils import whatid2columns
-from .fixtures import *
+from .fixtures import df_with_whatid
 
 
 def test_whatid2columns(df_with_whatid):

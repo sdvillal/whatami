@@ -3,7 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import
 import hashlib
 
 from future.utils import PY3

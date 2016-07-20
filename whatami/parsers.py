@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import print_function, absolute_import, unicode_literals
+from __future__ import print_function, absolute_import, unicode_literals  # N.B. arpeggio wants unicode
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
 
 
