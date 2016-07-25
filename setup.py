@@ -34,7 +34,6 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
-        'Operating System :: Unix',
     ],
     install_requires=['arpeggio>=1.5', 'future>=0.15.2'],
     tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
@@ -43,6 +42,7 @@ setup(
         'pandas': ['pandas'],
         'sklearn': ['scikit-learn'],
         'docs': ['Sphinx'],
+        'toolz': ['toolz'],
     },
     platforms=['Any'],
 )
