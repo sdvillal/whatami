@@ -9,6 +9,7 @@ from functools import partial
 from itertools import chain
 import datetime
 import inspect
+from importlib import import_module
 from collections import OrderedDict
 from socket import gethostname
 
@@ -561,6 +562,66 @@ def decorate_some(name='DecorateSome', **decorators):
                     d[attr] = attr_decorator(d[attr])
         return type.__new__(mcs, name, bases, d)
     return type(name, (type,), {'__new__': new_decorate})
+
+
+# --- Import helpers
+
+class _LazyImportError(object):
+    """Defer ImportError raising to when a module is actually used, giving human hints on installation."""
+    def __init__(self, library_name, install_msg=None, *variants):
+        super(_LazyImportError, self).__init__()
+        # Bookkeeping
+        self._library_name = library_name
+        self._variants = variants
+        self._errors = []
+        # Try to import
+        self.module = self
+        if not variants:
+            variants = [self._library_name]
+        for variant in variants:
+            try:
+                self.module = import_module(variant)
+            except ImportError as ie:
+                self._errors.append((variant, ie))
+        # Autogenerate install hint
+        if install_msg in ('conda', 'pip'):
+            install_msg = '%s install %s' % (install_msg, variants[0])
+        self._install_msg = install_msg
+
+    def __getattribute__(self, name):
+        if name in ('_library_name', '_install_msg', '_errors', '_maybe_import', 'module', '_variants'):
+            return super(_LazyImportError, self).__getattribute__(name)
+        errors_msg = '\n'.join(['\timport %s: %s' % (variant, str(ie)) for variant, ie in self._errors])
+        raise ImportError('Trying to access %s from module %s, but the library fails to import.\n'
+                          'Errors: \n%s\n'
+                          'Maybe install it like "%s"?' %
+                          (name, self._library_name, errors_msg, self._install_msg))
+
+
+def maybe_import(library_name, install_msg=None, *variants):
+    """Tries to import a module but do not fails immediatly if there is a problem.
+
+    Parameters
+    ----------
+    library_name : string
+      The name for the library used in error reporting.
+      "import library_name" is not tried if any other variant is provided.
+
+    install_msg : string or None
+      The message that will provide installation hints.
+      If None, no hint will be provided.
+      If 'pip' or 'conda', a generic install message with the first variant will be generated.
+
+    variants : strings
+      Different module names that provide the same functionality.
+
+    Examples
+    --------
+    This will try to kinda lazily import toolz, prioritizing cytoolz:
+      toolz = LazyImportError.maybe_import(toolz, install_msg='conda', 'cytoolz', 'toolz')
+    """
+    lie = _LazyImportError(library_name, install_msg, *variants)
+    return lie.module
 
 
 # --- Tools to make aggregation of information from functions and whatables easier

@@ -9,10 +9,9 @@ import inspect
 from time import strptime, mktime
 
 from functools import partial
-from future.utils import PY3
 
 from ..what import whatable
-from ..misc import callable2call, is_iterable, mlexp_info_helper
+from ..misc import callable2call, is_iterable, mlexp_info_helper, maybe_import
 
 import pytest
 
@@ -125,3 +124,28 @@ def test_mlexp_info_helper():
     assert info['comments'] == 'comments4nothing'
     recorded_time = mktime(strptime(info['date'], '%Y-%m-%d %H:%M:%S'))
     assert (recorded_time - before) < 2
+
+
+def test_lazy_imports():
+
+    inspect2 = maybe_import('inspect')
+    assert inspect2 is inspect
+
+    inspect3 = maybe_import('inspect', None, '123wrong', 'inspect')
+    assert inspect3 is inspect
+
+    with pytest.raises(ImportError) as excinfo:
+        failed_import = maybe_import('cool', 'conda', '123invalid', '456wrong')
+        print(failed_import.whatever)
+    assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
+    assert 'import 123invalid: No module named 123invalid' in str(excinfo.value)
+    assert 'import 456wrong: No module named 456wrong' in str(excinfo.value)
+    assert 'Maybe install it like "conda install 123invalid"?' in str(excinfo.value)
+
+    with pytest.raises(ImportError) as excinfo:
+        failed_import = maybe_import('cool', 'sudo apt-get cool', '123invalid', '456wrong')
+        print(failed_import.whatever)
+    assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
+    assert 'import 123invalid: No module named 123invalid' in str(excinfo.value)
+    assert 'import 456wrong: No module named 456wrong' in str(excinfo.value)
+    assert 'Maybe install it like "sudo apt-get cool"?' in str(excinfo.value)
