@@ -4,11 +4,11 @@
 # Licence: BSD 3 clause
 
 from __future__ import print_function, absolute_import
+from future.utils import string_types
+
 import inspect
 from collections import OrderedDict
 from functools import partial
-
-from future.utils import string_types
 
 from .what import What, whatareyou
 from .misc import callable2call, config_dict_for_object, curry2partial
@@ -383,3 +383,18 @@ class WhatamiPluginManager(object):
             string = plugin(v)
             if string is not None:
                 return string
+
+
+try:  # pragma: no cover
+    # noinspection PyPackageRequirements
+    import cytoolz as toolz
+except ImportError:  # pragma: no cover
+    try:
+        # noinspection PyPackageRequirements
+        import toolz
+    except ImportError:   # pragma: no cover
+        toolz = None
+
+
+def has_toolz():
+    return toolz is not None
