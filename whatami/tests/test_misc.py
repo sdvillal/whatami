@@ -139,7 +139,7 @@ def test_lazy_imports():
         failed_import = maybe_import('cool', 'conda', '123invalid', '456wrong')
         print(failed_import.whatever)
     assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
-    expectation = 'import 123invalid: No module named 123invalid' if PY3 else \
+    expectation = 'import 123invalid: No module named 123invalid' if not PY3 else \
         'import 123invalid: No module named \'123invalid\''
     assert expectation in str(excinfo.value)
     assert 'Maybe install it like "conda install 123invalid"?' in str(excinfo.value)
