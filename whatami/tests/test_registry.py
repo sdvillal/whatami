@@ -6,7 +6,7 @@
 from __future__ import absolute_import
 
 from ..what import whatable
-from ..registry import WhatamiRegistry
+from ..registry import WhatamiRegistry, Recorder
 
 import pytest
 
@@ -99,3 +99,17 @@ def test_reset(registry, what2nick):
     assert registry.list() == [(nick, whatid)]
     registry.reset()
     assert registry.list() == []
+
+
+def test_recorder():
+
+    rec = Recorder(name='registry', id_column_name='name')
+    assert rec.name == 'registry'
+    keep = rec.add(keep=True)
+    drop = rec.add(keep=False)
+    rec.add('first', afield=3)
+    keep('keeper', anotherfield=4)
+    drop('dropper', why='ugliness')
+    assert rec.get('first') == {'name': 'first', 'afield': 3}
+    assert rec.get('keeper') == {'name': 'keeper', 'keep': True, 'anotherfield': 4}
+    assert rec.get('dropper') == {'name': 'dropper', 'keep': False, 'why': 'ugliness'}
