@@ -108,8 +108,8 @@ def test_recorder():
     keep = rec.add(keep=True)
     drop = rec.add(keep=False)
     rec.add('first', afield=3)
-    keep('keeper', anotherfield=4)
-    drop('dropper', why='ugliness')
+    keep('keepme', anotherfield=4)
+    drop('dropme', why='ugliness')
     assert rec.get('first') == {'name': 'first', 'afield': 3}
-    assert rec.get('keeper') == {'name': 'keeper', 'keep': True, 'anotherfield': 4}
-    assert rec.get('dropper') == {'name': 'dropper', 'keep': False, 'why': 'ugliness'}
+    assert rec.get('keepme') == {'name': 'keepme', 'keep': True, 'anotherfield': 4}
+    assert rec.get('dropme') == {'name': 'dropme', 'keep': False, 'why': 'ugliness'}

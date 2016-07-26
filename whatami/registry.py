@@ -130,7 +130,7 @@ class Recorder(with_metaclass(decorate_some(add=toolz.curry))):
         ids = [ids] if isinstance(ids, string_types) else ids
         # Get whatami ids (maybe this should be left to the caller)
         if self.idextractor is not None:
-            ids = map(self.idextractor, ids)
+            ids = list(map(self.idextractor, ids))
         # Expand iterables to field assignments
         config_dict = {param: self._params2dict(ids, value) for param, value in fields.items()}
         # Add each id in turn...
