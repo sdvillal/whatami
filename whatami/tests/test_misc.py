@@ -4,6 +4,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import absolute_import
+from future.utils import PY3
 from datetime import datetime
 import inspect
 from time import strptime, mktime
@@ -138,14 +139,13 @@ def test_lazy_imports():
         failed_import = maybe_import('cool', 'conda', '123invalid', '456wrong')
         print(failed_import.whatever)
     assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
-    assert 'import 123invalid: No module named 123invalid' in str(excinfo.value)
-    assert 'import 456wrong: No module named 456wrong' in str(excinfo.value)
+    expectation = 'import 123invalid: No module named 123invalid' if PY3 else \
+        'import 123invalid: No module named \'123invalid\''
+    assert expectation in str(excinfo.value)
     assert 'Maybe install it like "conda install 123invalid"?' in str(excinfo.value)
 
     with pytest.raises(ImportError) as excinfo:
         failed_import = maybe_import('cool', 'sudo apt-get cool', '123invalid', '456wrong')
         print(failed_import.whatever)
     assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
-    assert 'import 123invalid: No module named 123invalid' in str(excinfo.value)
-    assert 'import 456wrong: No module named 456wrong' in str(excinfo.value)
     assert 'Maybe install it like "sudo apt-get cool"?' in str(excinfo.value)
