@@ -10,6 +10,8 @@ import inspect
 from collections import OrderedDict
 from functools import partial
 
+from whatami.misc import maybe_import
+
 from .what import What, whatareyou
 from .misc import callable2call, config_dict_for_object, curry2partial
 from .minijoblib.hashing import hash as hasher
@@ -185,22 +187,15 @@ def anyobject_plugin(v):
 hasher = partial(hasher, hash_name='md5')
 
 
-try:  # pragma: no cover
-    # noinspection PyPackageRequirements
-    import numpy as np
-except ImportError:  # pragma: no cover
-    np = None
+np = maybe_import('numpy', 'conda')
 
 
 def has_numpy():
     """Returns True iff numpy can be imported."""
-    return np is not None
+    return inspect.ismodule(np)
 
-try:  # pragma: no cover
-    # noinspection PyPackageRequirements
-    import pandas as pd
-except ImportError:  # pragma: no cover
-    pd = None
+
+pd = maybe_import('pandas', 'conda')
 
 
 def has_pandas():
@@ -385,16 +380,4 @@ class WhatamiPluginManager(object):
                 return string
 
 
-try:  # pragma: no cover
-    # noinspection PyPackageRequirements
-    import cytoolz as toolz
-except ImportError:  # pragma: no cover
-    try:
-        # noinspection PyPackageRequirements
-        import toolz
-    except ImportError:   # pragma: no cover
-        toolz = None
-
-
-def has_toolz():
-    return toolz is not None
+toolz = maybe_import('toolz', 'pip', 'cytoolz', 'toolz')
