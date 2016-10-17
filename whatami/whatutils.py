@@ -201,6 +201,91 @@ def _key2colname(key):
     return '_'.join(map(str, key)) if isinstance(key, (tuple, list)) else key
 
 
+def match_whatids(whatids, template_whatid, ignored_keys=(),
+                  non_ids_too=False, collections_too=False, recursive=True):
+    """
+    Select the whatids that match the template but for some keys.
+
+    Matching whatids will have exactly the same keys as the template
+    and exactly the same values but for the keys indicated in `free_keys`.
+
+    Parameters
+    ----------
+    whatids : iterator of strings
+      The strings we will match to the template.
+
+    template_whatid : string
+      The whatami id string we will match
+
+    ignored_keys : iterator of strings and tuples of strings
+      The keys that do not need to match for a string to be selected.
+
+    non_ids_too : boolean, default False
+      If True, include also non id keys
+
+    collections_too : boolean, default False
+      If True, include also keys that address members of python lists, tuples and dictionaries
+
+    recursive : boolean, default True
+      If True, recurse into nested What and collections
+
+    Returns
+    -------
+    A list of matching whatids.
+
+    Examples
+    --------
+    >>> template = "A(x='x',y=B(x='yx'))"
+    >>> whatids = (template,
+    ...            "A(x='notx',y=B(x='yx'))",
+    ...            "A(x='x',y=B(x='notbx'))",
+    ...            "A(x='notx',y=B(x='notbx'))",
+    ...            "A(x='x',y=NotB(x='yx'))",
+    ...           )
+    >>> match_whatids(whatids, template, ignored_keys=())
+    ["A(x='x',y=B(x='yx'))"]
+    >>> match_whatids(whatids, template, ignored_keys=('x',))
+    ["A(x='x',y=B(x='yx'))", "A(x='notx',y=B(x='yx'))"]
+    >>> match_whatids(whatids, template, ignored_keys=(('y', 'x'),))
+    ["A(x='x',y=B(x='yx'))", "A(x='x',y=B(x='notbx'))"]
+    >>> match_whatids(whatids, template, ignored_keys=('y',))
+    ["A(x='x',y=B(x='yx'))", "A(x='x',y=B(x='notbx'))", "A(x='x',y=NotB(x='yx'))"]
+    """
+
+    # Slow but somehow clear implementation ahead, based on What.flatten
+    # Alternatives: nasty recursion, make flatten take a visitor that can abort...
+
+    template_what = id2what(template_whatid)
+    template_name = template_what.name
+    template_keys, template_values = template_what.flatten(non_ids_too=non_ids_too,
+                                                           collections_too=collections_too,
+                                                           recursive=recursive)
+
+    def ignore_key(key, ignored_keys=set(ignored_keys)):
+        if key in ignored_keys:
+            return True
+        if isinstance(key, tuple):
+            partial_key = key[:-1] if len(key) > 1 else key[0]
+            return ignore_key(partial_key)
+        return False
+
+    def not_ignored_values(keys, values):
+        return [(value.name, value.out_name) if isinstance(value, What) else value
+                for key, value in zip(keys, values) if not ignore_key(key)]
+
+    def partial_match(what,
+                      template_values=not_ignored_values(template_keys, template_values)):
+        if what.name != template_name:
+            return False
+        keys, values = what.flatten(non_ids_too=non_ids_too,
+                                    collections_too=collections_too,
+                                    recursive=recursive)
+        return (template_keys == keys and
+                not_ignored_values(keys, values) == template_values)
+
+    return [whatid for whatid in whatids if partial_match(id2what(whatid))]
+
+
 def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=True):
     """
     Extract values from whatami id strings into new columns in a pandas dataframe.
