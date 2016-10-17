@@ -13,9 +13,9 @@ Example
 >>> from sklearn.ensemble import RandomForestClassifier
 >>> rfc = RandomForestClassifier(n_jobs=8, n_estimators=23)
 >>> print(rfc.what().id())
-rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,random_state=None,warm_start=False)
+rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_impurity_split=1e-07,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,random_state=None,warm_start=False)
 >>> print(rfc.what())
-rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,n_jobs=8,oob_score=False,random_state=None,verbose=0,warm_start=False)
+rfc(bootstrap=True,class_weight=None,criterion='gini',max_depth=None,max_features='auto',max_leaf_nodes=None,min_impurity_split=1e-07,min_samples_leaf=1,min_samples_split=2,min_weight_fraction_leaf=0.0,n_estimators=23,n_jobs=8,oob_score=False,random_state=None,verbose=0,warm_start=False)
 
 Implementation Notes
 --------------------

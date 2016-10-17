@@ -33,7 +33,7 @@ def test_pipeline():
     kmeans_id = kmeans.what().id()
     print(kmeans_id)
     assert kmeans_id == \
-        "KMeans(init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
+        "KMeans(algorithm='auto',init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
     expected_ids = (
         "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id),  # sklearn < 0.17
