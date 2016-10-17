@@ -293,7 +293,7 @@ def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=
     Parameters
     ----------
     df : pandas DataFrame
-      Should contain a column
+      Should contain a column "whatid_col"
 
     whatid_col : string
       The name of the column where the whatami id strings are stored.
