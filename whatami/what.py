@@ -171,7 +171,7 @@ class What(object):
                 if non_ids_too:
                     kvs = sorted(what.conf.items())
                 else:
-                    kvs = sorted(item for item in what.conf.items() if item[0] not in self.non_id_keys)
+                    kvs = sorted(item for item in what.conf.items() if item[0] not in what.non_id_keys)
             elif isinstance(what, (list, tuple)) and collections_too:
                 kvs = enumerate(what)
             elif isinstance(what, dict) and collections_too:
