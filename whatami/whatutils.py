@@ -237,6 +237,7 @@ def match_whatids(whatids, template_whatid, ignored_keys=(),
     --------
     >>> template = "A(x='x',y=B(x='yx'))"
     >>> whatids = (template,
+    ...            "NotA(x='x',y=B(x='yx'))",
     ...            "A(x='notx',y=B(x='yx'))",
     ...            "A(x='x',y=B(x='notbx'))",
     ...            "A(x='notx',y=B(x='notbx'))",
