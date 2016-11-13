@@ -11,8 +11,8 @@ from functools import partial
 from collections import OrderedDict
 
 from .whatutils import what2id
-from .misc import is_iterable, call_dict, decorate_some
-from .plugins import has_pandas, pd, toolz
+from .misc import is_iterable, decorate_some, ensure_has_positional_args
+from .plugins import pd, toolz
 
 
 class WhatamiRegistry(object):
@@ -115,7 +115,11 @@ class _DefaultDict(dict):
             return self.default
 
 
-class Recorder(with_metaclass(decorate_some(add=toolz.curry))):
+_RecorderMeta = decorate_some(add=[partial(ensure_has_positional_args, args=('ids',)),
+                                   toolz.curry])
+
+
+class Recorder(with_metaclass(_RecorderMeta)):
     """Manual data input helper."""
 
     def __init__(self,
