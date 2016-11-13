@@ -75,12 +75,18 @@ class WhatamiRegistry(object):
         del self._nick2id[nickname]
         del self._id2nick[whatid]
 
-    def nick2id(self, nickname):
-        """Maps a nickname to the corrensponding id, returning None if the pair is not in the registry."""
+    def nick2id(self, nickname):  # type: (str) -> Optional[str]
+        """
+        Maps a nickname to the corrensponding id-
+        Returns a string or None if the pair is not in the registry.
+        """
         return self._nick2id.get(nickname, None)
 
-    def id2nick(self, whatid):
-        """Maps an id to the corrensponding nickname, returning None if the pair is not in the registry."""
+    def id2nick(self, whatid):  # type: (str) -> Optional[str]
+        """
+        Maps an id to the corrensponding nickname.
+        Returns a string or None if the pair is not in the registry.
+        """
         return self._id2nick.get(whatid, None)
 
     def nick_or_id(self, what):
