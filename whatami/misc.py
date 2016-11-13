@@ -20,6 +20,58 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
+def required_args(func):
+    """
+    Returns a list with the positional arguments of the function.
+
+    Examples
+    --------
+    >>> def func(a, b, c=3, *args, **kwargs):
+    ...     return a, b, c, args, kwargs
+    >>> required_args(func)
+    ['a', 'b']
+    """
+    args, _, _, defaults = inspect.getargspec(func)
+    if defaults:
+        args = args[:-len(defaults)]
+    return args
+
+
+def ensure_has_positional_args(func, args=()):
+    """
+    Ensures that a function has at least the positional arguments specified in `args`.
+    If that is not the case, an exception is raised.
+    If that is the case, the function itself is returned.
+
+    Examples
+    --------
+    >>> def func(a, b, c=3, *args, **kwargs):
+    ...     return a, b, c, args, kwargs
+    >>> func == ensure_has_positional_args(func, args=())
+    True
+    >>> func == ensure_has_positional_args(func, args=('a',))
+    True
+    >>> func == ensure_has_positional_args(func, args=('a', 'b'))
+    True
+    >>> ensure_has_positional_args(func, args=('c',))
+    Traceback (most recent call last):
+    ...
+    Exception: function 'func' is missing ['c'] positional args; name positional args correctly
+    >>> ensure_has_positional_args(func, args=('nocilla',))
+    Traceback (most recent call last):
+    ...
+    Exception: function 'func' is missing ['nocilla'] positional args; name positional args correctly
+    """
+    func_args = required_args(func)
+    if not set(args) <= set(func_args):
+        # Is there any way to find at this stage if the function is defined within a class,
+        # so we can provide better error messages?
+        raise Exception('function %r is missing %r positional args; name positional args correctly' % (
+            func.__name__,
+            sorted(set(args) - set(func_args))))
+    return func
+
+
 def call_dict(depth=1, ignores=('cls', 'self'), ignore_varargs=False, overrides=None, **over_overrides):
     """
     Returns a dictionary {parameter: value} for the call at the specified frame depth.
