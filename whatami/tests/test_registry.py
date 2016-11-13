@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+from whatami import call_dict
 from ..what import whatable
 from ..registry import WhatamiRegistry, Recorder
 
@@ -101,15 +102,56 @@ def test_reset(registry, what2nick):
     assert registry.list() == []
 
 
-def test_recorder():
-
-    rec = Recorder(name='registry', id_column_name='name')
+def test_recorder_basic():
+    rec = Recorder(name='registry', id_column_name='name', register='me')
     assert rec.name == 'registry'
+    # curried add
     keep = rec.add(keep=True)
     drop = rec.add(keep=False)
     rec.add('first', afield=3)
     keep('keepme', anotherfield=4)
     drop('dropme', why='ugliness')
-    assert rec.get('first') == {'name': 'first', 'afield': 3}
-    assert rec.get('keepme') == {'name': 'keepme', 'keep': True, 'anotherfield': 4}
-    assert rec.get('dropme') == {'name': 'dropme', 'keep': False, 'why': 'ugliness'}
+    assert rec.get('first') == [{'name': 'first', 'afield': 3, 'register': 'me'}]
+    assert rec.get('keepme') == [{'name': 'keepme', 'keep': True, 'anotherfield': 4, 'register': 'me'}]
+    assert rec.get('dropme') == [{'name': 'dropme', 'keep': False, 'why': 'ugliness', 'register': 'me'}]
+    # partial add
+    pkeep = rec.padd(keep=True)
+    records = pkeep('keepmepartial', why='pity')
+    expectation = {'keepmepartial': {'name': 'keepmepartial',
+                                     'keep': True, 'why': 'pity', 'register': 'me'}}
+    assert records == expectation
+    assert rec.get('keepmepartial') == [expectation['keepmepartial']]
+    # multiple adds on one call
+    records = pkeep(['a', 'b'], why='why not', price=[3, 2])
+    assert records == {
+        'a': {'name': 'a', 'keep': True, 'why': 'why not', 'price': 3, 'register': 'me'},
+        'b': {'name': 'b', 'keep': True, 'why': 'why not', 'price': 2, 'register': 'me'},
+    }
+    # disallow duplicates
+    with pytest.raises(Exception) as excinfo:
+        rec.add('a')
+    assert '"a" is already in the registry' in str(excinfo.value)
+
+
+def test_recorder_inheritance():
+    class Books(Recorder):
+        # noinspection PyMethodOverriding
+        def add(self, ids, title, author, collection, **fields):
+            return super(Books, self).add(**call_dict())
+    books = Books()
+    # noinspection PyArgumentList
+    reverte_alatriste = books.add(author='Arturo', collection='Alatriste')
+    reverte_alatriste('ala1', 'El Capitan Alatriste')
+    reverte_alatriste(['ala2', 'ala3'],
+                      ['Limpieza de sangre', 'El sol de Breda'],
+                      sequels=True)
+
+
+def test_recorder_inheritance_naming_contract_check():
+    with pytest.raises(Exception) as excinfo:
+        class BadRecorder(Recorder):
+            def add(self, bad_name, **fields):
+                return super(BadRecorder, self).add(bad_name, **fields)
+    assert "function 'add' is missing ['ids'] positional args" in str(excinfo.value)
+
+# TODO: get the tests in Recorder doctest here, and expand with more (corner) cases
