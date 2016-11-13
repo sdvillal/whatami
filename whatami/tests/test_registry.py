@@ -144,8 +144,23 @@ def test_recorder_inheritance():
     reverte_alatriste('ala1', 'El Capitan Alatriste')
     reverte_alatriste(['ala2', 'ala3'],
                       ['Limpieza de sangre', 'El sol de Breda'],
-                      sequels=True)
-
+                      sequel=True)
+    ala1, ala2, ala3 = books.get('ala1', 'ala2', 'ala3')
+    assert ala1 == {'author': 'Arturo',
+                    'collection': 'Alatriste',
+                    'id': 'ala1',
+                    'title': 'El Capitan Alatriste'}
+    assert ala2 == {'author': 'Arturo',
+                    'collection': 'Alatriste',
+                    'id': 'ala2',
+                    'title': 'Limpieza de sangre',
+                    'sequel': True}
+    assert ala3 == {'author': 'Arturo',
+                    'collection': 'Alatriste',
+                    'id': 'ala3',
+                    'title': 'El sol de Breda',
+                    'sequel': True}
+    
 
 def test_recorder_inheritance_naming_contract_check():
     with pytest.raises(Exception) as excinfo:
