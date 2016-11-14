@@ -626,7 +626,7 @@ class Recorder(with_metaclass(_RecorderMeta)):
         config_dict = {param: self._params2dict(ids, value, unbox_iterables)
                        for param, value in columns.items()}
         # Add each id in turn...
-        records = {}
+        records = OrderedDict()
         for an_id in ids:
             # Check id uniqueness
             if an_id in self._registry:
