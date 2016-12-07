@@ -446,7 +446,7 @@ class Recorder(with_metaclass(_RecorderMeta)):
     >>> # noinspection PyTypeChecker
     ... rec = Recorder(name='test', id_extractor=Counter().next)
     >>> rec.add(['first', 'second'])
-    {1: {'id': 1}, 2: {'id': 2}}
+    OrderedDict([(1, {'id': 1}), (2, {'id': 2})])
 
     We can query the size of the registry using `len`
     >>> len(rec) == len(rec)

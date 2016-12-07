@@ -160,7 +160,7 @@ def test_recorder_inheritance():
                     'id': 'ala3',
                     'title': 'El sol de Breda',
                     'sequel': True}
-    
+
 
 def test_recorder_inheritance_naming_contract_check():
     with pytest.raises(Exception) as excinfo:
