@@ -122,6 +122,16 @@ def call_dict(depth=1, ignores=('cls', 'self'), ignore_varargs=False, overrides=
     ...     return call_dict(overrides={'depth': 99}, x=99)
     >>> sorted(overriding_caller(1).items())
     [('depth', 99), ('x', 99), ('y', 3)]
+
+    call_dict works by inspecting locals. This allows to change the value
+    of a parameter within the function itself, to add more complicated
+    logic
+    >>> # noinspection PyUnusedLocal
+    ... def caller(x, y=3, *args, **kwargs):
+    ...     y = y if y is not None else 'custom_logic'
+    ...     return call_dict()
+    >>> sorted(caller(1, y=None).items())
+    [('x', 1), ('y', 'custom_logic')]
     """
     import inspect
     args, varargs, kwargs_name, frame_locals = inspect.getargvalues(inspect.stack()[depth][0])
