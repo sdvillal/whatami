@@ -146,7 +146,11 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_a_string(_, children):
-        return children[0]
+        if 1 == len(children):
+            return children[0]
+        elif 0 == len(children):
+            return ''
+        raise ValueError('unexpected string children: %r' % children)
 
     @staticmethod
     def visit_a_true(*_):

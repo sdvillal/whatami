@@ -21,6 +21,12 @@ def test_parse_whatid_within_string():  # pragma: no cover
     assert what.conf == {'name': "'banyan'"}
 
 
+def test_parse_empty_string():
+    what = parse_whatid("f(x='')")
+    assert what.name == 'f'
+    assert what.conf == {'x': ''}
+
+
 def test_parse_id_simple():
     # no parameters
     what = parse_whatid('rfc()')
