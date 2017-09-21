@@ -49,7 +49,7 @@ def builtin_plugin(v):
 def numeric_type_plugin(v):
     """Numeric types."""
     types = (int, float, complex) if not PY2 else (int, long, float, complex)
-    if v in types:
+    if any(v is t for t in types):  # N.B. do not do v in types, as it will fail with numpy arrays
         return '%s()' % v.__name__
 
 
