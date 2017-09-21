@@ -64,15 +64,17 @@ def dict_plugin(v):
     Any custom representation for a dictionary subclass must precede this plugin in the plugins chain.
     """
     if isinstance(v, dict):
+        if isinstance(v, OrderedDict):
+            what = whatareyou(v)
+            what.conf['seq'] = list(v.items())
+            return what.id()
         kvs = ['%s:%s' % (WhatamiPluginManager.build_string(dict_k),
                           WhatamiPluginManager.build_string(dict_v))
                for dict_k, dict_v in v.items()]
-        if not isinstance(v, OrderedDict):
-            kvs = sorted(kvs)
-        id_string = '{%s}' % ','.join(kvs)
+        id_string = '{%s}' % ','.join(sorted(kvs))
         if type(v) == dict:
             return id_string
-        return '%s(seq=%s)' % (v.__class__.__name__, id_string)
+        return whatareyou(v).id()
 
 
 def set_plugin(v):

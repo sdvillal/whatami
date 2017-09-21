@@ -27,9 +27,9 @@ def test_dict_plugin():
             "{'func':test_dict_plugin(),'int':1,'str':'1'}")
 
     # OrderedDict
-    assert dict_plugin(OrderedDict()) == 'OrderedDict(seq={})'
+    assert dict_plugin(OrderedDict()) == 'OrderedDict(seq=[])'
     assert (dict_plugin(OrderedDict([('int', 1), ('str', '1'), ('func', test_dict_plugin)])) ==
-            "OrderedDict(seq={'int':1,'str':'1','func':test_dict_plugin()})")
+            "OrderedDict(seq=[('int',1),('str','1'),('func',test_dict_plugin())])")
 
 
 def test_set_plugin():
