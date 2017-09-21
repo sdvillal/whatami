@@ -195,40 +195,6 @@ def test_what_copy(c1, c2, c3):
         assert what == what.copy()
 
 
-def test_numpy_plugin(array):
-
-    array, array_hash2, array_hash3 = array
-    array_hash = array_hash2 if not PY3 else array_hash3
-
-    # joblib hash has changed?
-    from whatami.plugins import hasher
-    assert array_hash == hasher(array)
-
-    @whatable
-    def lpp(adjacency=array):  # pragma: no cover
-        return adjacency
-
-    assert lpp.what().id() == "lpp(adjacency=ndarray(hash='%s'))" % array_hash
-
-
-def test_pandas_plugin(df):
-
-    df, df_hash2, df_hash3 = df
-    df_hash = df_hash2 if not PY3 else df_hash3
-    name = df.__class__.__name__
-
-    # check for changes in joblib hashing and pandas pickling across versions
-    from whatami.plugins import hasher
-    assert df_hash == hasher(df)
-
-    # check for proper string generation
-    @whatable
-    def lpp(adjacency=df):  # pragma: no cover
-        return adjacency
-
-    assert lpp.what().id() == "lpp(adjacency=%s(hash='%s'))" % (name, df_hash)
-
-
 def test_to_dict(c1, c2, c3):
     assert c1.what().to_dict() == {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'},
                                    'whatami_name': 'C1',

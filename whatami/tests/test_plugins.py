@@ -2,11 +2,15 @@
 """Test id string generation plugins on isolation."""
 from collections import namedtuple, OrderedDict
 
-from future.utils import PY2
+from future.utils import PY2, PY3
+from whatami import whatable
 
 from whatami.plugins import (string_plugin, rng_plugin, has_numpy,
                              tuple_plugin, list_plugin, set_plugin, dict_plugin)
 import pytest
+
+# noinspection PyUnresolvedReferences
+from .fixtures import df, array
 
 
 def test_string_plugin():
@@ -85,3 +89,37 @@ def test_rng_plugin():
     expected_hash = 'e1f5b00dbefe7c9ea168ded4bbcd2ba8' if PY2 else '662c48a1ec3131127823ec872403fc3c'
     expected = "RandomState(state=tuple(seq=('MT19937',ndarray(hash='%s'),2,0,0.0)))" % expected_hash
     assert expected == rng_plugin(rng)
+
+
+def test_numpy_plugin(array):
+
+    array, array_hash2, array_hash3 = array
+    array_hash = array_hash2 if not PY3 else array_hash3
+
+    # joblib hash has changed?
+    from whatami.plugins import hasher
+    assert array_hash == hasher(array)
+
+    @whatable
+    def lpp(adjacency=array):  # pragma: no cover
+        return adjacency
+
+    assert lpp.what().id() == "lpp(adjacency=ndarray(hash='%s'))" % array_hash
+
+
+def test_pandas_plugin(df):
+
+    df, df_hash2, df_hash3 = df
+    df_hash = df_hash2 if not PY3 else df_hash3
+    name = df.__class__.__name__
+
+    # check for changes in joblib hashing and pandas pickling across versions
+    from whatami.plugins import hasher
+    assert df_hash == hasher(df)
+
+    # check for proper string generation
+    @whatable
+    def lpp(adjacency=df):  # pragma: no cover
+        return adjacency
+
+    assert lpp.what().id() == "lpp(adjacency=%s(hash='%s'))" % (name, df_hash)
