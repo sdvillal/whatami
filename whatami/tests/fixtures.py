@@ -1,6 +1,7 @@
 # coding=utf-8
 from ..what import whatable, whatareyou
-from ..plugins import has_numpy, has_pandas
+from ..plugins import has_numpy, has_pandas, pd, np
+from distutils.version import LooseVersion
 import pytest
 
 
@@ -59,7 +60,6 @@ def numpy_skip(test):  # pragma: no cover
                 ids=['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'])
 def array(request):
     """Hardcodes hashes, so we can detect hashing changes in joblib."""
-    from ..plugins import np
     arrays = {
         # base array
         'a1': (np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]),
@@ -89,8 +89,6 @@ def pandas_skip(test):  # pragma: no cover
     if not has_pandas():
         return pytest.mark.skipif(test, reason='the pandas plugin requires pandas')
     # Check library versions
-    from ..plugins import pd
-    from distutils.version import LooseVersion
     minor = LooseVersion(pd.__version__).version[1]
     if minor not in (16, 17, 18, 20):
         return pytest.mark.skipif(test, reason='these tests do not support pandas version %s' % pd.__version__)
@@ -101,10 +99,9 @@ def pandas_skip(test):  # pragma: no cover
                 ids=['df1', 'df2', 'df3', 'df4', 's1', 's2'])
 def df(request):
     """Hardcodes hashes, so we can detect hashing changes in joblib and pandas serialisation across versions."""
-    from ..plugins import pd, np
-    from distutils.version import LooseVersion
+    # Unfortunate, that pandas hashes are unstable across pandas versions and python 2/3 should be documented
     adjacency = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
-    dfs = {}
+    dfs = {}  # fixture_name -> (dataframe, py2_expected_hash, py3_expected_hash)
     if LooseVersion('0.16') <= LooseVersion(pd.__version__) < LooseVersion('0.17'):  # pragma: no cover
         dfs = {
             'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
@@ -179,7 +176,6 @@ def df_with_whatid(request):
         - key: for top level keys
         - key1_key2_key3: for recursive keys
     """
-    from ..plugins import pd
     if request.param == 'dfw1':
         whatids = [
             "Blosc(cname='blosclz',level=5,shuffle=False)",
