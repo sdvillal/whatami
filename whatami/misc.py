@@ -312,7 +312,7 @@ def _dict(obj):
     """
     try:
         return obj.__dict__.copy()
-    except:
+    except AttributeError:
         return {}
 
 
@@ -522,7 +522,7 @@ def is_iterable(v):
     """Checks whether an object is iterable or not."""
     try:
         iter(v)
-    except:
+    except TypeError:
         return False
     return True
 

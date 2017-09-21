@@ -34,10 +34,10 @@ def what2id(obj):
         return obj
     try:
         return obj.what().id()
-    except:
+    except AttributeError:
         try:
             return obj.id()
-        except:
+        except AttributeError:
             return whatareyou(obj).id()
 
 
@@ -371,6 +371,7 @@ def whatadd(what, key, values):
     if key in what.conf:
         raise ValueError('"%s" already exists as a key in the id' % key)
     return [what.set(key, value).id() for value in values]
+
 
 # --- Maintenance
 
