@@ -92,7 +92,7 @@ def pandas_skip(test):  # pragma: no cover
     from ..plugins import pd
     from distutils.version import LooseVersion
     minor = LooseVersion(pd.__version__).version[1]
-    if minor not in (16, 17, 18):
+    if minor not in (16, 17, 18, 20):
         return pytest.mark.skipif(test, reason='these tests do not support pandas version %s' % pd.__version__)
     return test
 
@@ -149,6 +149,21 @@ def df(request):
                    '2b0e7e414f6cbf83df534c715f307b25', '4273d3625a0b2f4374aef2405e144d81'),
             's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
                    '43dbf2ae18abdf54921ea1a49e8d847b', '50052bba6794aceab461a1f2a1baa785'),
+        }
+    elif LooseVersion('0.20') <= LooseVersion(pd.__version__) < LooseVersion('0.21'):  # pragma: no cover
+        dfs = {
+            'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
+                    '5b0f297230bccaab968ca2464d7a10f0', '7133178ca4922a7ed8b17c8cc9b7c6c2'),
+            'df2': (pd.DataFrame(data=adjacency, columns=['xx', 'yy', 'zz']),
+                    '4973d1cb908113c2a514d407766dfe7b', '20759a616b21a050c7edfabb7f8d3197'),
+            'df3': (pd.DataFrame(data=adjacency.T, columns=['x', 'y', 'z']),
+                    '7114b8f27b1a084f47dc2d491a58ea7c', '74680aa0ba883e3df7f370708641df3b'),
+            'df4': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z'], index=['r1', 'r2', 'r3']),
+                    '10f1e6b7451beac5a3c625e59a078557', '41c3285396a6a23eecf5170bd4d05089'),
+            's1': (pd.Series(data=adjacency.ravel()),
+                   '1ef045028b9f4dd882239c492e684a33', '4273d3625a0b2f4374aef2405e144d81'),
+            's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
+                   '645ec1368429a0f2a5385aa0aa2daff6', '50052bba6794aceab461a1f2a1baa785'),
         }
     return dfs[request.param]
 
