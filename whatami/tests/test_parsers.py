@@ -4,6 +4,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import absolute_import
+
 import arpeggio
 
 from ..what import What
@@ -159,6 +160,13 @@ def test_parse_id_out_name():
     assert what.conf == {'x': What(name='Normal',
                                    conf={'mean': 0, 'std': 1},
                                    out_name='std')}
+
+
+def test_parse_empty_dictionaries():
+    what = parse_whatid('defaultdict(default_factory=int(),seq={})')
+    assert what.name == 'defaultdict'
+    assert what.conf == {'default_factory': What(name='int', conf={}),
+                         'seq': {}}
 
 
 def test_arpeggio_resilience():

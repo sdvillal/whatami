@@ -86,8 +86,8 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return [StrMatch('set()'), StrMatch('frozenset()')]
 
     def a_non_empty_set():
-        return [(StrMatch('{'), Optional(list_elements), StrMatch('}')),
-                (StrMatch('frozenset({'), Optional(list_elements), StrMatch('})'))]
+        return [(StrMatch('{'), list_elements, StrMatch('}')),
+                (StrMatch('frozenset({'), list_elements, StrMatch('})'))]
 
     def a_set():
         return [an_empty_set, a_non_empty_set]
@@ -195,6 +195,8 @@ class WhatamiTreeVisitor(PTNodeVisitor):
 
     @staticmethod
     def visit_a_dict(_, children):
+        if len(children) == 0:
+            return {}
         return dict(list(children[0]))
 
     @staticmethod
