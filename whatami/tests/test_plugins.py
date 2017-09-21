@@ -1,6 +1,6 @@
 # coding=utf-8
 """Test id string generation plugins on isolation."""
-from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict, defaultdict
 
 from future.utils import PY2, PY3
 from whatami import whatable
@@ -30,6 +30,12 @@ def test_dict_plugin():
     assert dict_plugin(OrderedDict()) == 'OrderedDict(seq=[])'
     assert (dict_plugin(OrderedDict([('int', 1), ('str', '1'), ('func', test_dict_plugin)])) ==
             "OrderedDict(seq=[('int',1),('str','1'),('func',test_dict_plugin())])")
+
+    # defaultdict
+    assert dict_plugin(defaultdict(int)) == 'defaultdict(default_factory=int(),seq={})'
+    d = defaultdict(int)
+    d[0] = 1
+    assert dict_plugin(d) == 'defaultdict(default_factory=int(),seq={0:1})'
 
 
 def test_set_plugin():
