@@ -1,12 +1,12 @@
 # coding=utf-8
+import pickle
+from collections import defaultdict
 from functools import partial
 
-import pickle
-
+from whatami.plugins import WhatamiPluginManager, anyobject0x_plugin, anyobject_plugin
+from .fixtures import *
 from ..what import is_whatable, What, trim_dict, config_dict_for_object
 from ..whatutils import what2id
-from .fixtures import *
-from whatami.plugins import WhatamiPluginManager, anyobject0x_plugin, anyobject_plugin
 
 
 def test_whatable_decorator():
@@ -413,6 +413,7 @@ def test_whatable_inplacefunc():
     wafunc = whatable(afunc, modify_func_inplace=True)
 
     assert afunc is wafunc
+    # noinspection PyUnresolvedReferences
     assert afunc.what().id() == wafunc.what().id()
     assert wafunc.what().id() == 'afunc(x=3)'
 
@@ -432,3 +433,32 @@ def test_whatareyou_basic_collections():
     # Dict
     x = {1: 'one', 2: 'two', '3': 'three'}
     assert whatareyou(x).id() == "dict(seq={'3':'three',1:'one',2:'two'})"
+
+
+def test_whatareyou_derived_collections():
+
+    # Dict subclass
+    x = defaultdict(int)
+    assert whatareyou(x).id() == 'defaultdict(default_factory=int(),seq={})'
+    x[0] = 2
+    assert whatareyou(x).id() == 'defaultdict(default_factory=int(),seq={0:2})'
+
+    # Tuple subclass
+    class TD(tuple):
+        def __new__(cls, a, b):
+            # noinspection PyArgumentList
+            return super(TD, cls).__new__(cls, tuple(b))
+
+        # noinspection PyMissingConstructor,PyUnusedLocal
+        def __init__(self, a, b):
+            self.a = a
+    x = TD(123, [1, 2])
+    assert whatareyou(x).id() == 'TD(a=123,seq=(1,2))'
+
+    # List subclass (that bad smell...)
+    class LD(list):
+        def __init__(self, a, b):
+            super(LD, self).__init__(b)
+            self.a = a
+    x = LD(123, [1, 2])
+    assert whatareyou(x).id() == 'LD(a=123,seq=[1,2])'

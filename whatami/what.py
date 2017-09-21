@@ -71,6 +71,7 @@ import inspect
 from copy import deepcopy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
+from collections import defaultdict
 
 from future.utils import PY3
 
@@ -327,16 +328,20 @@ def whatareyou(obj,
     try:
         name, cd = callable2call(obj)
     except (ValueError, TypeError):
+        name = obj.__class__.__name__
+        cd = config_dict_for_object(obj,
+                                    add_dict=add_dict,
+                                    add_slots=add_slots,
+                                    add_properties=add_properties,
+                                    add_class=add_class)
         if type(obj) in (list, tuple, set, dict):  # N.B. do not use isinstance here
-            name = obj.__class__.__name__
-            cd = {'seq': obj}
-        else:
-            name = obj.__class__.__name__
-            cd = config_dict_for_object(obj,
-                                        add_dict=add_dict,
-                                        add_slots=add_slots,
-                                        add_properties=add_properties,
-                                        add_class=add_class)
+            cd['seq'] = obj
+        elif isinstance(obj, dict):
+            cd['seq'] = dict(**obj)
+        elif isinstance(obj, tuple):
+            cd['seq'] = tuple(obj)
+        elif isinstance(obj, list):
+            cd['seq'] = list(obj)
     return What(name=name,
                 conf=trim_dict(cd,
                                exclude_prefix=exclude_prefix,
