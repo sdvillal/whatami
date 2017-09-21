@@ -337,7 +337,7 @@ def whatareyou(obj,
         if type(obj) in (list, tuple, set, dict):  # N.B. do not use isinstance here
             cd['seq'] = obj
         elif isinstance(obj, dict):
-            cd['seq'] = dict(**obj)
+            cd['seq'] = {k: v for k, v in obj.items()}
         elif isinstance(obj, tuple):
             cd['seq'] = tuple(obj)
         elif isinstance(obj, list):
