@@ -6,4 +6,4 @@ from .parsers import *
 from .whatutils import *
 from .registry import *
 
-__version__ = '5.1.11dev0'
+__version__ = '5.1.11'
