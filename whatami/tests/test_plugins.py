@@ -6,7 +6,7 @@ from future.utils import PY2, PY3
 from whatami import whatable
 
 from whatami.plugins import (string_plugin, rng_plugin, has_numpy,
-                             tuple_plugin, list_plugin, set_plugin, dict_plugin)
+                             tuple_plugin, list_plugin, set_plugin, dict_plugin, numeric_type_plugin)
 import pytest
 
 # noinspection PyUnresolvedReferences
@@ -123,3 +123,14 @@ def test_pandas_plugin(df):
         return adjacency
 
     assert lpp.what().id() == "lpp(adjacency=%s(hash='%s'))" % (name, df_hash)
+
+
+def test_numeric_type_plugin():
+    assert numeric_type_plugin(int) == 'int()'
+    assert numeric_type_plugin(float) == 'float()'
+    assert numeric_type_plugin(complex) == 'complex()'
+
+    @whatable
+    def f(x=int):  # pragma: no cover
+        return x
+    assert f.what().id() == "f(x=int())"

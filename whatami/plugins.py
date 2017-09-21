@@ -4,7 +4,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import print_function, absolute_import
-from future.utils import string_types
+from future.utils import string_types, PY2
 
 import inspect
 from collections import OrderedDict
@@ -44,6 +44,13 @@ def builtin_plugin(v):
     if inspect.isbuiltin(v):
         raise Exception('Cannot determine the argspec of a non-python function (%s). '
                         'Please wrap it in a whatable' % v.__name__)
+
+
+def numeric_type_plugin(v):
+    """Numeric types."""
+    types = (int, float, complex) if not PY2 else (int, long, float, complex)
+    if v in types:
+        return '%s()' % v.__name__
 
 
 def property_plugin(v):
@@ -182,6 +189,7 @@ def anyobject_plugin(v):
     """Delegate to str, this should be the last plugin in the chain."""
     return str(v)
 
+
 # --- Numpy and pandas
 
 hasher = partial(hasher, hash_name='md5')
@@ -288,6 +296,7 @@ class WhatamiPluginManager(object):
         whatable_plugin,
         # basic plugins
         builtin_plugin,
+        numeric_type_plugin,
         property_plugin,
         string_plugin,
         tuple_plugin,
