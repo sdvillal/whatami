@@ -13,8 +13,9 @@ from itertools import chain
 from operator import itemgetter
 from arpeggio import NoMatch
 
-from whatami.parsers import parse_whatid, build_oldwhatami_parser
-from whatami.what import whatable, whatareyou, What, is_whatable
+from whatami import (config_dict_for_object,
+                     parse_whatid, build_oldwhatami_parser,
+                     whatable, whatareyou, What, is_whatable)
 
 
 def what2id(obj):
@@ -371,6 +372,20 @@ def whatadd(what, key, values):
     if key in what.conf:
         raise ValueError('"%s" already exists as a key in the id' % key)
     return [what.set(key, value).id() for value in values]
+
+
+class FunctionLike(object):
+    """Mixin that helps to create callable objects that appear like regular python functions to whatami."""
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
+    def what(self):
+        cd = {k: v for k, v in config_dict_for_object(self).items()
+              if not k.startswith('_') and not k.endswith('_')}
+        # noinspection PyTypeChecker
+        return What(self.__name__, cd)
 
 
 # --- Maintenance

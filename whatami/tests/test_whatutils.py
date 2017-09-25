@@ -1,6 +1,10 @@
 # coding=utf-8
 """Tests various functions in whatutils."""
 from functools import partial
+
+from whatami import FunctionLike
+from whatami.whatutils import what2id
+
 from ..whatutils import whatid2columns
 from .fixtures import df_with_whatid
 
@@ -52,3 +56,18 @@ def test_whatid2columns(df_with_whatid):
     assert edf is df_with_whatid
     for col in toplevel_values:
         assert_series_equal(df_with_whatid[col], df_with_whatid['pre-' + col + '-post'])
+
+
+def test_function_like():
+
+    class B(FunctionLike):
+
+        def __init__(self, a, b):
+            super(B, self).__init__()
+            self.a = a
+            self.b = b
+
+        def __call__(self, *args, **kwargs):
+            pass
+
+    assert what2id(B(1, 'b')) == "B(a=1,b='b')"
