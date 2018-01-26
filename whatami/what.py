@@ -230,6 +230,13 @@ class What(object):
                 return w
             raise
 
+    def get(self, item, default=None):
+        """Get ala dict."""
+        try:
+            self[item]
+        except KeyError:
+            return default
+
     # ---- Fluency
 
     def set(self, key, value, copy=False):

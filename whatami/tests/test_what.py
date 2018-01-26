@@ -75,6 +75,8 @@ def test_what_getitem_magic(c1, c2, c3):
     assert c3.what()['c2', 'c1', 'p1'] == 'blah'
     with pytest.raises(KeyError):
         assert c1.what()['not_there']
+    assert c3.what().get('not_there') is None
+    assert c3.what().get('not_there', 'good') is 'good'
 
 
 def test_what_eq_magic(c1, c2, c3):
