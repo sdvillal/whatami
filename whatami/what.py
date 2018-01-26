@@ -233,7 +233,7 @@ class What(object):
     def get(self, item, default=None):
         """Get ala dict."""
         try:
-            self[item]
+            return self[item]
         except KeyError:
             return default
 
