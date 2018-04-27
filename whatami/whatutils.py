@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from future.utils import string_types
 
 import inspect

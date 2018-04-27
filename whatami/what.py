@@ -65,13 +65,12 @@ buy(currency='euro',price=4294967296)
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals
 import hashlib
 import inspect
 from copy import deepcopy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
-from collections import defaultdict
 
 from future.utils import PY3
 
@@ -292,7 +291,10 @@ class What(object):
     def _trim_too_long(string, maxlength=0):
         """Returns the string or its sha1 if the string length is larger than maxlength."""
         if 0 < maxlength < len(string):
-            return hashlib.sha1(string.encode('utf-8')).hexdigest()
+            try:
+                return hashlib.sha1(string.encode('utf-8')).hexdigest()
+            except UnicodeError:
+                return hashlib.sha1(string.decode('utf-8').encode('utf-8')).hexdigest()
         return string
 
     # --- ID to dictionary
@@ -388,7 +390,7 @@ def is_whatable(obj):
             raise Exception('Cannot infer return type for unbound method what, '
                             'please pass a %r instance instead of the class' % obj)
         return isinstance(what_method(), What)
-    except:
+    except Exception:
         return False
 
 
@@ -552,5 +554,5 @@ def whatable(obj=None,
         else:
             obj.what = types.MethodType(whatablefunc, obj)
         return obj
-    except:
+    except Exception:
         raise Exception('cannot whatamise %s' % type(obj))

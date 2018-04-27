@@ -5,7 +5,9 @@
 # Licence: BSD 3 clause
 
 from __future__ import print_function, absolute_import, unicode_literals  # N.B. arpeggio wants unicode
-from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
+from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree, \
+    Terminal, text
+from future.utils import string_types
 
 
 def build_whatami_parser(reduce_tree=False, debug=False):
@@ -242,6 +244,16 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     def visit_whatami_id_top(_, children):
         return children[0]
 
+    def visit__default__(self, node, children):
+        if isinstance(node, Terminal):
+            if node.suppress:
+                return None
+            try:
+                return str(node, 'utf-8')
+            except (UnicodeError, TypeError):
+                return str(node).decode('utf-8')
+        return super(WhatamiTreeVisitor, self).visit__default__(node, children)
+
 
 DEFAULT_WHATAMI_PARSER = build_whatami_parser()
 DEFAULT_WHATAMI_VISITOR = WhatamiTreeVisitor()
@@ -286,6 +298,11 @@ def parse_whatid(id_string, parser=None, visitor=None):
     if visitor is None:
         visitor = DEFAULT_WHATAMI_VISITOR
     try:
+        if isinstance(id_string, string_types):
+            try:
+                id_string = id_string.encode('utf-8')
+            except UnicodeDecodeError:
+                id_string = id_string.decode('utf-8').encode('utf-8')
         return visit_parse_tree(parser.parse(id_string), visitor=visitor)
     except TypeError:
         # Remove this once arpeggio is released with this fix:

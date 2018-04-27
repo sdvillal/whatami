@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 from ..what import whatable, What
 from ..parsers import parse_whatid

@@ -1,5 +1,6 @@
 # coding=utf-8
 """Tests various functions in whatutils."""
+from __future__ import unicode_literals
 from functools import partial
 
 from whatami import FunctionLike

@@ -3,7 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from future.builtins import str
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier

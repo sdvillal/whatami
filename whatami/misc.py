@@ -4,7 +4,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from functools import partial
 from itertools import chain
 import datetime
@@ -623,7 +623,7 @@ def decorate_some(name='DecorateSome', **decorators):
                 for attr_decorator in attr_decorators:
                     d[attr] = attr_decorator(d[attr])
         return type.__new__(mcs, name, bases, d)
-    return type(name, (type,), {'__new__': new_decorate})
+    return type(str(name), (type,), {'__new__': new_decorate})
 
 
 # --- Import helpers
@@ -727,3 +727,13 @@ def mlexp_info_helper(title,
         ('comments', comments),
     ))
     return info
+
+
+# --- Unicode encoding fun stuff (simplify if we ever move only for python 3)
+
+
+def ensure_encoding(text, encoding='utf-8'):
+    try:
+        return str(text, encoding)
+    except TypeError:
+        return text.decode(encoding).encode('utf-8')

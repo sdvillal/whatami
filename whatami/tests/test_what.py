@@ -3,7 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 import hashlib
 
 from future.utils import PY3
@@ -40,21 +40,21 @@ def test_non_id_keys(c3):
     # non-id keys
     config_c3 = c3.what()
     assert config_c3.id() == "C3(c1=C1(length=1,p1='blah',p2='bleh')," \
-                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
+                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne'))"
     assert config_c3.id(nonids_too=True) == "C3(c1=C1(length=1,p1='blah',p2='bleh')," \
-                                            "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')," \
+                                            "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne')," \
                                             "irrelevant=True)"
-    c3id = "C3(c1=C1(length=1,p1='blah',p2='bleh'),c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'))"
+    c3id = "C3(c1=C1(length=1,p1='blah',p2='bleh'),c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne'))"
     assert config_c3.id(nonids_too=False) == c3id
-    sha1 = hashlib.sha1(c3id.encode('utf-8')).hexdigest()
+    sha1 = hashlib.sha1(c3id).hexdigest()
     assert config_c3.id(maxlength=1) == sha1
 
 
 def test_what_str_magic(c1, c2, c3):
     assert str(c1.what()) == "C1(length=1,p1='blah',p2='bleh')"
-    assert str(c2.what()) == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
+    assert str(c2.what()) == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne')"
     assert str(c3.what()) == "C3(c1=C1(length=1,p1='blah',p2='bleh')," \
-                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne'),irrelevant=True)"
+                             "c2=C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne'),irrelevant=True)"
 
 
 def test_what_repr_magic(c1):
@@ -205,7 +205,7 @@ def test_to_dict(c1, c2, c3):
     assert c2.what().to_dict() == {'whatami_conf': {'c1': {'whatami_conf': {'length': 1, 'p1': 'blah', 'p2': 'bleh'},
                                                            'whatami_name': 'C1',
                                                            'whatami_out_name': None},
-                                                    'name': 'roxanne'},
+                                                    'name': 'röxanne'},
                                    'whatami_name': 'C2',
                                    'whatami_out_name': None}
 
@@ -218,7 +218,7 @@ def test_to_dict(c1, c2, c3):
                                                                 'whatami_conf': {'p2': 'bleh',
                                                                                  'length': 1,
                                                                                  'p1': 'blah'}},
-                                                         'name': 'roxanne'}},
+                                                         'name': u'röxanne'}},
                                  'c1': {'whatami_name': 'C1',
                                         'whatami_out_name': None,
                                         'whatami_conf': {'p2': 'bleh', 'length': 1, 'p1': 'blah'}}}}

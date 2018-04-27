@@ -1,5 +1,6 @@
 # coding=utf-8
 """Test id string generation plugins on isolation."""
+from __future__ import unicode_literals
 from collections import namedtuple, OrderedDict, defaultdict
 
 from future.utils import PY2, PY3

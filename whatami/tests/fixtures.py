@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import unicode_literals
 from ..what import whatable, whatareyou
 from ..plugins import has_numpy, has_pandas, pd, np
 from distutils.version import LooseVersion
@@ -25,7 +26,7 @@ def c2(c1):
     """A whatable object with a nested whatable."""
     @whatable
     class C2(object):
-        def __init__(self, name='roxanne', c1=c1):
+        def __init__(self, name='röxanne', c1=c1):
             super(C2, self).__init__()
             self.name = name
             self.c1 = c1

@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import unicode_literals
 import pickle
 from collections import defaultdict
 from functools import partial
@@ -44,12 +45,12 @@ def test_nested_whatables(c1, c2):
     config_c2 = c2.what()
     assert config_c2.name == 'C2'
     assert len(config_c2.conf) == 2
-    assert config_c2.conf['name'] == 'roxanne'
+    assert config_c2.conf['name'] == 'röxanne'
     assert config_c2.conf['c1'].what() == c1.what()
-    assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
+    assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne')"
     c2.c1 = c1.what()
     config_c2 = c2.what()
-    assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='roxanne')"
+    assert config_c2.id() == "C2(c1=C1(length=1,p1='blah',p2='bleh'),name='röxanne')"
 
 
 def test_whatable_partial(c1):

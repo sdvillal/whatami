@@ -3,7 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 from whatami import call_dict
 from ..what import whatable
@@ -167,6 +167,6 @@ def test_recorder_inheritance_naming_contract_check():
         class BadRecorder(Recorder):
             def add(self, bad_name, **fields):
                 return super(BadRecorder, self).add(bad_name, **fields)
-    assert "function 'add' is missing ['ids'] positional args" in str(excinfo.value)
+    assert "function 'add' is missing ['ids'] positional args" in excinfo.value.message
 
 # TODO: get the tests in Recorder doctest here, and expand with more (corner) cases

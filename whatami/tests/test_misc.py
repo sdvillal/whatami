@@ -3,7 +3,7 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from future.utils import PY3
 from datetime import datetime
 import inspect
@@ -70,7 +70,7 @@ def test_callable2call_wrongargs():
     with pytest.raises(Exception) as excinfo:
         callable2call('sorted')
     expected = 'Only callables (partials, functions, builtins...) are allowed, \'sorted\' is none of them'
-    assert str(excinfo.value) == expected
+    assert str(excinfo.value) == str(expected)
 
 
 def test_callable2call_lambdas():

@@ -40,7 +40,7 @@ It also makes really easy to add a what() method to scikit estimators.
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 import inspect
 import warnings
 
