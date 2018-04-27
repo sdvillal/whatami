@@ -41,3 +41,5 @@ nosetests.xml
 
 # Sphinx
 doc/_build
+
+.pytest_cache
