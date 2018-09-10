@@ -35,6 +35,10 @@ This allows the sklearn folks to precisely define a protocol for configuring, co
 retrieval and cloning (along with other niceties like standard control of deprecation).
 
 It also makes really easy to add a what() method to scikit estimators.
+
+See also rendered docs:
+  API: http://scikit-learn.org/stable/modules/classes.html
+  New glossary: http://scikit-learn.org/dev/glossary.html
 """
 
 # Authors: Santi Villalba <sdvillal@gmail.com>
@@ -43,36 +47,16 @@ It also makes really easy to add a what() method to scikit estimators.
 from __future__ import absolute_import
 import inspect
 import warnings
+import logging
+from distutils.version import StrictVersion
 
 from sklearn.base import BaseEstimator
-from sklearn.cluster import KMeans, DBSCAN, MeanShift, SpectralClustering, Birch
-from sklearn.cluster.affinity_propagation_ import AffinityPropagation
-from sklearn.cluster.bicluster import SpectralCoclustering, SpectralBiclustering
-from sklearn.cluster.hierarchical import AgglomerativeClustering, FeatureAgglomeration
-from sklearn.cluster.k_means_ import MiniBatchKMeans
-from sklearn.cross_decomposition import PLSRegression, PLSCanonical, CCA, PLSSVD
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, ExtraTreesClassifier, ExtraTreesRegressor
-from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier, GradientBoostingRegressor
-from sklearn.gaussian_process import GaussianProcess
-from sklearn.linear_model import Ridge, Lasso, ElasticNet, Lars, OrthogonalMatchingPursuit, \
-    BayesianRidge, ARDRegression, LogisticRegression, SGDClassifier, SGDRegressor, Perceptron, LassoLars, \
-    LinearRegression
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
-from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor, \
-    RadiusNeighborsRegressor, NearestCentroid
-from sklearn.pipeline import FeatureUnion
-from sklearn.preprocessing import Normalizer
-from sklearn.preprocessing.data import MinMaxScaler
-from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from ..what import What
 from ..misc import all_subclasses
 
 
 # ----- Manually check which parameters are not part of the default id (WIP)
-
-_LAST_SKLEARN_CHECKED = '1.5.1'
 
 _SKLRegistry = {}
 
@@ -97,94 +81,308 @@ class _SklearnEstimatorID(object):
         self.notes = notes
 
 
-def _a(skclass, nickname, non_id_params=(), notes=None):
+def _a(skclass, nickname=None, non_id_params=(), notes=None):
     """Adds a class to the SKLRegistry."""
     _SKLRegistry[skclass.__name__] = _SklearnEstimatorID(skclass, nickname, non_id_params, notes)
 
 
-# Ensembles
-_a(RandomForestClassifier, 'rfc', ('verbose', 'n_jobs', 'oob_score'),
-   'oob_score used to change the internal representation of the model (recheck); '
-   'warm start is non-id unless we use incremental learning')
-_a(RandomForestRegressor, 'rfr', ('verbose', 'n_jobs', 'oob_score'),
-   'Same non-ids as RFC')
-_a(ExtraTreesClassifier, 'etc', ('n_jobs', 'verbose', 'oob_score'))
-_a(ExtraTreesRegressor, 'etr', ('n_jobs', 'verbose', 'oob_score'))
-_a(GradientBoostingClassifier, 'gbc', ('verbose',))
-_a(GradientBoostingRegressor, 'gbr', ('verbose',))
+def _declare0dot15dot1():  # pragma: no cover
+    from sklearn.cluster import KMeans, DBSCAN, MeanShift, SpectralClustering, Birch
+    from sklearn.cluster.affinity_propagation_ import AffinityPropagation
+    from sklearn.cluster.bicluster import SpectralCoclustering, SpectralBiclustering
+    from sklearn.cluster.hierarchical import AgglomerativeClustering, FeatureAgglomeration
+    from sklearn.cluster.k_means_ import MiniBatchKMeans
+    from sklearn.cross_decomposition import PLSRegression, PLSCanonical, CCA, PLSSVD
+    from sklearn.ensemble import (RandomForestClassifier, RandomForestRegressor,
+                                  ExtraTreesClassifier, ExtraTreesRegressor)
+    from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier, GradientBoostingRegressor
+    from sklearn.gaussian_process import GaussianProcess
+    from sklearn.linear_model import (Ridge, Lasso, ElasticNet, Lars, OrthogonalMatchingPursuit,
+                                      BayesianRidge, ARDRegression, LogisticRegression, SGDClassifier,
+                                      SGDRegressor, Perceptron, LassoLars, LinearRegression)
+    from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+    from sklearn.neighbors import (KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor,
+                                   RadiusNeighborsRegressor, NearestCentroid)
+    from sklearn.pipeline import FeatureUnion
+    from sklearn.preprocessing import Normalizer
+    from sklearn.preprocessing.data import MinMaxScaler
+    from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
+    from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-# GLMs
-_a(Ridge, 'ridge', ('copy_X',))
-_a(Lasso, 'lasso', ('copy_X',),
-   'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-_a(ElasticNet, 'elnet', ('copy_X',),
-   'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-_a(Lars, 'lars', ('verbose', 'copy_X', 'fit_path'),
-   'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-_a(LassoLars, 'lassolars', ('verbose', 'copy_X', 'fit_path'),
-   'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-_a(OrthogonalMatchingPursuit, 'omp', ('copy_X', 'copy_Xy', 'copy_Gram'),
-   'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-_a(BayesianRidge, 'bayridge', ('copy_X', 'verbose'))
-_a(ARDRegression, 'ardr', ('copy_X', 'verbose'))
-_a(LogisticRegression, 'logreg')
-_a(SGDClassifier, 'sgdc', ('verbose', 'n_jobs'))
-_a(SGDRegressor, 'sgdr', ('verbose',))
-_a(Perceptron, 'perceptron', ('verbose', 'n_jobs'))
-_a(LinearRegression, 'lr', ('copy_X',))
+    # Ensembles
+    _a(RandomForestClassifier, 'rfc', ('verbose', 'n_jobs', 'oob_score'),
+       'oob_score used to change the internal representation of the model (recheck); '
+       'warm start is non-id unless we use incremental learning')
+    _a(RandomForestRegressor, 'rfr', ('verbose', 'n_jobs', 'oob_score'),
+       'Same non-ids as RFC')
+    _a(ExtraTreesClassifier, 'etc', ('n_jobs', 'verbose', 'oob_score'))
+    _a(ExtraTreesRegressor, 'etr', ('n_jobs', 'verbose', 'oob_score'))
+    _a(GradientBoostingClassifier, 'gbc', ('verbose',))
+    _a(GradientBoostingRegressor, 'gbr', ('verbose',))
 
-# SVMs
-_a(SVC, 'svc', ('cache_size', 'verbose'))
-_a(NuSVC, 'nusvc', ('cache_size', 'verbose'))
-_a(LinearSVC, 'linsvc', ('verbose',))
-_a(SVR, 'svr', ('cache_size', 'verbose'))
-_a(NuSVR, 'nusvr', ('cache_size', 'verbose'))
+    # GLMs
+    _a(Ridge, 'ridge', ('copy_X',))
+    _a(Lasso, 'lasso', ('copy_X',),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(ElasticNet, 'elnet', ('copy_X',),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(Lars, 'lars', ('verbose', 'copy_X', 'fit_path'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LassoLars, 'lassolars', ('verbose', 'copy_X', 'fit_path'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(OrthogonalMatchingPursuit, 'omp', ('copy_X', 'copy_Xy', 'copy_Gram'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(BayesianRidge, 'bayridge', ('copy_X', 'verbose'))
+    _a(ARDRegression, 'ardr', ('copy_X', 'verbose'))
+    _a(LogisticRegression, 'logreg')
+    _a(SGDClassifier, 'sgdc', ('verbose', 'n_jobs'))
+    _a(SGDRegressor, 'sgdr', ('verbose',))
+    _a(Perceptron, 'perceptron', ('verbose', 'n_jobs'))
+    _a(LinearRegression, 'lr', ('copy_X',))
 
-# NaiveBayes
-_a(GaussianNB, 'gnb')
-_a(MultinomialNB, 'mnb')
-_a(BernoulliNB, 'bnb')
+    # SVMs
+    _a(SVC, 'svc', ('cache_size', 'verbose'))
+    _a(NuSVC, 'nusvc', ('cache_size', 'verbose'))
+    _a(LinearSVC, 'linsvc', ('verbose',))
+    _a(SVR, 'svr', ('cache_size', 'verbose'))
+    _a(NuSVR, 'nusvr', ('cache_size', 'verbose'))
 
-# Decision Trees
-_a(DecisionTreeClassifier, 'dtc')
-_a(DecisionTreeRegressor, 'dtr')
+    # NaiveBayes
+    _a(GaussianNB, 'gnb')
+    _a(MultinomialNB, 'mnb')
+    _a(BernoulliNB, 'bnb')
 
-# Nearest Neighbours
-_a(KNeighborsClassifier, 'knc', ('warn_on_equidistant',))
-_a(RadiusNeighborsClassifier, 'rnc', ('outlier_label',),
-   'outlier_label is questionable, but it won\'t change the model')
-_a(KNeighborsRegressor, 'knr', ('warn_on_equidistant',))
-_a(RadiusNeighborsRegressor, 'rnr')
-_a(NearestCentroid, 'nc')
+    # Decision Trees
+    _a(DecisionTreeClassifier, 'dtc')
+    _a(DecisionTreeRegressor, 'dtr')
 
-# Partial Least Squares
-_a(PLSRegression, 'plsr', ('copy',))
-_a(PLSCanonical, 'plscan', ('copy',))
-_a(CCA, 'cca', ('copy',))
-_a(PLSSVD, 'plssvd')
+    # Nearest Neighbours
+    _a(KNeighborsClassifier, 'knc', ('warn_on_equidistant',))
+    _a(RadiusNeighborsClassifier, 'rnc', ('outlier_label',),
+       'outlier_label is questionable, but it won\'t change the model')
+    _a(KNeighborsRegressor, 'knr', ('warn_on_equidistant',))
+    _a(RadiusNeighborsRegressor, 'rnr')
+    _a(NearestCentroid, 'nc')
 
-# Gaussian Processes
-_a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
+    # Partial Least Squares
+    _a(PLSRegression, 'plsr', ('copy',))
+    _a(PLSCanonical, 'plscan', ('copy',))
+    _a(CCA, 'cca', ('copy',))
+    _a(PLSSVD, 'plssvd')
 
-# Clusterers
-_a(KMeans, None, ('n_jobs', 'copy_x', 'verbose', 'precompute_distances'))
-_a(MiniBatchKMeans, None, ('verbose',))
-_a(MeanShift, None, ('n_jobs',))
-_a(AffinityPropagation, None, ('copy', 'verbose',))
-_a(SpectralClustering, None, ())
-_a(DBSCAN, None, ())
-_a(AgglomerativeClustering, None, ('memory',))
-_a(Birch, None, ('compute_labels', 'copy'))
-_a(FeatureAgglomeration, None, ('memory',))
-_a(SpectralCoclustering, None, ('n_jobs',))
-_a(SpectralBiclustering, None, ('n_jobs',))
+    # Gaussian Processes
+    _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
 
-# Preprocessing
-_a(Normalizer, None, ('copy',))
-_a(MinMaxScaler, None, ('copy',))
+    # Clusterers
+    _a(KMeans, None, ('n_jobs', 'copy_x', 'verbose', 'precompute_distances'))
+    _a(MiniBatchKMeans, None, ('verbose',))
+    _a(MeanShift, None, ('n_jobs',))
+    _a(AffinityPropagation, None, ('copy', 'verbose',))
+    _a(SpectralClustering, None, ())
+    _a(DBSCAN, None, ())
+    _a(AgglomerativeClustering, None, ('memory',))
+    _a(Birch, None, ('compute_labels', 'copy'))
+    _a(FeatureAgglomeration, None, ('memory',))
+    _a(SpectralCoclustering, None, ('n_jobs',))
+    _a(SpectralBiclustering, None, ('n_jobs',))
 
-# Pipelines
-_a(FeatureUnion, 'f_union', ('n_jobs',))
+    # Preprocessing
+    _a(Normalizer, None, ('copy',))
+    _a(MinMaxScaler, None, ('copy',))
+
+    # Pipelines
+    _a(FeatureUnion, 'f_union', ('n_jobs',))
+
+
+def _declare0dot19dot1():  # pragma: no cover
+
+    from sklearn.gaussian_process import GaussianProcess
+    from sklearn.linear_model import (Ridge, Lasso, ElasticNet, Lars, OrthogonalMatchingPursuit,
+                                      BayesianRidge, ARDRegression, LogisticRegression, SGDClassifier,
+                                      SGDRegressor, Perceptron, LassoLars, LinearRegression)
+    from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+    from sklearn.neighbors import (KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor,
+                                   RadiusNeighborsRegressor, NearestCentroid)
+    from sklearn.pipeline import FeatureUnion
+    from sklearn.preprocessing import Normalizer
+    from sklearn.preprocessing.data import MinMaxScaler
+    from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
+    from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+
+    # Calibration
+    from sklearn.calibration import CalibratedClassifierCV
+    _a(CalibratedClassifierCV)
+
+    # Clusterers
+    from sklearn.cluster import (AffinityPropagation, AgglomerativeClustering,
+                                 Birch, DBSCAN, FeatureAgglomeration,
+                                 KMeans, MiniBatchKMeans, MeanShift,
+                                 SpectralClustering, SpectralCoclustering, SpectralBiclustering)
+    _a(AffinityPropagation, None, ('copy', 'verbose',))
+    _a(AgglomerativeClustering, None, ('memory',))
+    _a(Birch, None, ('copy', 'compute_labels'))
+    _a(DBSCAN, None, ('n_jobs',))
+    _a(FeatureAgglomeration, None, ('memory',))
+    _a(KMeans, None, ('copy_x', 'n_jobs', 'precompute_distances', 'verbose'))
+    _a(MiniBatchKMeans, None, ('compute_labels', 'verbose'))
+    _a(MeanShift, None, ('n_jobs',))
+    _a(SpectralClustering, None, ('n_jobs',))
+    _a(SpectralCoclustering, None, ('n_jobs',))
+    _a(SpectralBiclustering, None, ('n_jobs',))
+
+    # Covariance estimators
+    from sklearn.covariance import (EmpiricalCovariance, EllipticEnvelope, GraphLasso, GraphLassoCV,
+                                    LedoitWolf, MinCovDet, OAS, ShrunkCovariance)
+    _a(EmpiricalCovariance)
+    _a(EllipticEnvelope, None, ('store_precision',))
+    _a(GraphLasso, None, ('verbose',))
+    _a(GraphLassoCV, None, ('n_jobs', 'verbose',))
+    _a(LedoitWolf)
+    _a(MinCovDet)
+    _a(OAS)
+    _a(ShrunkCovariance)
+
+    # Cross decomposition
+    from sklearn.cross_decomposition import PLSRegression, PLSCanonical, CCA, PLSSVD
+    _a(PLSRegression, 'plsr', ('copy',))
+    _a(PLSCanonical, 'plscan', ('copy',))
+    _a(CCA, 'cca', ('copy',))
+    _a(PLSSVD, 'plssvd', ('copy',))
+
+    # Matrix decomposition
+    from sklearn.decomposition import (DictionaryLearning, FactorAnalysis, FastICA, IncrementalPCA,
+                                       KernelPCA, LatentDirichletAllocation, MiniBatchDictionaryLearning,
+                                       MiniBatchSparsePCA, NMF, PCA, SparsePCA, SparseCoder, TruncatedSVD)
+    _a(DictionaryLearning, None, ('n_jobs', 'verbose'))
+    _a(FactorAnalysis, None, ('copy',))
+    _a(FastICA)
+    _a(IncrementalPCA, None, ('copy',))
+    _a(KernelPCA, None, ('copy_X', 'n_jobs'))
+    _a(LatentDirichletAllocation, None, ('n_jobs', 'verbose'))
+    _a(MiniBatchDictionaryLearning, None, ('n_jobs', 'verbose'))
+    _a(MiniBatchSparsePCA, None, ('callback', 'n_jobs', 'verbose'))
+    _a(NMF, None, ('verbose',))
+    _a(PCA, None, ('copy',))
+    _a(SparsePCA, None, ('n_jobs', 'verbose'))
+    _a(SparseCoder, None, ('n_jobs',))
+    _a(TruncatedSVD)
+
+    # Discriminant analysis
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+    _a(LinearDiscriminantAnalysis, None, ('store_covariance',))
+    _a(QuadraticDiscriminantAnalysis, None, ('store_covariance',))
+
+    # Dummy Estimators
+    from sklearn.dummy import DummyClassifier, DummyRegressor
+    _a(DummyClassifier)
+    _a(DummyRegressor)
+
+    # Ensembles
+    from sklearn.ensemble import (AdaBoostClassifier, AdaBoostRegressor,
+                                  BaggingClassifier, BaggingRegressor,
+                                  ExtraTreesClassifier, ExtraTreesRegressor,
+                                  GradientBoostingClassifier, GradientBoostingRegressor,
+                                  IsolationForest,
+                                  RandomForestClassifier, RandomForestRegressor, RandomTreesEmbedding,
+                                  VotingClassifier)
+    _a(AdaBoostClassifier)
+    _a(AdaBoostRegressor)
+    _a(BaggingClassifier, None, ('n_jobs', 'oob_score', 'verbose'))
+    _a(BaggingRegressor, None,  ('n_jobs', 'oob_score', 'verbose'))
+    _a(ExtraTreesClassifier, 'etc', ('n_jobs', 'oob_score', 'verbose'))
+    _a(ExtraTreesRegressor, 'etr', ('n_jobs', 'oob_score', 'verbose'))
+    _a(GradientBoostingClassifier, 'gbc', ('verbose',))
+    _a(GradientBoostingRegressor, 'gbr', ('verbose',))
+    _a(IsolationForest, None, ('n_jobs', 'verbose'))
+
+    _a(RandomForestClassifier, 'rfc', ('verbose', 'n_jobs', 'oob_score'),
+       'oob_score used to change the internal representation of the model (recheck); '
+       'warm start is non-id unless we use incremental learning')
+    _a(RandomForestRegressor, 'rfr', ('verbose', 'n_jobs', 'oob_score'),
+       'Same non-ids as RFC')
+
+    # GLMs
+    _a(Ridge, 'ridge', ('copy_X',))
+    _a(Lasso, 'lasso', ('copy_X',),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(ElasticNet, 'elnet', ('copy_X',),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(Lars, 'lars', ('verbose', 'copy_X', 'fit_path'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LassoLars, 'lassolars', ('verbose', 'copy_X', 'fit_path'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(OrthogonalMatchingPursuit, 'omp', ('copy_X', 'copy_Xy', 'copy_Gram'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(BayesianRidge, 'bayridge', ('copy_X', 'verbose'))
+    _a(ARDRegression, 'ardr', ('copy_X', 'verbose'))
+    _a(LogisticRegression, 'logreg')
+    _a(SGDClassifier, 'sgdc', ('verbose', 'n_jobs'))
+    _a(SGDRegressor, 'sgdr', ('verbose',))
+    _a(Perceptron, 'perceptron', ('verbose', 'n_jobs'))
+    _a(LinearRegression, 'lr', ('copy_X',))
+
+    # SVMs
+    _a(SVC, 'svc', ('cache_size', 'verbose'))
+    _a(NuSVC, 'nusvc', ('cache_size', 'verbose'))
+    _a(LinearSVC, 'linsvc', ('verbose',))
+    _a(SVR, 'svr', ('cache_size', 'verbose'))
+    _a(NuSVR, 'nusvr', ('cache_size', 'verbose'))
+
+    # NaiveBayes
+    _a(GaussianNB, 'gnb')
+    _a(MultinomialNB, 'mnb')
+    _a(BernoulliNB, 'bnb')
+
+    # Decision Trees
+    _a(DecisionTreeClassifier, 'dtc')
+    _a(DecisionTreeRegressor, 'dtr')
+
+    # Nearest Neighbours
+    _a(KNeighborsClassifier, 'knc', ('warn_on_equidistant',))
+    _a(RadiusNeighborsClassifier, 'rnc', ('outlier_label',),
+       'outlier_label is questionable, but it won\'t change the model')
+    _a(KNeighborsRegressor, 'knr', ('warn_on_equidistant',))
+    _a(RadiusNeighborsRegressor, 'rnr')
+    _a(NearestCentroid, 'nc')
+
+    # Gaussian Processes
+    _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
+
+    # Preprocessing
+    _a(Normalizer, None, ('copy',))
+    _a(MinMaxScaler, None, ('copy',))
+
+    # Pipelines
+    _a(FeatureUnion, 'f_union', ('n_jobs',))
+
+
+def _declare_id_nonid_attributes():
+    """Checks scikit version and applies the best matching wrapping function."""
+
+    import sklearn
+    sklearn_version = StrictVersion(sklearn.__version__)
+
+    # Versions I have, more or less, manually checked
+    supported_versions = sorted((
+        (StrictVersion('0.15.1'), _declare0dot15dot1),
+        (StrictVersion('0.19.1'), _declare0dot19dot1),
+        (StrictVersion('0.19.2'), _declare0dot19dot1),
+    ))
+
+    # Choose a version, default to the immediately older explicitly supported
+    version = declarator = None
+    for version, declarator in supported_versions:
+        if version >= sklearn_version:
+            break
+
+    # Warn if the version is not explicitly supported
+    # We might want to allow being loose / share declarations between versions
+    if version != sklearn_version:
+        logging.getLogger(__package__).warn('Unsupported sklearn version %r, trying to apply %r' %
+                                            (sklearn_version, version))
+
+    # Declare IDs and non ids for several sklearn estimators
+    declarator()
 
 
 # Make the invese map: short_name -> long_name
@@ -194,13 +392,13 @@ _SKLShort2Long = dict((v.short_name, k) for k, v in _SKLRegistry.items())
 # ----- Monkey-patching for whatability
 
 
-def _what_for_sklearn(x):
+def _what_for_sklearn(x, use_short=True):
     """Returns a What configuration for the scikit learn estimator x."""
     name = x.__class__.__name__
     configuration_dict = x.get_params(deep=False)   # N.B. we take care of recursing ourselves
     pinfo = _SKLRegistry.get(name, None)
     if pinfo is not None:
-        return What(pinfo.short_name,
+        return What(pinfo.short_name if use_short else name,
                     conf=configuration_dict,
                     non_id_keys=pinfo.non_id_params)
     return What(name, conf=configuration_dict)
@@ -212,14 +410,18 @@ def whatamise_sklearn(check=False, log=False):
     Parameters
     ----------
     check: boolean, default True
-        If True, call check_all_monkeypatched() after getting right BaseEstimator.what
+      If True, call check_all_monkeypatched() after getting right BaseEstimator.what
+
+    log: bool, default False
+      If True, print success message.
     """
     if not hasattr(BaseEstimator, 'what'):
+        _declare_id_nonid_attributes()
         BaseEstimator.what = _what_for_sklearn
     if check:
         _check_all_monkeypatched()
     if log:
-        print('Scikit-Learn estimators now are whatable')
+        logging.getLogger(__package__).info('Scikit-Learn estimators now are whatable')
 
 
 def _check_all_monkeypatched():
