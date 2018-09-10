@@ -34,6 +34,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     install_requires=['arpeggio>=1.5', 'future>=0.15.2', 'toolz'],
     tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
