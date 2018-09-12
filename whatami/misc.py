@@ -627,6 +627,8 @@ def decorate_some(name='DecorateSome', **decorators):
 
 
 # --- Import helpers
+# See also: https://snarky.ca/lazy-importing-in-python-3-7/
+#           https://github.com/mnmelo/lazy_import
 
 class _LazyImportError(object):
     """Defer ImportError raising to when a module is actually used, giving human hints on installation."""
@@ -654,10 +656,15 @@ class _LazyImportError(object):
         if name in ('_library_name', '_install_msg', '_errors', '_maybe_import', 'module', '_variants'):
             return super(_LazyImportError, self).__getattribute__(name)
         errors_msg = '\n'.join(['\timport %s: %s' % (variant, str(ie)) for variant, ie in self._errors])
-        raise ImportError('Trying to access %s from module %s, but the library fails to import.\n'
-                          'Errors: \n%s\n'
-                          'Maybe install it like "%s"?' %
-                          (name, self._library_name, errors_msg, self._install_msg))
+        if self._install_msg is not None:
+            raise ImportError('Trying to access %s from module %s, but the library fails to import.\n'
+                              'Errors: \n%s\n'
+                              'Maybe install it like "%s"?' %
+                              (name, self._library_name, errors_msg, self._install_msg))
+        else:
+            raise ImportError('Trying to access %s from module %s, but the library fails to import.\n'
+                              'Errors: \n%s\n' %
+                              (name, self._library_name, errors_msg))
 
 
 def maybe_import(library_name, install_msg=None, *variants):
