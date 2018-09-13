@@ -103,6 +103,8 @@ def id2dict(whatid):
 
 
 def obj2what(obj,
+             force_inspect=False,
+             name_override=None,
              # ID string building options
              non_id_keys=None,
              # Config-dict building options
@@ -126,9 +128,10 @@ def obj2what(obj,
     >>> print(obj2what(id2what, excludes=('parser',)).id())
     parse_whatid(visitor=None)
     """
-    if is_whatable(obj):  # do not move this to whatareyou, or we face infinite recursion
+    if not force_inspect and is_whatable(obj):  # do not move this to whatareyou, or we face infinite recursion
         return obj.what()
     return whatareyou(obj,
+                      name_override=name_override,
                       non_id_keys=non_id_keys,
                       add_dict=add_dict,
                       add_slots=add_slots,
