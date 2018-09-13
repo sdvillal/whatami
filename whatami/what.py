@@ -309,6 +309,7 @@ class What(object):
 
 
 def whatareyou(obj,
+               name_override=None,
                # ID string building options
                non_id_keys=None,
                # Config-dict building options
@@ -352,7 +353,7 @@ def whatareyou(obj,
             cd['seq'] = tuple(obj)
         elif isinstance(obj, list):
             cd['seq'] = list(obj)
-    return What(name=name,
+    return What(name=name if name_override is None else name_override,
                 conf=trim_dict(cd,
                                exclude_prefix=exclude_prefix,
                                exclude_postfix=exclude_postfix,
@@ -391,7 +392,7 @@ def is_whatable(obj):
             raise Exception('Cannot infer return type for unbound method what, '
                             'please pass a %r instance instead of the class' % obj)
         return isinstance(what_method(), What)
-    except:
+    except Exception:
         return False
 
 
