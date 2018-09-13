@@ -38,12 +38,7 @@ def test_pipeline():
         "KMeans(algorithm='auto',init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
     # noinspection PyTypeChecker
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
-    expected_ids = (
-        "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id),              # sklearn < 0.17
-        "Pipeline(steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id),              # sklearn >= 0.17
-        "Pipeline(memory=None,steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id),  # sklearn >= 0.19
-    )
-    assert pipeline_id in expected_ids
+    assert pipeline_id == "Pipeline(steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id)
 
 
 def test_no_estimators():

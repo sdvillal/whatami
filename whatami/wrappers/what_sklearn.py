@@ -53,7 +53,7 @@ from distutils.version import StrictVersion
 
 from sklearn.base import BaseEstimator
 
-from whatami import whatamise_object, obj2what
+from whatami import whatamize_object, obj2what
 from whatami.what import What
 from whatami.misc import all_subclasses
 
@@ -198,15 +198,6 @@ def _declare0dot15dot1():  # pragma: no cover
 
 
 def _declare0dot19dot1():  # pragma: no cover
-
-    from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
-    from sklearn.neighbors import (KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor,
-                                   RadiusNeighborsRegressor, NearestCentroid)
-    from sklearn.pipeline import FeatureUnion
-    from sklearn.preprocessing import Normalizer
-    from sklearn.preprocessing.data import MinMaxScaler
-    from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR
-    from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
     # Calibration
     from sklearn.calibration import CalibratedClassifierCV
@@ -459,36 +450,99 @@ def _declare0dot19dot1():  # pragma: no cover
     _a(GridSearchCV, None, ('error_score', 'n_jobs', 'pre_dispatch', 'refit', 'return_train_score', 'verbose'))
     _a(RandomizedSearchCV, None, ('error_score', 'n_jobs', 'pre_dispatch', 'refit', 'return_train_score', 'verbose'))
 
-    # SVMs
-    _a(SVC, 'svc', ('cache_size', 'verbose'))
-    _a(NuSVC, 'nusvc', ('cache_size', 'verbose'))
-    _a(LinearSVC, 'linsvc', ('verbose',))
-    _a(SVR, 'svr', ('cache_size', 'verbose'))
-    _a(NuSVR, 'nusvr', ('cache_size', 'verbose'))
+    # Multiclass and multilabel classification
+    from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier, OutputCodeClassifier
+    _a(OneVsRestClassifier, None, ('n_jobs',))
+    _a(OneVsOneClassifier, None, ('n_jobs',))
+    _a(OutputCodeClassifier, None, ('n_jobs',))
 
-    # NaiveBayes
+    # Multioutput regression and classification
+    from sklearn.multioutput import ClassifierChain, MultiOutputClassifier, MultiOutputRegressor
+    _a(ClassifierChain)
+    _a(MultiOutputClassifier, None, ('n_jobs',))
+    _a(MultiOutputRegressor, None, ('n_jobs',))
+
+    # Naive Bayes
+    from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
+    _a(BernoulliNB, 'bnb')
     _a(GaussianNB, 'gnb')
     _a(MultinomialNB, 'mnb')
-    _a(BernoulliNB, 'bnb')
 
-    # Decision Trees
-    _a(DecisionTreeClassifier, 'dtc')
-    _a(DecisionTreeRegressor, 'dtr')
-
-    # Nearest Neighbours
-    _a(KNeighborsClassifier, 'knc', ('warn_on_equidistant',))
-    _a(RadiusNeighborsClassifier, 'rnc', ('outlier_label',),
-       'outlier_label is questionable, but it won\'t change the model')
-    _a(KNeighborsRegressor, 'knr', ('warn_on_equidistant',))
+    # Nearest Neighbors
+    from sklearn.neighbors import (KernelDensity,
+                                   KNeighborsClassifier, RadiusNeighborsClassifier,
+                                   KNeighborsRegressor, RadiusNeighborsRegressor,
+                                   LocalOutlierFactor,
+                                   NearestCentroid, NearestNeighbors)
+    _a(KernelDensity)
+    _a(KNeighborsClassifier, 'knc', ('n_jobs',))
+    _a(KNeighborsRegressor, 'knr', ('n_jobs',))
+    _a(LocalOutlierFactor, 'lof', ('n_jobs',))
+    _a(RadiusNeighborsClassifier, 'rnc')
     _a(RadiusNeighborsRegressor, 'rnr')
     _a(NearestCentroid, 'nc')
+    _a(NearestNeighbors, None, ('n_jobs',))
 
-    # Preprocessing
-    _a(Normalizer, None, ('copy',))
-    _a(MinMaxScaler, None, ('copy',))
+    # Neural network models
+    from sklearn.neural_network import BernoulliRBM, MLPClassifier, MLPRegressor
+    _a(BernoulliRBM, None, ('verbose',))
+    _a(MLPClassifier, None, ('verbose',))
+    _a(MLPRegressor, None, ('verbose',))
 
     # Pipelines
-    _a(FeatureUnion, 'f_union', ('n_jobs',))
+    from sklearn.pipeline import FeatureUnion, Pipeline
+    _a(FeatureUnion, None, ('n_jobs',))
+    _a(Pipeline, None, ('memory',))
+
+    # Preprocessing and Normalization
+    from sklearn.preprocessing import (Binarizer, FunctionTransformer, Imputer,
+                                       KernelCenterer, LabelBinarizer, LabelEncoder,
+                                       MultiLabelBinarizer, MaxAbsScaler, MinMaxScaler,
+                                       Normalizer, OneHotEncoder, PolynomialFeatures,
+                                       QuantileTransformer, RobustScaler, StandardScaler)
+    _a(Binarizer, None, ('copy',))
+    _a(FunctionTransformer)
+    _a(Imputer, None, ('copy', 'verbose'))
+    _a(KernelCenterer)
+    _a(LabelBinarizer)
+    _a(LabelEncoder)
+    _a(MultiLabelBinarizer)
+    _a(MaxAbsScaler, None, ('copy',))
+    _a(MinMaxScaler, None, ('copy',))
+    _a(Normalizer, None, ('copy',))
+    _a(OneHotEncoder)
+    _a(PolynomialFeatures)
+    _a(QuantileTransformer, None, ('copy',))
+    _a(RobustScaler, None, ('copy',))
+    _a(StandardScaler, None, ('copy',))
+
+    # Random projections
+    from sklearn.random_projection import GaussianRandomProjection, SparseRandomProjection
+    _a(GaussianRandomProjection)
+    _a(SparseRandomProjection)
+
+    # Semisupervised learning
+    from sklearn.semi_supervised import LabelPropagation, LabelSpreading
+    _a(LabelPropagation, None, ('n_jobs',))
+    _a(LabelSpreading, None, ('n_jobs',))
+
+    # SVMs
+    from sklearn.svm import LinearSVC, LinearSVR, NuSVC, NuSVR, OneClassSVM, SVC, SVR
+    _a(LinearSVC, 'linsvc', ('verbose',))
+    _a(LinearSVR, 'linsvr', ('verbose',))
+    _a(NuSVC, 'nusvc', ('cache_size', 'verbose'))
+    _a(NuSVR, 'nusvr', ('cache_size', 'verbose'))
+    _a(OneClassSVM, 'ocsvm', ('cache_size', 'verbose'))
+    _a(SVC, 'svc', ('cache_size', 'verbose'))
+    _a(SVR, 'svr', ('cache_size', 'verbose'))
+
+    # Decision Trees
+    from sklearn.tree import (DecisionTreeClassifier, DecisionTreeRegressor,
+                              ExtraTreeClassifier, ExtraTreeRegressor)
+    _a(DecisionTreeClassifier, 'dtc')
+    _a(DecisionTreeRegressor, 'dtr')
+    _a(ExtraTreeClassifier)
+    _a(ExtraTreeRegressor)
 
 
 def _declare_id_nonid_attributes():
@@ -558,13 +612,13 @@ def whatamise_sklearn(check=False, log=False):
     """
     _declare_id_nonid_attributes()
     # Whatamise all estimators
-    whatamise_object(BaseEstimator, _what_for_sklearn, force=False)
+    whatamize_object(BaseEstimator, _what_for_sklearn, force=False)
     # Whatamise a selection of other classes
     for clazz in ('sklearn.gaussian_process.kernels.Kernel',
                   'sklearn.model_selection.BaseCrossValidator',
                   'sklearn.model_selection._split.BaseShuffleSplit',
                   'sklearn.model_selection._split._RepeatedSplits',):
-        whatamise_object(clazz, _what_for_sklearn, fail_on_import_error=False, force=False)
+        whatamize_object(clazz, _what_for_sklearn, fail_on_import_error=False, force=False)
     if check:
         _check_all_monkeypatched()
     if log:
