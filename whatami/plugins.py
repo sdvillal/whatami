@@ -10,6 +10,8 @@ import inspect
 from collections import OrderedDict
 from functools import partial
 
+from whatami import getargspec
+
 from whatami.misc import maybe_import
 
 from .what import What, whatareyou
@@ -156,7 +158,7 @@ def function_plugin(v):
     Note that configuration is "weak" and not guaranteed, as can change at dispatch time.
     """
     if inspect.isfunction(v):
-        args, _, _, defaults = inspect.getargspec(v)
+        args, _, _, defaults = getargspec(v)
         defaults = [] if not defaults else defaults
         args = [] if not args else args
         params_with_defaults = dict(zip(args[-len(defaults):], defaults))

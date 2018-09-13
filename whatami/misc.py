@@ -5,6 +5,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import absolute_import
+from future.utils import PY3
 from functools import partial
 from itertools import chain
 import datetime
@@ -20,6 +21,29 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
+def getargspec(func):  # pragma: no cover
+    """
+    PY/PY3 argspec that avoids using deprecated API
+
+    Parameters
+    ----------
+    func : function
+      A function.
+
+    Returns
+    -------
+    A 4-tuple (args, varargs, varkw, defaults)
+
+    """
+    # On moving off PY2, just replace by inspect.signature() and take into account
+    # new model (kwonly, annotations)
+    if PY3:
+        # noinspection PyUnresolvedReferences
+        return inspect.getfullargspec(func)[:4]
+    else:
+        return inspect.getargspec(func)
+
+
 def required_args(func):
     """
     Returns a list with the positional arguments of the function.
@@ -31,7 +55,7 @@ def required_args(func):
     >>> required_args(func)
     ['a', 'b']
     """
-    args, _, _, defaults = inspect.getargspec(func)
+    args, _, _, defaults = getargspec(func)
     if defaults:
         args = args[:-len(defaults)]
     return args
@@ -235,7 +259,7 @@ def callable2call(c, closure_extractor=lambda c: c):
         if inspect.isfunction(c):
             if is_closure(c):  # allow custom behavior with closures
                 c = closure_extractor(c)
-            args, _, _, defaults = inspect.getargspec(c)
+            args, _, _, defaults = getargspec(c)
             defaults = [] if not defaults else defaults
             args = [] if not args else args
             args_set = set(args)
