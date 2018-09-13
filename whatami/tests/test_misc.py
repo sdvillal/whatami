@@ -172,6 +172,11 @@ def test_import_submodules():
     assert 'whatami.tests.test_what' in subms
     assert 'whatami' not in subms
 
+    with pytest.raises(ImportError):
+        import_submodules('i.made.this.up', ignore_errors=False)
+
+    assert import_submodules('i.made.this.up', ignore_errors=True) == {}
+
 
 def test_fqn():
     assert fqn(Thread) == 'threading.Thread'
