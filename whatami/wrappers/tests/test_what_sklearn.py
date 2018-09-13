@@ -5,12 +5,13 @@
 
 from __future__ import absolute_import
 from future.builtins import str
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 
-from ..what_sklearn import whatamise_sklearn, _check_all_monkeypatched
+from whatami import what2id
+from whatami.wrappers.what_sklearn import whatamise_sklearn, _check_all_monkeypatched
 
 whatamise_sklearn(check=True, log=True)
 
@@ -25,6 +26,7 @@ def test_non_ids():
     assert 'n_jobs' in str(rfc.what())
 
 
+# noinspection PyUnresolvedReferences
 def test_pipeline():
     norm = Normalizer(norm='l1')
     norm_id = norm.what().id()
@@ -34,6 +36,7 @@ def test_pipeline():
     print(kmeans_id)
     assert kmeans_id == \
         "KMeans(algorithm='auto',init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
+    # noinspection PyTypeChecker
     pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
     expected_ids = (
         "Pipeline(steps=[('norm',%s),('kmeans',%s)])" % (norm_id, kmeans_id),              # sklearn < 0.17
@@ -41,3 +44,18 @@ def test_pipeline():
         "Pipeline(memory=None,steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id),  # sklearn >= 0.19
     )
     assert pipeline_id in expected_ids
+
+
+def test_no_estimators():
+    from sklearn.model_selection import KFold, RepeatedStratifiedKFold, StratifiedShuffleSplit
+    assert (KFold(n_splits=5, shuffle=True, random_state=0).what().id() ==
+            "KFold(n_splits=5,random_state=0,shuffle=True)")
+    assert (StratifiedShuffleSplit(n_splits=2, test_size='default', train_size=None, random_state=0).what().id() ==
+            "StratifiedShuffleSplit(n_splits=2,random_state=0,test_size='default',train_size=None)")
+    assert (RepeatedStratifiedKFold(n_splits=5, n_repeats=2, random_state=0).what().id() ==
+            "RepeatedStratifiedKFold(cv=<class 'sklearn.model_selection._split.StratifiedKFold'>,"
+            "cvargs={'n_splits':5},n_repeats=2,random_state=0)")
+
+    from sklearn.gaussian_process.kernels import WhiteKernel
+    assert (WhiteKernel(noise_level=2,noise_level_bounds=(1e-5, 1e5)).what().id() ==
+            "WhiteKernel(noise_level=2,noise_level_bounds=(1e-05,100000.0))")

@@ -45,6 +45,7 @@ See also rendered docs:
 # Licence: BSD 3 clause
 
 from __future__ import absolute_import
+
 import inspect
 import warnings
 import logging
@@ -52,8 +53,9 @@ from distutils.version import StrictVersion
 
 from sklearn.base import BaseEstimator
 
-from ..what import What
-from ..misc import all_subclasses
+from whatami import whatamise_object, obj2what
+from whatami.what import What
+from whatami.misc import all_subclasses
 
 
 # ----- Manually check which parameters are not part of the default id (WIP)
@@ -83,6 +85,7 @@ class _SklearnEstimatorID(object):
 
 def _a(skclass, nickname=None, non_id_params=(), notes=None):
     """Adds a class to the SKLRegistry."""
+    # Maybe we should key using FQNs to avoid any possible name clash
     _SKLRegistry[skclass.__name__] = _SklearnEstimatorID(skclass, nickname, non_id_params, notes)
 
 
@@ -196,10 +199,6 @@ def _declare0dot15dot1():  # pragma: no cover
 
 def _declare0dot19dot1():  # pragma: no cover
 
-    from sklearn.gaussian_process import GaussianProcess
-    from sklearn.linear_model import (Ridge, Lasso, ElasticNet, Lars, OrthogonalMatchingPursuit,
-                                      BayesianRidge, ARDRegression, LogisticRegression, SGDClassifier,
-                                      SGDRegressor, Perceptron, LassoLars, LinearRegression)
     from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
     from sklearn.neighbors import (KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor,
                                    RadiusNeighborsRegressor, NearestCentroid)
@@ -294,32 +293,171 @@ def _declare0dot19dot1():  # pragma: no cover
     _a(GradientBoostingClassifier, 'gbc', ('verbose',))
     _a(GradientBoostingRegressor, 'gbr', ('verbose',))
     _a(IsolationForest, None, ('n_jobs', 'verbose'))
-
     _a(RandomForestClassifier, 'rfc', ('verbose', 'n_jobs', 'oob_score'),
        'oob_score used to change the internal representation of the model (recheck); '
        'warm start is non-id unless we use incremental learning')
     _a(RandomForestRegressor, 'rfr', ('verbose', 'n_jobs', 'oob_score'),
        'Same non-ids as RFC')
+    _a(RandomTreesEmbedding, 'rte', ('verbose', 'n_jobs'))
+    _a(VotingClassifier, None, ('n_jobs',))
+
+    # Feature extraction
+    from sklearn.feature_extraction import DictVectorizer, FeatureHasher
+    from sklearn.feature_extraction.image import PatchExtractor
+    # noinspection PyProtectedMember
+    from sklearn.feature_extraction.text import (CountVectorizer, HashingVectorizer,
+                                                 TfidfTransformer, TfidfVectorizer)
+    _a(DictVectorizer)
+    _a(FeatureHasher)
+    _a(PatchExtractor)
+    _a(CountVectorizer)
+    _a(HashingVectorizer)
+    _a(TfidfTransformer)
+    _a(TfidfVectorizer)
+
+    # Feature selection
+    from sklearn.feature_selection import (GenericUnivariateSelect, SelectPercentile, SelectKBest,
+                                           SelectFpr, SelectFdr, SelectFromModel, SelectFwe,
+                                           RFE, RFECV, VarianceThreshold)
+    _a(GenericUnivariateSelect)
+    _a(SelectPercentile)
+    _a(SelectKBest)
+    _a(SelectFpr)
+    _a(SelectFdr)
+    _a(SelectFromModel)
+    _a(SelectFwe)
+    _a(RFE, None, ('verbose',))
+    _a(RFECV, None, ('n_jobs', 'verbose'))
+    _a(VarianceThreshold)
+
+    # Gaussian processes
+    from sklearn.gaussian_process import (GaussianProcessClassifier, GaussianProcessRegressor)
+    from sklearn.gaussian_process.kernels import (CompoundKernel, ConstantKernel, DotProduct,
+                                                  ExpSineSquared, Exponentiation,
+                                                  Matern, PairwiseKernel, Product, RBF,
+                                                  RationalQuadratic, Sum, WhiteKernel)
+    _a(GaussianProcessClassifier, 'gpc', ('copy_X_train', 'n_jobs'))
+    _a(GaussianProcessRegressor, 'gpr', ('copy_X_train',))
+    _a(CompoundKernel)
+    _a(ConstantKernel)
+    _a(DotProduct)
+    _a(ExpSineSquared)
+    _a(Exponentiation)
+    _a(Matern)
+    _a(PairwiseKernel)
+    _a(Product)
+    _a(RBF)
+    _a(RationalQuadratic)
+    _a(Sum)
+    _a(WhiteKernel)
+
+    # Isotonic regression
+    from sklearn.isotonic import IsotonicRegression
+    _a(IsotonicRegression)
+
+    # Kernel approximation
+    from sklearn.kernel_approximation import AdditiveChi2Sampler, Nystroem, RBFSampler, SkewedChi2Sampler
+    _a(AdditiveChi2Sampler)
+    _a(Nystroem)
+    _a(RBFSampler)
+    _a(SkewedChi2Sampler)
+
+    # Kernel ridge regression
+    from sklearn.kernel_ridge import KernelRidge
+    _a(KernelRidge)
 
     # GLMs
-    _a(Ridge, 'ridge', ('copy_X',))
-    _a(Lasso, 'lasso', ('copy_X',),
-       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    from sklearn.linear_model import (ARDRegression, BayesianRidge, ElasticNet, ElasticNetCV,
+                                      HuberRegressor, Lars, LarsCV, Lasso, LassoCV,
+                                      LassoLars, LassoLarsCV, LassoLarsIC,
+                                      LinearRegression, LogisticRegression, LogisticRegressionCV,
+                                      MultiTaskLasso, MultiTaskElasticNet,
+                                      MultiTaskElasticNetCV, MultiTaskLassoCV,
+                                      OrthogonalMatchingPursuit, OrthogonalMatchingPursuitCV,
+                                      PassiveAggressiveClassifier, PassiveAggressiveRegressor,
+                                      Perceptron, RANSACRegressor,
+                                      Ridge, RidgeClassifier, RidgeClassifierCV, RidgeCV,
+                                      SGDClassifier, SGDRegressor, TheilSenRegressor)
+    _a(ARDRegression, 'ardr', ('copy_X', 'verbose'))
+    _a(BayesianRidge, 'bayridge', ('copy_X', 'verbose'))
     _a(ElasticNet, 'elnet', ('copy_X',),
        'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-    _a(Lars, 'lars', ('verbose', 'copy_X', 'fit_path'),
+    _a(ElasticNetCV, 'elnetcv', ('copy_X', 'n_jobs', 'verbose'),
        'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-    _a(LassoLars, 'lassolars', ('verbose', 'copy_X', 'fit_path'),
+    _a(HuberRegressor)
+    _a(Lars, 'lars', ('copy_X', 'fit_path', 'verbose'),
        'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-    _a(OrthogonalMatchingPursuit, 'omp', ('copy_X', 'copy_Xy', 'copy_Gram'),
+    _a(LarsCV, 'larscv', ('copy_X', 'fit_path', 'n_jobs', 'verbose'),
        'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
-    _a(BayesianRidge, 'bayridge', ('copy_X', 'verbose'))
-    _a(ARDRegression, 'ardr', ('copy_X', 'verbose'))
-    _a(LogisticRegression, 'logreg')
-    _a(SGDClassifier, 'sgdc', ('verbose', 'n_jobs'))
+    _a(Lasso, 'lasso', ('copy_X',),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LassoCV, 'lassocv', ('copy_X', 'n_jobs', 'verbose'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LassoLars, 'lassolars', ('copy_X', 'fit_path', 'verbose'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LassoLarsCV, 'lassolarscv', ('copy_X', 'fit_path', 'n_jobs', 'verbose'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LassoLarsIC, 'lassolarsic', ('copy_X', 'verbose'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(LinearRegression, 'linreg', ('copy_X', 'n_jobs'))
+    _a(LogisticRegression, 'logreg', ('n_jobs', 'verbose'))
+    _a(LogisticRegressionCV, 'logregcv', ('n_jobs', 'verbose'))
+    _a(MultiTaskLasso, None, ('copy_X',))
+    _a(MultiTaskLassoCV, None, ('copy_X', 'n_jobs', 'verbose'))
+    _a(MultiTaskElasticNet, None, ('copy_X',))
+    _a(MultiTaskElasticNetCV, None, ('copy_X', 'n_jobs', 'verbose'))
+    _a(OrthogonalMatchingPursuit, 'omp', (),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(OrthogonalMatchingPursuitCV, 'ompcv', ('copy', 'n_jobs', 'verbose'),
+       'we need to take care of "precompute" when we pass the Gram matrix, should use a hash of the array')
+    _a(PassiveAggressiveClassifier, None, ('n_jobs', 'verbose'))
+    _a(PassiveAggressiveRegressor, None, ('verbose',))
+    _a(Perceptron, 'perceptron', ('n_jobs', 'verbose'))
+    _a(RANSACRegressor)
+    _a(Ridge, 'ridge', ('copy_X',))
+    _a(RidgeClassifier, None, ('copy_X',))
+    _a(RidgeClassifierCV)
+    _a(RidgeCV)
+    _a(SGDClassifier, 'sgdc', ('n_jobs', 'verbose'))
     _a(SGDRegressor, 'sgdr', ('verbose',))
-    _a(Perceptron, 'perceptron', ('verbose', 'n_jobs'))
-    _a(LinearRegression, 'lr', ('copy_X',))
+    _a(TheilSenRegressor, None, ('copy_X', 'n_jobs', 'verbose'))
+
+    # Manifold learning
+    from sklearn.manifold import Isomap, LocallyLinearEmbedding, MDS, SpectralEmbedding, TSNE
+    _a(Isomap, None, ('n_jobs',))
+    _a(LocallyLinearEmbedding, None, ('n_jobs', 'neighbors_algorithm'),
+       'neighbors algo must go if ever using non-exact')
+    _a(MDS, None, ('n_jobs', 'verbose'))
+    _a(SpectralEmbedding, None, ('n_jobs',))
+    _a(TSNE, None, ('verbose',))
+
+    # GMMs
+    from sklearn.mixture import BayesianGaussianMixture, GaussianMixture
+    _a(BayesianGaussianMixture, None, ('verbose', 'verbose_interval'))
+    _a(GaussianMixture, None, ('verbose', 'verbose_interval'))
+
+    # Model selection
+    from sklearn.model_selection import (GroupKFold, GroupShuffleSplit, KFold,
+                                         LeaveOneGroupOut, LeavePGroupsOut,
+                                         LeaveOneOut, LeavePOut,
+                                         PredefinedSplit, RepeatedStratifiedKFold, ShuffleSplit,
+                                         StratifiedKFold, StratifiedShuffleSplit, TimeSeriesSplit,
+                                         GridSearchCV, RandomizedSearchCV)
+    _a(GroupKFold)
+    _a(GroupShuffleSplit)
+    _a(KFold)
+    _a(LeaveOneGroupOut)
+    _a(LeavePGroupsOut)
+    _a(LeaveOneOut)
+    _a(LeavePOut)
+    _a(PredefinedSplit)
+    _a(RepeatedStratifiedKFold)
+    _a(ShuffleSplit)
+    _a(StratifiedKFold)
+    _a(StratifiedShuffleSplit)
+    _a(TimeSeriesSplit)
+    _a(GridSearchCV, None, ('error_score', 'n_jobs', 'pre_dispatch', 'refit', 'return_train_score', 'verbose'))
+    _a(RandomizedSearchCV, None, ('error_score', 'n_jobs', 'pre_dispatch', 'refit', 'return_train_score', 'verbose'))
 
     # SVMs
     _a(SVC, 'svc', ('cache_size', 'verbose'))
@@ -344,9 +482,6 @@ def _declare0dot19dot1():  # pragma: no cover
     _a(KNeighborsRegressor, 'knr', ('warn_on_equidistant',))
     _a(RadiusNeighborsRegressor, 'rnr')
     _a(NearestCentroid, 'nc')
-
-    # Gaussian Processes
-    _a(GaussianProcess, 'gp', ('storage_mode', 'verbose'))
 
     # Preprocessing
     _a(Normalizer, None, ('copy',))
@@ -395,8 +530,14 @@ _SKLShort2Long = dict((v.short_name, k) for k, v in _SKLRegistry.items())
 def _what_for_sklearn(x, use_short=True):
     """Returns a What configuration for the scikit learn estimator x."""
     name = x.__class__.__name__
-    configuration_dict = x.get_params(deep=False)   # N.B. we take care of recursing ourselves
     pinfo = _SKLRegistry.get(name, None)
+    try:
+        configuration_dict = x.get_params(deep=False)   # N.B. we take care of recursing ourselves
+    except AttributeError:
+        return obj2what(x,
+                        force_inspect=True,
+                        name_override=pinfo.short_name if use_short else name,
+                        non_id_keys=pinfo.non_id_params)
     if pinfo is not None:
         return What(pinfo.short_name if use_short else name,
                     conf=configuration_dict,
@@ -415,9 +556,15 @@ def whatamise_sklearn(check=False, log=False):
     log: bool, default False
       If True, print success message.
     """
-    if not hasattr(BaseEstimator, 'what'):
-        _declare_id_nonid_attributes()
-        BaseEstimator.what = _what_for_sklearn
+    _declare_id_nonid_attributes()
+    # Whatamise all estimators
+    whatamise_object(BaseEstimator, _what_for_sklearn, force=False)
+    # Whatamise a selection of other classes
+    for clazz in ('sklearn.gaussian_process.kernels.Kernel',
+                  'sklearn.model_selection.BaseCrossValidator',
+                  'sklearn.model_selection._split.BaseShuffleSplit',
+                  'sklearn.model_selection._split._RepeatedSplits',):
+        whatamise_object(clazz, _what_for_sklearn, fail_on_import_error=False, force=False)
     if check:
         _check_all_monkeypatched()
     if log:
