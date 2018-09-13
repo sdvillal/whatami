@@ -174,6 +174,7 @@ def sort_whats(whats, *keys):
     [-2, -1, 0, 1, 2]
     """
     values = [whatvalues(what, keys) for what in whats]
+    # noinspection PyTypeChecker
     return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whats), key=itemgetter(0))]))
 
 
@@ -195,6 +196,7 @@ def sort_whatids(whatids, *keys):
     """
     whats = map(id2what, whatids)  # if this is bottleneck, allow to pass what themselves
     values = [whatvalues(what, keys) for what in whats]
+    # noinspection PyTypeChecker
     return tuple(zip(*[(whatid, value) for value, whatid in sorted(zip(values, whatids), key=itemgetter(0))]))
 
 
@@ -303,20 +305,19 @@ def match_whatids(whatids, template_whatid, ignored_keys=(),
                                                            collections_too=collections_too,
                                                            recursive=recursive)
 
-    def ignore_key(key, ignored_keys=set(ignored_keys)):
+    def ignore_key(key, ignored_keys):
         if key in ignored_keys:
             return True
         if isinstance(key, tuple):
             partial_key = key[:-1] if len(key) > 1 else key[0]
-            return ignore_key(partial_key)
+            return ignore_key(partial_key, ignored_keys)
         return False
 
     def not_ignored_values(keys, values):
         return [(value.name, value.out_name) if isinstance(value, What) else value
-                for key, value in zip(keys, values) if not ignore_key(key)]
+                for key, value in zip(keys, values) if not ignore_key(key, set(ignored_keys))]
 
-    def partial_match(what,
-                      template_values=not_ignored_values(template_keys, template_values)):
+    def partial_match(what, template_values):
         if what.name != template_name:
             return False
         keys, values = what.flatten(non_ids_too=non_ids_too,
@@ -325,7 +326,8 @@ def match_whatids(whatids, template_whatid, ignored_keys=(),
         return (template_keys == keys and
                 not_ignored_values(keys, values) == template_values)
 
-    return [whatid for whatid in whatids if partial_match(id2what(whatid))]
+    niv = not_ignored_values(template_keys, template_values)
+    return [whatid for whatid in whatids if partial_match(id2what(whatid), niv)]
 
 
 def whatid2columns(df, whatid_col, columns=None, prefix='', postfix='', inplace=True):
