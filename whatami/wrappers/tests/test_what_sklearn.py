@@ -57,5 +57,5 @@ def test_no_estimators():
             "cvargs={'n_splits':5},n_repeats=2,random_state=0)")
 
     from sklearn.gaussian_process.kernels import WhiteKernel
-    assert (WhiteKernel(noise_level=2,noise_level_bounds=(1e-5, 1e5)).what().id() ==
+    assert (WhiteKernel(noise_level=2, noise_level_bounds=(1e-5, 1e5)).what().id() ==
             "WhiteKernel(noise_level=2,noise_level_bounds=(1e-05,100000.0))")
