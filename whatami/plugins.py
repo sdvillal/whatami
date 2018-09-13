@@ -10,7 +10,7 @@ import inspect
 from collections import OrderedDict
 from functools import partial
 
-from whatami import getargspec
+from whatami import getargspec, is_whatable
 
 from whatami.misc import maybe_import
 
@@ -35,7 +35,7 @@ def whatable_plugin(v):
 
     This should be second in the plugin chain to allow free specialisation of the what method.
     """
-    if hasattr(v, 'what'):
+    if is_whatable(v):
         what = v.what
         what = what() if callable(what) else what
         return what_plugin(what)
