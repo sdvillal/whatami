@@ -69,6 +69,22 @@ def getargspec(func):  # pragma: no cover
         return inspect.getargspec(func)
 
 
+def init_argspec(obj):
+    """
+    Returns a named 4-tuple (args, varargs, varkw, defaults) for the constructor of obj.
+
+    If the constructor cannot be introspected, all these will be an empty tuple.
+    """
+    try:
+        args, varargs, varkw, defaults = getargspec(obj.__init__)
+        required = args if not defaults else args[:-len(defaults)]
+        if required and required[0] == 'self':
+            required = required[1:]
+    except TypeError:  # no init
+        args = varargs = varkw = defaults = required = ()
+    return args, varargs, varkw, defaults, required
+
+
 def required_args(func):
     """
     Returns a list with the positional arguments of the function.

@@ -13,7 +13,7 @@ import inspect
 from time import strptime, mktime
 
 from functools import partial
-from whatami import import_submodules, fqn, maybe_import_member
+from whatami import import_submodules, fqn, maybe_import_member, init_argspec
 
 from ..what import whatable
 from ..misc import callable2call, is_iterable, mlexp_info_helper, maybe_import
@@ -154,6 +154,16 @@ def test_lazy_imports():
         print(failed_import.whatever)
     assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
     assert 'Maybe install it like "sudo apt-get cool"?' in str(excinfo.value)
+
+
+def test_init_argspec():
+    args, varargs, varkw, defaults, required = init_argspec(Thread)
+    assert not required
+    assert 'target' in args
+    assert dict(zip(args, defaults))['target'] is None
+
+    args, varargs, varkw, defaults, required = init_argspec(object)
+    assert not args
 
 
 def test_import_submodules():
