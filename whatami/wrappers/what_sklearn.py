@@ -8,7 +8,7 @@ Example
 -------
 
 >>> # Monkey-patch sklearn estimators
->>> whatamise_sklearn()
+>>> whatamize_sklearn()
 >>> # Use what() to retrieve the id of a model
 >>> from sklearn.ensemble import RandomForestClassifier
 >>> rfc = RandomForestClassifier(n_jobs=8, n_estimators=23)
@@ -44,28 +44,35 @@ See also rendered docs:
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 
 import inspect
 import warnings
 import logging
+from collections import OrderedDict
 from distutils.version import StrictVersion
 
 from sklearn.base import BaseEstimator
 
-from whatami import whatamize_object, obj2what
+from whatami import whatamize_object, obj2what, import_submodules, fqn, maybe_import_member, init_argspec
 from whatami.what import What
 from whatami.misc import all_subclasses
 
 
 # ----- Manually check which parameters are not part of the default id (WIP)
 
-_SKLRegistry = {}
+_SKLRegistry = OrderedDict()
+
+_WHATAMIZED_BASES = ('sklearn.base.BaseEstimator',
+                     'sklearn.gaussian_process.kernels.Kernel',
+                     'sklearn.model_selection.BaseCrossValidator',
+                     'sklearn.model_selection._split.BaseShuffleSplit',
+                     'sklearn.model_selection._split._RepeatedSplits',)
 
 
-class _SklearnEstimatorID(object):
+class _ObjectParametersMeta(object):
     """
-    Stores information about sklearn short names, non_id_params, notes and possibly others.
+    Stores information about an object short name, non_id_params, notes and possibly others.
 
     N.B. it is better to include a non-existing non_id_param
     (innocuous, can help to support several sklearn versions)
@@ -73,20 +80,26 @@ class _SklearnEstimatorID(object):
     """
 
     def __init__(self,
-                 skclass,
+                 object_ref,
                  short_name,
                  non_id_params=(),
-                 notes=None):
-        self.skclass = skclass
-        self.short_name = short_name if short_name is not None else skclass.__name__
+                 notes=None,
+                 group=None,
+                 extra=None):
+        self.object = object_ref
+        self.short_name = short_name if short_name is not None else object_ref.__name__
         self.non_id_params = non_id_params
         self.notes = notes
+        self.group = group
+        self.extra = extra
 
 
-def _a(skclass, nickname=None, non_id_params=(), notes=None):
+def _a(skclass, nickname=None, non_id_params=(), notes=None, override=True):
     """Adds a class to the SKLRegistry."""
     # Maybe we should key using FQNs to avoid any possible name clash
-    _SKLRegistry[skclass.__name__] = _SklearnEstimatorID(skclass, nickname, non_id_params, notes)
+    if not override and skclass.__name__ in _SKLRegistry:
+        raise Exception('%r is already in the sklearn registry' % skclass.__name__)
+    _SKLRegistry[skclass.__name__] = _ObjectParametersMeta(skclass, nickname, non_id_params, notes)
 
 
 def _declare0dot15dot1():  # pragma: no cover
@@ -599,7 +612,7 @@ def _what_for_sklearn(x, use_short=True):
     return What(name, conf=configuration_dict)
 
 
-def whatamise_sklearn(check=False, log=False):
+def whatamize_sklearn(check=False, log=False):
     """Monkey-patches sklearn.base.BaseEstimator to make sklearn estimators whatable.
 
     Parameters
@@ -612,12 +625,9 @@ def whatamise_sklearn(check=False, log=False):
     """
     _declare_id_nonid_attributes()
     # Whatamise all estimators
-    whatamize_object(BaseEstimator, _what_for_sklearn, force=False)
+    whatamize_object(BaseEstimator, _what_for_sklearn, fail_on_import_error=True, force=False)
     # Whatamise a selection of other classes
-    for clazz in ('sklearn.gaussian_process.kernels.Kernel',
-                  'sklearn.model_selection.BaseCrossValidator',
-                  'sklearn.model_selection._split.BaseShuffleSplit',
-                  'sklearn.model_selection._split._RepeatedSplits',):
+    for clazz in _WHATAMIZED_BASES:
         whatamize_object(clazz, _what_for_sklearn, fail_on_import_error=False, force=False)
     if check:
         _check_all_monkeypatched()
@@ -631,7 +641,7 @@ def _check_all_monkeypatched():
     """
 
     # Make sure we have added what to sklearn stuff
-    whatamise_sklearn(check=False)
+    whatamize_sklearn(check=False)
 
     # Trick to force python to populate part of the BaseEstimator hierarchy
     from sklearn.ensemble.forest import RandomForestClassifier
@@ -655,6 +665,45 @@ def _check_all_monkeypatched():
                     pass
     return True
 
+
+def sklearn_parameters_report():
+
+    # Store sklearn version
+    import sklearn
+    report = {'sklearn_version': sklearn.__version__}
+
+    # Whatamise the library
+    whatamize_sklearn()
+    whatamized = {}
+    for name, meta in _SKLRegistry.items():
+        args, varargs, varkw, defaults, required = init_argspec(meta.object)
+        whatamized[fqn(meta.object)] = args, varargs, varkw, defaults, required, name, meta
+
+    # Import all from sklearn we can import, so we can find relevant subclasses
+    import_submodules('sklearn')
+
+    # Collect subclasess from relevant bases
+    all_report = {}
+    for base_fqn in _WHATAMIZED_BASES:
+        member = maybe_import_member(base_fqn, fail_if_import_error=False)
+        if member is not None:
+            for subclass in all_subclasses(member):
+                args, varargs, varkw, defaults, required = init_argspec(subclass)
+                all_report[fqn(subclass)] = args, varargs, varkw, defaults, required, None
+
+    # Do we miss someting?
+    report['unwhatamized'] = sorted(set(all_report) - set(whatamized))
+
+    # TODO: store a history of this (maybe pickle) that can help supporting more easily new sklearn versions
+    # So report too:
+    #   - changes in required parameters
+    #   - new parameters
+    #   - removed parameters
+    #   - changes in parameter default values
+    # Plus some automatic way to try to catch errors in my definition of non-id values
+    # This is WIP until then
+
+    return report
 
 ####
 #

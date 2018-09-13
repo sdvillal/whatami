@@ -5,15 +5,14 @@
 
 from __future__ import absolute_import
 from future.builtins import str
-from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 
-from whatami import what2id
-from whatami.wrappers.what_sklearn import whatamise_sklearn, _check_all_monkeypatched
+from whatami.wrappers.what_sklearn import whatamize_sklearn, _check_all_monkeypatched, sklearn_parameters_report
 
-whatamise_sklearn(check=True, log=True)
+whatamize_sklearn(check=True, log=True)
 
 
 def test_monkeypatch():
@@ -54,3 +53,9 @@ def test_no_estimators():
     from sklearn.gaussian_process.kernels import WhiteKernel
     assert (WhiteKernel(noise_level=2, noise_level_bounds=(1e-5, 1e5)).what().id() ==
             "WhiteKernel(noise_level=2,noise_level_bounds=(1e-05,100000.0))")
+
+
+def test_sklearn_parameters_report():
+    result = sklearn_parameters_report()
+    # well, this ought not to be like this...
+    assert 'sklearn.decomposition.pca.RandomizedPCA' in result['unwhatamized']

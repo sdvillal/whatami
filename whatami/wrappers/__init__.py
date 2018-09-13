@@ -1,1 +1,1 @@
-from whatami.wrappers.what_sklearn import whatamise_sklearn
+from whatami.wrappers.what_sklearn import whatamize_sklearn
