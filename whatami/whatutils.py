@@ -5,6 +5,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import print_function
+# noinspection PyProtectedMember
 from future.utils import string_types
 
 import inspect
@@ -15,7 +16,42 @@ from arpeggio import NoMatch
 
 from whatami import (config_dict_for_object,
                      parse_whatid, build_oldwhatami_parser,
-                     whatable, whatareyou, What, is_whatable)
+                     whatable, whatareyou, What, is_whatable, maybe_import)
+
+
+def whatamise_object(clazz_or_fqn, what_func, fail_on_import_error=True, force=False):
+    """
+    Assign what_func to the what member of clazz.
+
+
+    Parameters
+    ----------
+    clazz_or_fqn : string or generic object
+      The object to whatamise.
+      If a string, it is interpreted as an object to import.
+
+    what_func : callable () -> What
+      The function that will provide what contact.
+
+    force : bool, default False
+      If True and the object already has a what member, replace it.
+      If False and the object already has a what member, do nothing.
+
+    fail_on_import_error : bool, default True
+      If True and clazz_or_fqn is a string and import fails, fail too.
+
+    """
+    try:
+        if isinstance(clazz_or_fqn, string_types):
+            module, _, clazz = clazz_or_fqn.rpartition('.')
+            clazz = getattr(maybe_import(module), clazz)
+        else:
+            clazz = clazz_or_fqn
+        if not hasattr(clazz, 'what') or force:
+            clazz.what = what_func
+    except ImportError:
+        if fail_on_import_error:
+            raise
 
 
 def what2id(obj):
