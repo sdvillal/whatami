@@ -19,7 +19,7 @@ from whatami import (config_dict_for_object,
                      whatable, whatareyou, What, is_whatable, maybe_import)
 
 
-def whatamise_object(clazz_or_fqn, what_func, fail_on_import_error=True, force=False):
+def whatamize_object(clazz_or_fqn, what_func, fail_on_import_error=True, force=False):
     """
     Assign what_func to the what member of clazz.
 

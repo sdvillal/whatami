@@ -294,7 +294,7 @@ class What(object):
         if 0 < maxlength < len(string):
             try:
                 return hashlib.sha1(string.encode('utf-8')).hexdigest()
-            except UnicodeError:
+            except UnicodeError:  # pragma: no cover
                 return hashlib.sha1(string.decode('utf-8').encode('utf-8')).hexdigest()
         return string
 

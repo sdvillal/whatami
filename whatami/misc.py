@@ -678,7 +678,7 @@ class _LazyImportError(object):
 
     def __getattribute__(self, name):
         if name in ('_library_name', '_install_msg', '_errors', '_maybe_import', 'module', '_variants'):
-            return super(_LazyImportError, self).__getattribute__(name)
+            return super(_LazyImportError, self).__getattribute__(name)  # pragma: no cover
         errors_msg = '\n'.join(['\timport %s: %s' % (variant, str(ie)) for variant, ie in self._errors])
         if self._install_msg is not None:
             raise ImportError('Trying to access %s from module %s, but the library fails to import.\n'
