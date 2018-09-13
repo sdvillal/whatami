@@ -828,8 +828,8 @@ def import_submodules(package, recurse_packages=True, ignore_errors=True):
         if recurse_packages and is_pkg:
             try:
                 results.update(import_submodules(full_name))
-            except ImportError:
-                if not ignore_errors:  # pragma: no cover
+            except ImportError:  # pragma: no cover
+                if not ignore_errors:
                     raise
     return results
 

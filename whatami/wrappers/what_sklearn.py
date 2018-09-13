@@ -97,7 +97,7 @@ class _ObjectParametersMeta(object):
 def _a(skclass, nickname=None, non_id_params=(), notes=None, override=True):
     """Adds a class to the SKLRegistry."""
     # Maybe we should key using FQNs to avoid any possible name clash
-    if not override and skclass.__name__ in _SKLRegistry:
+    if not override and skclass.__name__ in _SKLRegistry:  # pragma: no cover
         raise Exception('%r is already in the sklearn registry' % skclass.__name__)
     _SKLRegistry[skclass.__name__] = _ObjectParametersMeta(skclass, nickname, non_id_params, notes)
 
