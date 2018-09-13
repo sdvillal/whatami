@@ -157,12 +157,12 @@ def test_lazy_imports():
 
 
 def test_init_argspec():
-    args, varargs, varkw, defaults, required = init_argspec(Thread)
+    args, _, _, defaults, required = init_argspec(Thread)
     assert not required
     assert 'target' in args
     assert dict(zip(args, defaults))['target'] is None
 
-    args, varargs, varkw, defaults, required = init_argspec(object)
+    _, _, _, _, required = init_argspec(object)
     assert not required
 
 

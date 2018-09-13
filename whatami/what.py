@@ -71,7 +71,6 @@ import inspect
 from copy import deepcopy
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
 import types
-from collections import defaultdict
 
 from future.utils import PY3
 

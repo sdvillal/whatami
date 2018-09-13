@@ -16,7 +16,7 @@ from arpeggio import NoMatch
 
 from whatami import (config_dict_for_object,
                      parse_whatid, build_oldwhatami_parser,
-                     whatable, whatareyou, What, is_whatable, maybe_import)
+                     whatareyou, What, is_whatable, maybe_import)
 
 
 def whatamize_object(clazz_or_fqn, what_func, fail_on_import_error=True, force=False):
@@ -121,6 +121,7 @@ def obj2what(obj,
 
     Examples
     --------
+    >>> from whatami import whatable
     >>> print(obj2what(whatable(id2what)).id())
     parse_whatid(parser=None,visitor=None)
     >>> print(obj2what(id2what).id())

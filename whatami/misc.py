@@ -198,7 +198,6 @@ def call_dict(depth=1, ignores=('cls', 'self'), ignore_varargs=False, overrides=
     >>> sorted(caller(1, y=None).items())
     [('x', 1), ('y', 'custom_logic')]
     """
-    import inspect
     args, varargs, kwargs_name, frame_locals = inspect.getargvalues(inspect.stack()[depth][0])
     call_param_value = {arg: frame_locals[arg] for arg in args}
     # Ignore unnammed parameters
@@ -819,7 +818,7 @@ def import_submodules(package, recurse_packages=True, ignore_errors=True):
                 return results
             raise
     results[package.__name__] = package
-    for loader, name, is_pkg in walk_packages(package.__path__):
+    for _, name, is_pkg in walk_packages(package.__path__):
         full_name = package.__name__ + '.' + name
         try:
             results[full_name] = import_module(full_name)
