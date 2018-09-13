@@ -38,7 +38,7 @@ class _ConsistentSet(object):
         except TypeError:
             # If elements are unorderable, sorting them using their hash.
             # This is slower but works in any case.
-            self._sequence = sorted((hash(e) for e in set_sequence))
+            self._sequence = sorted((hasher(e) for e in set_sequence))
 
 
 class _MyHash(object):
@@ -147,7 +147,7 @@ class Hasher(Pickler):
         except TypeError:
             # If keys are unorderable, sorting them using their hash. This is
             # slower but works in any case.
-            Pickler._batch_setitems(self, iter(sorted((hash(k), v)
+            Pickler._batch_setitems(self, iter(sorted((hasher(k), v)
                                                       for k, v in items)))
 
     def save_set(self, set_items):
@@ -242,7 +242,7 @@ class NumpyHasher(Hasher):
         Hasher.save(self, obj)
 
 
-def hash(obj, hash_name='md5', coerce_mmap=False):
+def hasher(obj, hash_name='md5', coerce_mmap=False):
     """ Quick calculation of a hash to identify uniquely Python objects
         containing numpy arrays.
 

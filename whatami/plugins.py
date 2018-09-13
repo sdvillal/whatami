@@ -16,7 +16,7 @@ from whatami.misc import maybe_import
 
 from .what import What, whatareyou
 from .misc import callable2call, config_dict_for_object, curry2partial
-from .minijoblib.hashing import hash as hasher
+from .minijoblib.hashing import hasher
 
 
 # --- Basic plugins
