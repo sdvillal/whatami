@@ -4,6 +4,9 @@
 # Licence: BSD 3 clause
 
 from __future__ import absolute_import
+
+from threading import Thread
+
 from future.utils import PY3
 from datetime import datetime
 import inspect
@@ -69,6 +72,7 @@ def test_callable2call_builtins():
 
 def test_callable2call_wrongargs():
     with pytest.raises(Exception) as excinfo:
+        # noinspection PyTypeChecker
         callable2call('sorted')
     expected = 'Only callables (partials, functions, builtins...) are allowed, \'sorted\' is none of them'
     assert str(excinfo.value) == expected
@@ -160,15 +164,15 @@ def test_import_submodules():
 
 
 def test_fqn():
-    assert fqn(BaseException) == 'exceptions.BaseException'
-    assert fqn(BaseException, use_class=True) == '__builtin__.type'
-    assert fqn(BaseException(), use_class=True) == 'exceptions.BaseException'
+    assert fqn(Thread) == 'threading.Thread'
+    assert fqn(Thread, use_class=True) == '__builtin__.type'
+    assert fqn(Thread(), use_class=True) == 'threading.Thread'
 
 
 def test_maybe_import_member():
     with pytest.raises(ValueError):
-        maybe_import_member('BaseException')
-    assert maybe_import_member('exceptions.BaseException') is BaseException
+        maybe_import_member('Thread')
+    assert maybe_import_member('threading.Thread') is Thread
     with pytest.raises(ImportError):
         maybe_import_member('i.made.this.UP', fail_if_import_error=True)
     assert maybe_import_member('i.made.this.UP', fail_if_import_error=False) is None
