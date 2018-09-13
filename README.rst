@@ -121,5 +121,5 @@ actually changes.
 .. _semantic versioning: http://semver.org/
 .. _scikit-learn: http://scikit-learn.org
 .. _pyopy: https://github.com/sdvillal/pyopy
-.. |Codacy Status| image:: image:: https://api.codacy.com/project/badge/Grade/163584371aeb432497b6c9525a21cdae    :target: https://www.codacy.com/app/sdvillal/whatami?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=sdvillal/whatami&amp;utm_campaign=Badge_Grade
-   :target: https://scrutinizer-ci.com/g/sdvillal/whatami/?branch=master
+.. |Codacy Status| image:: https://api.codacy.com/project/badge/Grade/163584371aeb432497b6c9525a21cdae
+   :target: https://www.codacy.com/app/sdvillal/whatami?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=sdvillal/whatami&amp;utm_campaign=Badge_Grade
