@@ -6,6 +6,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals  # N.B. arpeggio wants unicode
 from arpeggio import ParserPython, Optional, ZeroOrMore, StrMatch, RegExMatch, EOF, PTNodeVisitor, visit_parse_tree
+from whatami import maybe_import
 
 
 def build_whatami_parser(reduce_tree=False, debug=False):
@@ -62,6 +63,11 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     def a_none():
         return StrMatch('None')
 
+    # Classes / types
+
+    def a_class():
+        return StrMatch('<class '), a_string, StrMatch('>')
+
     # Collection types: lists, tuples, dictionaries
 
     def list_elements():
@@ -95,7 +101,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     # Key-values
 
     def value():
-        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_set, a_dict, whatami_id]
+        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_set, a_dict, a_class, whatami_id]
 
     def kv():
         return an_id, StrMatch('='), value
@@ -170,6 +176,17 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     @staticmethod
     def visit_a_none(*_):
         return WhatamiTreeVisitor._NONE_NODE
+
+    # --- Classes / types
+
+    @staticmethod
+    def visit_a_class(_, children):
+        module, _, clazz = children[0].rpartition('.')
+        try:
+            return getattr(maybe_import(module), clazz)
+        except (ImportError, AttributeError):
+            # Unfortunately it breaks roundtripping, but is a lesser evil
+            return {'class': children[0]}
 
     # --- Collection types: lists, tuples, dictionaries
 

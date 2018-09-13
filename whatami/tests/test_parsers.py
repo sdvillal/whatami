@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 import arpeggio
+from whatami import obj2what
 
 from ..what import What
 from ..parsers import parse_whatid
@@ -167,6 +168,19 @@ def test_parse_empty_dictionaries():
     assert what.name == 'defaultdict'
     assert what.conf == {'default_factory': What(name='int', conf={}),
                          'seq': {}}
+
+
+def test_parse_class():
+    # class is not importable
+    what = parse_whatid("B(cv=<class 'sklearn.model_selection.DoesNotExist'>)")
+    assert what.name == 'B'
+    assert what.conf == {'cv': {'class': 'sklearn.model_selection.DoesNotExist'}}
+
+    # class is importable
+    from pickle import PickleError
+    what = obj2what({'error': PickleError})
+    assert what.name == 'dict'
+    assert what.conf == {'seq': {'error': PickleError}}
 
 
 def test_arpeggio_resilience():
