@@ -87,11 +87,12 @@ def pandas_skip(test):  # pragma: no cover
     """Skips a test if the pandas plugin is not available."""
     # Check libraries are present
     if not has_pandas():
-        return pytest.mark.skipif(test, reason='the pandas plugin requires pandas')
+        return pytest.param(test, marks=pytest.mark.skip(reason='the pandas plugin requires pandas'))
     # Check library versions
     minor = LooseVersion(pd.__version__).version[1]
-    if minor not in (16, 17, 18, 20, 21, 22):
-        return pytest.mark.skipif(test, reason='these tests do not support pandas version %s' % pd.__version__)
+    if minor not in (16, 17, 18, 20, 21, 22, 23):
+        reason = 'these tests do not support pandas version %s' % pd.__version__
+        return pytest.param(test, marks=pytest.mark.skip(reason=reason))
     return test
 
 
@@ -147,7 +148,7 @@ def df(request):
             's2': (pd.Series(data=adjacency.ravel(), index=list(range(len(adjacency.ravel()))))[::-1],
                    '43dbf2ae18abdf54921ea1a49e8d847b', '50052bba6794aceab461a1f2a1baa785'),
         }
-    elif LooseVersion('0.20') <= LooseVersion(pd.__version__) < LooseVersion('0.23'):  # pragma: no cover
+    elif LooseVersion('0.20') <= LooseVersion(pd.__version__) < LooseVersion('0.24'):  # pragma: no cover
         dfs = {
             'df1': (pd.DataFrame(data=adjacency, columns=['x', 'y', 'z']),
                     '5b0f297230bccaab968ca2464d7a10f0', '208ff258bdc0ec2395f3d15f56cd7eb4'),
