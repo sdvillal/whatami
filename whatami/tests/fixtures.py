@@ -56,7 +56,7 @@ def numpy_skip(test):  # pragma: no cover
     return test
 
 
-@pytest.fixture(params=map(numpy_skip, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']),
+@pytest.fixture(params=list(map(numpy_skip, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'])),
                 ids=['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'])
 def array(request):
     """Hardcodes hashes, so we can detect hashing changes in joblib."""
@@ -166,8 +166,7 @@ def df(request):
     return dfs[request.param]
 
 
-@pytest.fixture(params=map(pandas_skip, ['dfw1']),
-                ids=['dfw1'])
+@pytest.fixture(params=list(map(pandas_skip, ['dfw1'])), ids=['dfw1'])
 def df_with_whatid(request):
     """Fixtures to test whatid manipulations mixed with pandas dataframes.
 

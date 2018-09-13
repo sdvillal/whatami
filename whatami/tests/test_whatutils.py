@@ -9,6 +9,9 @@ from whatami.whatutils import what2id
 
 from whatami.whatutils import whatid2columns
 
+# noinspection PyUnresolvedReferences
+from whatami.tests.fixtures import df_with_whatid
+
 
 def test_whatid2columns(df_with_whatid):
     """Tests extracting values from whatid strings in a pandas dataframe column into their own columns.

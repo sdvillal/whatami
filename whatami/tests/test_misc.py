@@ -163,7 +163,7 @@ def test_init_argspec():
     assert dict(zip(args, defaults))['target'] is None
 
     args, varargs, varkw, defaults, required = init_argspec(object)
-    assert not args
+    assert not required
 
 
 def test_import_submodules():
@@ -175,7 +175,7 @@ def test_import_submodules():
 
 def test_fqn():
     assert fqn(Thread) == 'threading.Thread'
-    assert fqn(Thread, use_class=True) == '__builtin__.type'
+    assert fqn(Thread, use_class=True) == ('__builtin__.type' if not PY3 else 'builtins.type')
     assert fqn(Thread(), use_class=True) == 'threading.Thread'
 
 
