@@ -7,8 +7,7 @@ import pytest
 from whatami import FunctionLike, whatamize_object
 from whatami.whatutils import what2id
 
-from ..whatutils import whatid2columns
-from .fixtures import df_with_whatid
+from whatami.whatutils import whatid2columns
 
 
 def test_whatid2columns(df_with_whatid):
