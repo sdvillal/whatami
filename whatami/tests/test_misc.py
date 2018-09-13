@@ -10,6 +10,7 @@ import inspect
 from time import strptime, mktime
 
 from functools import partial
+from whatami import import_submodules, fqn, maybe_import_member
 
 from ..what import whatable
 from ..misc import callable2call, is_iterable, mlexp_info_helper, maybe_import
@@ -149,3 +150,25 @@ def test_lazy_imports():
         print(failed_import.whatever)
     assert 'Trying to access whatever from module cool, but the library fails to import.' in str(excinfo.value)
     assert 'Maybe install it like "sudo apt-get cool"?' in str(excinfo.value)
+
+
+def test_import_submodules():
+    subms = import_submodules('whatami.tests')
+    assert 'whatami.tests' in subms
+    assert 'whatami.tests.test_what' in subms
+    assert 'whatami' not in subms
+
+
+def test_fqn():
+    assert fqn(BaseException) == 'exceptions.BaseException'
+    assert fqn(BaseException, use_class=True) == '__builtin__.type'
+    assert fqn(BaseException(), use_class=True) == 'exceptions.BaseException'
+
+
+def test_maybe_import_member():
+    with pytest.raises(ValueError):
+        maybe_import_member('BaseException')
+    assert maybe_import_member('exceptions.BaseException') is BaseException
+    with pytest.raises(ImportError):
+        maybe_import_member('i.made.this.UP', fail_if_import_error=True)
+    assert maybe_import_member('i.made.this.UP', fail_if_import_error=False) is None
