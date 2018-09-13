@@ -2,7 +2,9 @@
 """Tests various functions in whatutils."""
 from functools import partial
 
-from whatami import FunctionLike
+import pytest
+
+from whatami import FunctionLike, whatamize_object
 from whatami.whatutils import what2id
 
 from ..whatutils import whatid2columns
@@ -71,3 +73,8 @@ def test_function_like():
             pass
 
     assert what2id(B(1, 'b')) == "B(a=1,b='b')"
+
+
+def test_whatamise_object():
+    with pytest.raises(ImportError):
+        whatamize_object('does.not.exist.Fail', None, fail_on_import_error=True)
