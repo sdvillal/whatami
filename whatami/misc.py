@@ -5,7 +5,11 @@
 # Licence: BSD 3 clause
 
 from __future__ import absolute_import
-from future.utils import PY3
+# noinspection PyProtectedMember
+from future.utils import PY3, string_types
+
+from pkgutil import walk_packages
+
 from functools import partial
 from itertools import chain
 import datetime
@@ -21,6 +25,27 @@ MAX_EXT4_FN_LENGTH = 255
 
 # --- Introspection tools
 
+def fqn(obj, use_class=False):
+    """
+    Returns the fully qualified name of an object.
+
+    Parameters
+    ----------
+    obj : object
+
+    use_class : bool, default False
+      If True, returns the FQN of obj.__class__
+    """
+    # https://stackoverflow.com/questions/2020014/get-fully-qualified-class-name-of-an-object-in-python
+    # https://www.python.org/dev/peps/pep-3155/
+    if use_class:
+        obj = obj.__class__
+    try:
+        return obj.__module__ + '.' + obj.__qualname__
+    except AttributeError:
+        return obj.__module__ + '.' + obj.__name__
+
+
 def getargspec(func):  # pragma: no cover
     """
     PY/PY3 argspec that avoids using deprecated API
@@ -32,7 +57,7 @@ def getargspec(func):  # pragma: no cover
 
     Returns
     -------
-    A 4-tuple (args, varargs, varkw, defaults)
+    A named 4-tuple (args, varargs, varkw, defaults)
 
     """
     # On moving off PY2, just replace by inspect.signature() and take into account
@@ -700,7 +725,7 @@ def maybe_import(library_name, install_msg=None, *variants):
       The name for the library used in error reporting.
       "import library_name" is not tried if any other variant is provided.
 
-    install_msg : string or None
+    install_msg : string or None, default None
       The message that will provide installation hints.
       If None, no hint will be provided.
       If 'pip' or 'conda', a generic install message with the first variant will be generated.
@@ -715,6 +740,83 @@ def maybe_import(library_name, install_msg=None, *variants):
     """
     lie = _LazyImportError(library_name, install_msg, *variants)
     return lie.module
+
+
+def maybe_import_member(member_fqn, fail_if_import_error=True, install_msg=None, *variants):
+    """
+    Tries to obtain a member from a class, with all the goodies of `maybe_import`
+
+    Parameters
+    ----------
+    member_fqn : string or list of strings
+      The FQN of the symbols to extract from a module import.
+
+    fail_if_import_error : bool, default True
+      If True, an ImportError is raised if the corresponding module cannot be imported.
+      If False, return None in case of ImportError.
+
+    install_msg : string or None
+      See `maybe_import`
+
+    variants : strings
+      See `maybe_import`
+
+    Returns
+    -------
+    The imported object or None.
+    """
+    module, _, member = member_fqn.rpartition('.')
+    if not module:
+        raise ValueError('Please provide a FQN, including module name (was given %r)' % member_fqn)
+    try:
+        return getattr(maybe_import(module, install_msg=install_msg, *variants), member)
+    except ImportError:
+        if fail_if_import_error:
+            raise
+        return None
+
+
+def import_submodules(package, recurse_packages=True, ignore_errors=True):
+    """
+    Imports a package and all its submodules, returning a dictionary {package_name: module}
+
+    Parameters
+    ----------
+    package : string or module
+      The package to import.
+
+    recurse_packages : bool, default True
+      If True, submodules and subpackages are recursively imported.
+      If False, only submodules are recursively imported.
+
+    ignore_errors : bool, default True
+      If True, errors are ignored and a best effort to import what is importable is carried out.
+      If False, any import error is raised.
+      Note: this stdlib bug is hit too frequently: https://bugs.python.org/issue14787
+    """
+    results = {}
+    if isinstance(package, string_types):
+        try:
+            package = import_module(package)
+        except ImportError:
+            if ignore_errors:
+                return results
+            raise
+    results[package.__name__] = package
+    for loader, name, is_pkg in walk_packages(package.__path__):
+        full_name = package.__name__ + '.' + name
+        try:
+            results[full_name] = import_module(full_name)
+        except ImportError:
+            if ignore_errors:
+                continue
+            raise
+        if recurse_packages and is_pkg:
+            try:
+                results.update(import_submodules(full_name))
+            except ImportError:
+                pass
+    return results
 
 
 # --- Tools to make aggregation of information from functions and whatables easier
