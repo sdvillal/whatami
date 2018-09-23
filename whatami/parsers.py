@@ -63,10 +63,13 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     def a_none():
         return StrMatch('None')
 
-    # Classes / types
+    # Classes, types, modules
 
     def a_class():
         return StrMatch('<class '), a_string, StrMatch('>')
+
+    def a_module():
+        return StrMatch('<module '), a_string, StrMatch('>')
 
     # Collection types: lists, tuples, dictionaries
 
@@ -101,7 +104,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
     # Key-values
 
     def value():
-        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_set, a_dict, a_class, whatami_id]
+        return [a_none, a_bool, a_number, a_string, a_tuple, a_list, a_set, a_dict, a_class, a_module, whatami_id]
 
     def kv():
         return an_id, StrMatch('='), value
@@ -177,7 +180,7 @@ class WhatamiTreeVisitor(PTNodeVisitor):
     def visit_a_none(*_):
         return WhatamiTreeVisitor._NONE_NODE
 
-    # --- Classes / types
+    # --- Classes, types,  modules
 
     @staticmethod
     def visit_a_class(_, children):
@@ -187,6 +190,15 @@ class WhatamiTreeVisitor(PTNodeVisitor):
         except (ImportError, AttributeError):
             # Unfortunately it breaks roundtripping, but is a lesser evil
             return {'class': children[0]}
+
+    @staticmethod
+    def visit_a_module(_, children):
+        module_name = children[0]
+        try:
+            return maybe_import(module_name)
+        except ImportError:
+            # Unfortunately it breaks roundtripping, but is a lesser evil
+            return {'module': children[0]}
 
     # --- Collection types: lists, tuples, dictionaries
 

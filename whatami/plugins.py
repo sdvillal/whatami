@@ -4,6 +4,7 @@
 # Licence: BSD 3 clause
 
 from __future__ import print_function, absolute_import
+# noinspection PyProtectedMember
 from future.utils import string_types, PY2
 
 import inspect
@@ -20,6 +21,12 @@ from .minijoblib.hashing import hasher
 
 
 # --- Basic plugins
+
+def module_plugin(v):
+    """Deals with python modules."""
+    if inspect.ismodule(v):
+        return '<module %s>' % v.__name__
+
 
 def what_plugin(v):
     """Deals with What objects.
@@ -50,6 +57,7 @@ def builtin_plugin(v):
 
 def numeric_type_plugin(v):
     """Numeric types."""
+    # noinspection PyUnresolvedReferences
     types = (int, float, complex) if not PY2 else (int, long, float, complex)
     if any(v is t for t in types):  # N.B. do not do v in types, as it will fail with numpy arrays
         return '%s()' % v.__name__
@@ -295,6 +303,8 @@ class WhatamiPluginManager(object):
     """
 
     DEFAULT_PLUGINS = (
+        # modules first
+        module_plugin,
         # whatami plugins, should go first
         what_plugin,
         whatable_plugin,
