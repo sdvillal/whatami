@@ -326,7 +326,10 @@ def callable2call(c, closure_extractor=lambda c: c):
                 keywords=dict(chain(pkeywords.items(), keywords.items())))   # N.B. order matters
         if hasattr(c, '__call__'):
             # No way to get the argspec from anything arriving here (builtins and the like...)
-            return c.__name__, keywords
+            try:
+                return c.__name__, keywords
+            except AttributeError:
+                return c.__class__.__name__
         raise ValueError('Only callables (partials, functions, builtins...) are allowed, %r is none of them' % c)
     return callable2call_recursive(c)
 
