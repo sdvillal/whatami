@@ -28,14 +28,13 @@ before_install:
  - travis_retry conda create -n test python=$TRAVIS_PYTHON_VERSION pip
  - source activate test
  - conda install numpy scipy scikit-learn pandas joblib future pytest cytoolz
- - travis_retry pip install arpeggio pytest-cov pytest-pep8 codecov scrutinizer-ocular
+ - travis_retry pip install arpeggio pytest-cov pytest-pep8 codecov
 
 script:
   py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
 
 after_success:
  - codecov
- - ocular --data-file ".coverage" --config-file ".coveragerc"
 
 notifications:
   email: false
