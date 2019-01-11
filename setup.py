@@ -36,7 +36,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    install_requires=['arpeggio>=1.5', 'future>=0.15.2', 'toolz'],
+    install_requires=['arpeggio>=1.5,<1.9', 'future>=0.15.2', 'toolz'],
     tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
     extras_require={
         'numpy': ['numpy'],
