@@ -36,8 +36,8 @@ def test_pipeline():
     assert kmeans_id == \
         "KMeans(algorithm='auto',init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
     # noinspection PyTypeChecker
-    pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
-    assert pipeline_id == "Pipeline(steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id)
+    pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans)), verbose=True).what().id()
+    assert pipeline_id == "Pipeline(steps=(('norm',%s),('kmeans',%s)),verbose=True)" % (norm_id, kmeans_id)
 
 
 def test_no_estimators():
