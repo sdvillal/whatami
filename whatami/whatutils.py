@@ -71,7 +71,7 @@ def what2id(obj):
         return obj
     try:
         return obj.what().id()
-    except AttributeError:
+    except (AttributeError, TypeError):
         try:
             return obj.id()
         except AttributeError:
