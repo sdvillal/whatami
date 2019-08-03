@@ -336,7 +336,7 @@ def whatareyou(obj,
     mola(n=7)
     """
     if inspect.ismodule(obj):
-        return What(name='module', conf={'name':obj.__name__}, non_id_keys=non_id_keys)
+        return What(name='module', conf={'name': obj.__name__}, non_id_keys=non_id_keys)
     try:
         name, cd = callable2call(obj)
     except (ValueError, TypeError):
