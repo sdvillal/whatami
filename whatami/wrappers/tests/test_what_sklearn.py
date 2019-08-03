@@ -58,4 +58,4 @@ def test_no_estimators():
 def test_sklearn_parameters_report():
     result = sklearn_parameters_report()
     # well, this ought not to be like this...
-    assert 'sklearn.decomposition.pca.RandomizedPCA' in result['unwhatamized']
+    assert 'sklearn.cluster.bicluster.BaseSpectral' in result['unwhatamized']
