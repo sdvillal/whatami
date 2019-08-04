@@ -19,6 +19,7 @@ def test_monkeypatch():
     assert _check_all_monkeypatched()
 
 
+# noinspection PyUnresolvedReferences
 def test_non_ids():
     rfc = RandomForestClassifier()
     assert 'n_jobs' not in rfc.what().id()
@@ -40,6 +41,7 @@ def test_pipeline():
     assert pipeline_id == "Pipeline(steps=(('norm',%s),('kmeans',%s)),verbose=True)" % (norm_id, kmeans_id)
 
 
+# noinspection PyUnresolvedReferences
 def test_no_estimators():
     from sklearn.model_selection import KFold, RepeatedStratifiedKFold, StratifiedShuffleSplit
     assert (KFold(n_splits=5, shuffle=True, random_state=0).what().id() ==
