@@ -735,7 +735,7 @@ class _LazyImportError(object):
 
 
 def maybe_import(library_name, install_msg=None, *variants):
-    """Tries to import a module but do not fails immediatly if there is a problem.
+    """Tries to import a module but do not fails immediately if there is a problem.
 
     Parameters
     ----------
