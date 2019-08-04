@@ -40,12 +40,14 @@ def test_pipeline():
     print(kmeans_id)
     assert kmeans_id == \
         "KMeans(algorithm='auto',init='k-means++',max_iter=300,n_clusters=12,n_init=10,random_state=None,tol=0.0001)"
-    # noinspection PyTypeChecker
-    pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans)), verbose=True).what().id()
     minor = LooseVersion(sklearn.__version__).version[1]
     if minor < 21:
+        # noinspection PyTypeChecker
+        pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans))).what().id()
         assert pipeline_id == "Pipeline(steps=(('norm',%s),('kmeans',%s)))" % (norm_id, kmeans_id)
     else:
+        # noinspection PyTypeChecker
+        pipeline_id = Pipeline((('norm', norm), ('kmeans', kmeans)), verbose=True).what().id()
         assert pipeline_id == "Pipeline(steps=(('norm',%s),('kmeans',%s)),verbose=True)" % (norm_id, kmeans_id)
 
 
