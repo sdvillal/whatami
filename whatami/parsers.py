@@ -45,7 +45,7 @@ def build_whatami_parser(reduce_tree=False, debug=False):
         return RegExMatch(r'[_A-Za-z][_a-zA-Z0-9]*')
 
     def a_number():
-        return [RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?'),
+        return [RegExMatch(r'-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?'),
                 StrMatch('-inf'), StrMatch('inf'), StrMatch('nan')]
 
     def a_string():
@@ -351,7 +351,7 @@ def build_oldwhatami_parser(reduce_tree=False, debug=False):
         return RegExMatch(r'[_A-Za-z][_a-zA-Z0-9]*')
 
     def a_number():
-        return [RegExMatch('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?'),
+        return [RegExMatch(r'-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?'),
                 StrMatch('-inf'), StrMatch('inf'), StrMatch('nan')]
 
     def a_string():

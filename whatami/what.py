@@ -557,5 +557,5 @@ def whatable(obj=None,
         else:
             obj.what = types.MethodType(whatablefunc, obj)
         return obj
-    except:
+    except Exception:
         raise Exception('cannot whatamise %s' % type(obj))
