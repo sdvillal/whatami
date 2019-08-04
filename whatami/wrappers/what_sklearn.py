@@ -580,8 +580,8 @@ def _declare_id_nonid_attributes():
     # Warn if the version is not explicitly supported
     # We might want to allow being loose / share declarations between versions
     if version != sklearn_version:  # pragma: no cover
-        logging.getLogger(__package__).warn('Unsupported sklearn version %r, trying to apply %r' %
-                                            (sklearn_version, version))
+        logging.getLogger(__package__).warning('Unsupported sklearn version %r, trying to apply %r' %
+                                               (sklearn_version, version))
 
     # Declare IDs and non ids for several sklearn estimators
     declarator()
