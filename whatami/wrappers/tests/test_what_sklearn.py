@@ -8,6 +8,7 @@ from __future__ import absolute_import
 from distutils.version import LooseVersion
 
 from future.builtins import str
+import sklearn
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
