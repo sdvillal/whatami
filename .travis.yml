@@ -29,17 +29,17 @@ before_install:
  - conda install numpy scipy scikit-learn pandas joblib future pytest cytoolz
  - travis_retry pip install arpeggio pytest-cov codecov
  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-     travis_retry pip install pytest-pep8
+      travis_retry pip install pytest-pep8;
    else
-     travis_retry pip install pytest-codestyle
+      travis_retry pip install pytest-codestyle;
    fi
 
 script:
  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-    py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami
-  else
-    py.test -v -rs --doctest-modules --codestyle --cov whatami --cov-report term-missing whatami
-  fi
+      py.test -v -rs --doctest-modules --pep8 --cov whatami --cov-report term-missing whatami;
+   else
+      py.test -v -rs --doctest-modules --codestyle --cov whatami --cov-report term-missing whatami;
+   fi
 
 after_success:
  - codecov
